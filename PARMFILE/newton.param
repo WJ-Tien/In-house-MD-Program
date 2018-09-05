@@ -1,0 +1,8 @@
+mode                     = newton
+initial_displacement     = 0.0
+initial_velocity         = 1.0
+initial_time             = 0.0
+time_interval            = 0.005
+time_length              = 10.0
+mass                     = 1.0
+box_length               = 6.28319
