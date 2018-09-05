@@ -1,2 +1,2 @@
-# Self_Written_MD
+# One_Dimension_MD
 one dimension molecular dynamcis
