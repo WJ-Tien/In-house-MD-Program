@@ -1,6 +1,6 @@
-#One Dimension Molecular Dynamics Code
+# One Dimension Molecular Dynamics Code
 
-##Modify all the parameters in ".param"
+## Modify all the parameters in ".param"
 
 To compile:
 	make (executable binary file "run" will be generated)
