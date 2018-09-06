@@ -10,8 +10,8 @@
 
 double* langevin_integrator(double current_disp, double current_vel, double current_time, 
                             double tintv, double mass,
-                            double (*force)(double), double MD_PARM[], double box_length, 
-											      double temperature, double frictCoeff)
+                            double (*force)(double), double MD_PARM[], double box_length,
+			    double temperature, double frictCoeff)
 {
 	double next_disp;
 	double next_vel;
