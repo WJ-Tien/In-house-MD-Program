@@ -182,8 +182,9 @@ int main(int argc, char *argv[]){
 			cout << "Hamiltonian" << " " << hamiltonian(MD_PARM[0], MD_PARM[1], MD_PARM[5], potential) <<endl;
 			cout << endl;
 
-			file_OUT << first_frame << " " << MD_PARM[2] << " " << MD_PARM[0] << " " <<  MD_PARM[1] << " "
-							 << hamiltonian(MD_PARM[0], MD_PARM[1], MD_PARM[5], potential) << endl;
+			file_OUT << first_frame << " " << MD_PARM[2] << " " << MD_PARM[0] << " " <<  MD_PARM[1] 
+               << " "  
+               << hamiltonian(MD_PARM[0], MD_PARM[1], MD_PARM[5], potential) << endl;
 
 			s = langevin_integrator(MD_PARM[0],MD_PARM[1],MD_PARM[2],MD_PARM[3], MD_PARM[5],force, 
                             MD_PARM, MD_PARM[6], MD_PARM[7], MD_PARM[8]);

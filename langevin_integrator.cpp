@@ -3,15 +3,15 @@
 #include <chrono>
 #include "langevin_integrator.h" 
 
-//https://en.wikipedia.org/wiki/Langevin_dynamics
 //http://itf.fys.kuleuven.be/~enrico/Teaching/molecular_dynamics_2015.pdf   (P21, Eq98)
+//https://en.wikipedia.org/wiki/Langevin_dynamics
 //http://www.cplusplus.com/reference/random/normal_distribution/normal_distirbution/
 //use normal distribution generator to generate random_theta and random_xi
 
 double* langevin_integrator(double current_disp, double current_vel, double current_time, 
                             double tintv, double mass,
                             double (*force)(double), double MD_PARM[], double box_length,
-			    double temperature, double frictCoeff)
+                            double temperature, double frictCoeff)
 {
 	double next_disp;
 	double next_vel;
@@ -19,8 +19,8 @@ double* langevin_integrator(double current_disp, double current_vel, double curr
 	double current_force;
 	double next_force;
 	double Ct;
-	//double kb = 1.38064852e-23; // J/K
 	double kb = 1;
+	//double kb = 1.38064852e-23; // J/K
 	double sigma;
 	double random_theta, random_xi;
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();

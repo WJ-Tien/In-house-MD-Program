@@ -1,3 +1,5 @@
 *.o
 knowledge/
-test/
+*.dat
+*.agr
+
