@@ -3,4 +3,7 @@ knowledge/
 *.dat
 *.agr
 note
+run
+analysis/*.dat
+analysis/*.agr
 
