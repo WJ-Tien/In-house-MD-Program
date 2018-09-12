@@ -18,7 +18,7 @@ binw = float(sys.argv[2]) # bin width
 minb = int(np.floor(coord[0] / binw))  # lower boundary
 maxb = int(np.floor(coord[-1] / binw)) # upper boundary
 
-prob = [0] * (maxb - minb + 1) # initialization of probalitity array 
+prob = [0] * (maxb - minb + 1) # initialization of probability array 
 
 for i in range(len(coord)):
 	prob[int(np.floor(coord[i] / binw)) + abs(minb)] += 1 # shift the index with value abs(minb)
