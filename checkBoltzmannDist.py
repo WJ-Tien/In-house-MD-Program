@@ -3,6 +3,7 @@ import sys
 import numpy as np
 
 # p(x) ~ exp(-(K+U)/kbT) ~= A*exp(-U(x) / kbT)
+# Apprantly, the kinetic energy term is constant when the temperature is constant
 # U(x) = cos(x) + cos(2*x) + cos(3*x)
 
 with open(sys.argv[1], "r") as fin:
