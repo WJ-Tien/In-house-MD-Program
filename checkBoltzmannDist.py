@@ -17,15 +17,15 @@ binw = float(sys.argv[2]) # bin width
 minb = int(np.floor(coord[0] / binw))  # lower boudary
 maxb = int(np.floor(coord[-1] / binw)) # upper boundary
 
-prob = [0] * (maxb-minb + 1) # initialization of probalitity array 
+prob = [0] * (maxb - minb + 1) # initialization of probalitity array 
 
 for i in range(len(coord)):
 	prob[int(np.floor(coord[i] / binw)) + abs(minb)] += 1 # shift the index with value abs(minb)
 
 prob = np.array(prob)
 prob = (prob / nsamples) #final probability distribution 
-x_axis = np.arange(coord[0], coord[-1]+binw, binw) #initialization of x-axis
+x_axis = np.arange(coord[0], coord[-1] + binw, binw) #initialization of x-axis
 
 with open(sys.argv[3], "w") as fout:
 	for i in range(len(prob)):
-		fout.write(str(x_axis[i])+ " " + str(prob[i]) + "\n")
+		fout.write(str(x_axis[i]) + " " + str(prob[i]) + "\n")
