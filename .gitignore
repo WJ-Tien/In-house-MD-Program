@@ -6,4 +6,5 @@ note
 run
 analysis/*.dat
 analysis/*.agr
+*.swp
 
