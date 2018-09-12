@@ -32,14 +32,15 @@ double* langevin_integrator(double current_disp, double current_vel, double curr
 	
 	sigma = sqrt(2.0 * kb * temperature * frictCoeff / mass);
 
-	Ct = 0.5 * tintv * (current_force - frictCoeff*current_vel) + sigma*pow(tintv,1.5) * 
-      (0.5*random_xi + 0.288675 * random_theta);
-	
 	current_force = (*force)(current_disp);	
+
+	Ct = (0.5 * tintv * tintv * (current_force - frictCoeff * current_vel) / mass) + 
+       sigma * pow(tintv, 1.5) * (0.5 * random_xi + 0.288675 * random_theta);
+	
 	next_disp = current_disp + tintv * current_vel + Ct;
-	next_disp -= (round(next_disp/box_length) * box_length); //PBC
+	next_disp -= (round(next_disp / box_length) * box_length); //PBC
 	next_force = (*force)(next_disp);
-	next_vel = current_vel + 0.5 * tintv * (next_force + current_force) -
+	next_vel = current_vel + (0.5 * tintv * (next_force + current_force) / mass) -
              tintv * frictCoeff * current_vel + sigma * sqrt(tintv) * random_xi - 
              frictCoeff * Ct; 
 		

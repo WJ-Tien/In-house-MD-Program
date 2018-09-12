@@ -15,7 +15,7 @@ with open(sys.argv[1], "r") as fin:
 	nsamples = len(coord) #total number of samples in the system
 			
 binw = float(sys.argv[2]) # bin width
-minb = int(np.floor(coord[0] / binw))  # lower boudary
+minb = int(np.floor(coord[0] / binw))  # lower boundary
 maxb = int(np.floor(coord[-1] / binw)) # upper boundary
 
 prob = [0] * (maxb - minb + 1) # initialization of probalitity array 
