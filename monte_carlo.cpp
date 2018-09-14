@@ -41,14 +41,14 @@ double* monte_carlo(double current_disp, double current_time,
 		return MD_PARM;	
 	}
 	
-	else{
+	else {
 		if (randnum < boltzmann_factor){
 			MD_PARM[0] = next_disp;
 			MD_PARM[1] = next_time;
 			return MD_PARM;	
 		}
 		
-		else{
+		else {
 			MD_PARM[0] = current_disp;
 			MD_PARM[1] = next_time;
 			return MD_PARM;

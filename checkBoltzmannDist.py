@@ -10,9 +10,9 @@ with open(sys.argv[1], "r") as fin:
 	coord = [] 
 	for line in fin:
 		line = line.split()
-		coord.append(float(line[2])) # save system coordinates
+		coord.append(float(line[2]))
 	coord.sort()
-	nsamples = len(coord) #total number of samples in the system
+	nsamples = len(coord) 
 			
 binw = float(sys.argv[2]) # bin width
 minb = int(np.floor(coord[0] / binw))  # lower boundary

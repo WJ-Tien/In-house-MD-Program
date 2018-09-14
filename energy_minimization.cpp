@@ -11,7 +11,7 @@ double* gradient_descent(double current_disp, int current_step, int total_steps,
 	double convexityCheck_Second_Order;
 
 	next_disp = current_disp + opt_scalar * (*force)(current_disp); 
-	next_disp -= (round(next_disp/box_length) * box_length);
+	next_disp -= (round(next_disp / box_length) * box_length);
 	current_step ++;
 	convexityCheck_First_Order = -(*force)(next_disp);
 	convexityCheck_Second_Order = (*potential_second_derivative)(next_disp);
@@ -35,7 +35,7 @@ double* gradient_descent(double current_disp, int current_step, int total_steps,
 		return MD_PARM; 
 	}
 
-	else{ 
+	else { 
 		MD_PARM[0] = next_disp;
 		MD_PARM[1] = current_step; 
 		MD_PARM[5] = (*pot)(next_disp) - (*pot)(current_disp);

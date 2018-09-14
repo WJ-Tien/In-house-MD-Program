@@ -9,10 +9,10 @@
 	 ./run input_params output_filename (2 argvs)
 
 ### To visualize the simulation:
-	 ./visualizer.py data_to_be_visualized output_mp4_name fps (3 argvs, argv[1] = output file from ./run; fps = playback speed) 
+	 ./visualizer.py output_file_from_MD output_mp4_name fps (3 argvs; fps = playback speed) 
 
 ### Examination of Boltzmann distribution
-	 ./checkBoltzmannDist.py MD_traj  bin_width output_filename (3 argvs)
+	 ./checkBoltzmannDist.py output_file_from_MD bin_width output_filename (3 argvs)
 
 ### To clean (e.g. modifications were made):
 	 make clean (remove all .o files and executable binary file "run")

@@ -21,7 +21,7 @@ PES_X = np.linspace(-np.pi, np.pi, 100)
 PES_Y = np.copy(cosPES(PES_X))
 
 traj_X = np.array(readFile(sys.argv[1]))
-traj_Y = np.copy(cosPES(traj_X))#deep copy
+traj_Y = np.copy(cosPES(traj_X)) #deep copy
 
 fig, ax = plt.subplots(1,1)
 dot, = ax.plot([],[],'o', color = 'red')
