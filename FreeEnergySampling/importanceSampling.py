@@ -64,9 +64,9 @@ class importanceSampling(object):
 
 if __name__ == "__main__":
 
-	fout = open("LDABF_gamma_0.1.dat", "w") 
-	MD_PARM = [1.25, 0., 0., 0.005, 1, 6.28319, 0.05, 4, 20, 0]
-	# disp[0], vel[1], time[2], tintv[3], mass[4], boxL[5], fC[6], temp[7], TimeL[8], initfm[9]
+	fout = open("LDABF_gamma_10.dat", "w") 
+	MD_PARM = [1.25, 0., 0., 0.005, 1, 6.28319, 10, 4, 20, 0]
+	# disp[0], vel[1], time[2], tintv[3], mass[4], boxL[5], frictCoeff[6], temp[7], TimeL[8], initfm[9]
 	fout.write(str(MD_PARM[9]) + " " + str(MD_PARM[2]) + " " + str(MD_PARM[0]) + "\n")
 
 	s = importanceSampling()
