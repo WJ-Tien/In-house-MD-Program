@@ -34,7 +34,7 @@ double* langevin_integrator(double current_disp, double current_vel, double curr
 
 	current_force = (*force)(current_disp);	
 
-	Ct = (0.5 * tintv * tintv * (current_force - frictCoeff * current_vel) / mass) + 
+	Ct = (0.5 * tintv * tintv * (current_force/mass - frictCoeff * current_vel)) + 
        sigma * pow(tintv, 1.5) * (0.5 * random_xi + 0.288675 * random_theta);
 	
 	next_disp = current_disp + tintv * current_vel + Ct;
