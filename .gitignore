@@ -9,4 +9,5 @@ analysis/*.dat
 analysis/*.agr
 FreeEnergySampling/visualizer.py
 *.swp
+*.png
 
