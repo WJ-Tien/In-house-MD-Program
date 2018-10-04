@@ -75,6 +75,8 @@ class importanceSampling(object):
 
 if __name__ == "__main__":
 
+	# Followings are the testing codes
+
 	startTime = time.time()
 	fout = open("LDABF_gamma_1_TL_100000_temp_10_woABF.dat", "w") 
 	MD_PARM = [0.,3.1622776601683795, 0., 0.005, 1, 6.283185307179586, 1, 10, 100000, 0]
