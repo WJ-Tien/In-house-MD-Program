@@ -30,7 +30,7 @@ class importanceSampling(object):
 	def ABF(self, current_disp, current_vel, current_time, tintv, mass, box_length, frictCoeff, temperature, MD_PARM):
 		
 		# Langevin MD
-		# x -> xi
+		# x -> xi; Cartesian Coord -> Collective Variables (reaction coordinates)
 		# 1D jacobian = 1
 		# inverse gradient partial(xi) / partial(x) = 1
 		# partial v(x) / partial(xi) = 1 
@@ -69,8 +69,10 @@ class importanceSampling(object):
 
 		return MD_PARM
 
-	def eABF(self):
-		pass
+	def eABF(self, current_disp, current_vel, current_time, tintv, mass, box_length, frictCoeff, temperature, springConst MD_PARM):
+
+		sigma = np.sqrt(self.kb * temperature / springConst)
+		tau = 2 * np.pi * np.sqrt(mass / springConst)
 
 
 if __name__ == "__main__":
@@ -80,8 +82,9 @@ if __name__ == "__main__":
 	startTime = time.time()
 	fout = open("LDABF_gamma_1_TL_100000_temp_10_woABF.dat", "w") 
 	MD_PARM = [0.,3.1622776601683795, 0., 0.005, 1, 6.283185307179586, 1, 10, 100000, 0]
-	T_REAL =  MD_PARM[1]**2 *  MD_PARM[4] / 1 # onedim 0.5 * mv^2 = 0.5 * kbT -> equi theorem 
 	# disp[0], vel[1], time[2], tintv[3], mass[4], boxL[5], frictCoeff[6], temp[7], TimeL[8], initfm[9]
+	T_REAL =  MD_PARM[1]**2 *  MD_PARM[4] / 1 
+	# onedim 0.5 * mv^2 = 0.5 * kbT -> equi theorem 
 	fout.write(str(MD_PARM[9]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(T_REAL) + "\n")
 
 	s = importanceSampling()
