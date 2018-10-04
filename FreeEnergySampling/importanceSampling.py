@@ -13,10 +13,10 @@ class importanceSampling(object):
 	def sysForce(self, CartesianCoord):
 		return np.sin(CartesianCoord) + 2*np.sin(2*CartesianCoord) + 3*np.sin(3*CartesianCoord)
 
-	def withFiction_sysForce(self, CartesianCoord, springConst, fictiousCoord): 
+	def withFiction_sysForce(self, CartesianCoord, springConst, fictiousCoord): # for eABF 
 		return springConst * (fictiousCoord - CartesianCoord) 
 
-	def withFiction_sysPotential(self, CartesianCoord, springConst, fictiousCoord): #for eABF
+	def withFiction_sysPotential(self, CartesianCoord, springConst, fictiousCoord): # for eABF
 		return self.sysPotential(CartesianCoord) + 0.5 * springConst * (CartesianCoord - fictiousCoord)**2	
 
 	def Jacobian(self):
@@ -44,9 +44,9 @@ class importanceSampling(object):
 		random_xi = np.random.normal(0, 1)
 		sigma = np.sqrt(2.0 * self.kb * temperature * frictCoeff / mass)
 
-		current_force = self.sysForce(current_disp) + (-self.sysForce(current_disp) - \
-                    (1 / beta * self.Jacobian())) * self.inverseGradient()
-#		current_force = self.sysForce(current_disp)	
+#		current_force = self.sysForce(current_disp) + (-self.sysForce(current_disp) - \
+#                    (1 / beta * self.Jacobian())) * self.inverseGradient()
+		current_force = self.sysForce(current_disp)	
 
 		Ct = (0.5 * tintv * tintv * (current_force / mass - frictCoeff * current_vel)) + \
          sigma * (tintv**1.5) * (0.5 * random_xi + 0.288675 * random_theta) 
@@ -54,9 +54,9 @@ class importanceSampling(object):
 		next_disp = current_disp + tintv * current_vel + Ct
 		next_disp -= (round(next_disp / box_length) * box_length) # PBC
 
-		next_force = self.sysForce(next_disp) + (-self.sysForce(next_disp) - \
-                 (1 / beta * self.Jacobian())) * self.inverseGradient()
-#		next_force = self.sysForce(next_disp)
+#		next_force = self.sysForce(next_disp) + (-self.sysForce(next_disp) - \
+#                 (1 / beta * self.Jacobian())) * self.inverseGradient()
+		next_force = self.sysForce(next_disp)
 		next_vel = current_vel + (0.5 * tintv * (next_force + current_force) / mass) - \
 							 tintv * frictCoeff * current_vel + sigma * np.sqrt(tintv) * random_xi - \
                frictCoeff * Ct 
@@ -76,8 +76,8 @@ class importanceSampling(object):
 if __name__ == "__main__":
 
 	startTime = time.time()
-	fout = open("LDABF_gamma_1_TL_100000_temp_4_wABF.dat", "w") 
-	MD_PARM = [0., 2., 0., 0.005, 1, 6.283185307179586, 1, 4, 100000, 0]
+	fout = open("LDABF_gamma_1_TL_100000_temp_10_woABF.dat", "w") 
+	MD_PARM = [0.,3.1622776601683795, 0., 0.005, 1, 6.283185307179586, 1, 10, 100000, 0]
 	T_REAL =  MD_PARM[1]**2 *  MD_PARM[4] / 1 # onedim 0.5 * mv^2 = 0.5 * kbT -> equi theorem 
 	# disp[0], vel[1], time[2], tintv[3], mass[4], boxL[5], frictCoeff[6], temp[7], TimeL[8], initfm[9]
 	fout.write(str(MD_PARM[9]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(T_REAL) + "\n")
