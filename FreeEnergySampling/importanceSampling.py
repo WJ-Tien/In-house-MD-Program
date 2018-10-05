@@ -69,7 +69,7 @@ class importanceSampling(object):
 
 		return MD_PARM
 
-	def eABF(self, current_disp, current_vel, current_time, tintv, mass, box_length, frictCoeff, temperature, springConst MD_PARM):
+	def eABF(self, current_disp, current_vel, current_time, tintv, mass, box_length, frictCoeff, temperature, springConst, MD_PARM):
 
 		sigma = np.sqrt(self.kb * temperature / springConst)
 		tau = 2 * np.pi * np.sqrt(mass / springConst)

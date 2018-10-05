@@ -28,5 +28,5 @@ prob = (prob / nsamples) # final probability distribution
 x_axis = np.arange(coord[0], coord[-1], binw) # initialization of x-axis
 
 with open(sys.argv[3], "w") as fout:
-	for i in range(len(prob)-1): # discard the point on pi
+	for i in range(len(prob)-1): # discard the point on pi (PBC issues)
 		fout.write(str(x_axis[i]) + " " + str(prob[i]) + "\n")
