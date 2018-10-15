@@ -9,11 +9,13 @@
 4. TL = time length (simulation time length)
 5. temp = temperature
 6. w = with; wo = without
+7. k = spring Constant
 
 ## Note 
 1. Dimensionless kb = 1 
 2. Higher gamma, better sampling
 3. The point on pi must be discarded due to PBC condition (Boltzmann Distribution)
+4. For eABF, higher k(springConst), better coupling between Cartcoord and ficcoord 
 
 ## Equipartition theorem
 1. For three dimensions molecular dynamics, the kinetic energy equals to 3/2 * kb * T
