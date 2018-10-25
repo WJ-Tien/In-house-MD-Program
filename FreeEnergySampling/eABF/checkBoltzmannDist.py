@@ -10,7 +10,7 @@ with open(sys.argv[1], "r") as fin:
 	coord = [] 
 	for line in fin:
 		line = line.split()
-		coord.append(round(float(line[3]), 7))
+		coord.append(round(float(line[int(sys.argv[3])]), 7)) # 2 for cartcoord; 3 for fictitious coord
 	coord.sort()
 	nsamples = len(coord) 
 			
