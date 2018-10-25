@@ -44,9 +44,9 @@ class importanceSampling(object):
 		random_xi = np.random.normal(0, 1)
 		sigma = np.sqrt(2.0 * self.kb * temperature * frictCoeff / mass)
 
-#		current_force = self.sysForce(current_disp) + (-self.sysForce(current_disp) - \
-#                    (1 / beta * self.Jacobian())) * self.inverseGradient()
-		current_force = self.sysForce(current_disp)	
+		current_force = self.sysForce(current_disp) + (-self.sysForce(current_disp) - \
+                    (1 / beta * self.Jacobian())) * self.inverseGradient()
+#		current_force = self.sysForce(current_disp)	
 
 		Ct = (0.5 * tintv * tintv * (current_force / mass - frictCoeff * current_vel)) + \
          sigma * (tintv**1.5) * (0.5 * random_xi + 0.288675 * random_theta) 
@@ -54,9 +54,9 @@ class importanceSampling(object):
 		next_disp = current_disp + tintv * current_vel + Ct
 		next_disp -= (round(next_disp / box_length) * box_length) # PBC
 
-#		next_force = self.sysForce(next_disp) + (-self.sysForce(next_disp) - \
-#                 (1 / beta * self.Jacobian())) * self.inverseGradient()
-		next_force = self.sysForce(next_disp)
+		next_force = self.sysForce(next_disp) + (-self.sysForce(next_disp) - \
+                 (1 / beta * self.Jacobian())) * self.inverseGradient()
+#		next_force = self.sysForce(next_disp)
 		next_vel = current_vel + (0.5 * tintv * (next_force + current_force) / mass) - \
 							 tintv * frictCoeff * current_vel + sigma * np.sqrt(tintv) * random_xi - \
                frictCoeff * Ct 
@@ -69,63 +69,55 @@ class importanceSampling(object):
 
 		return MD_PARM
 
-	def eABF(self, current_disp, current_vel, current_time, tintv, mass, box_length, frictCoeff, temperature, springConst, MD_PARM):
+	def eABF(self, current_disp, current_vel, current_time, tintv, mass, box_length, frictCoeff, temperature, springConst, current_disp_fictitious, current_vel_fictitious, MD_PARM):
 
-		# https://www.ks.uiuc.edu/Training/Tutorials/science/string/tutorial-string.pdf
-
-		sigma = np.sqrt(self.kb * temperature / springConst)
-		tau = 2 * np.pi * np.sqrt(mass / springConst)
 		beta = 1 / self.kb / temperature
-
 		random_theta = np.random.normal(0, 1)
 		random_xi = np.random.normal(0, 1)
 		sigma = np.sqrt(2.0 * self.kb * temperature * frictCoeff / mass)
-		
-		if current_disp == 0:
-			current_fictiousCoord = 0.1
-		else:
-			current_fictiousCoord = 1 / (current_disp)  
-			current_fictiousCoord -= (round(current_fictiousCoord / box_length) * box_length) 
 
-		# lambda = 1/|z(i+1) - z(i)|^2
-
-		current_force = self.sysForce(current_disp) + self.withFiction_sysForce(current_disp, springConst, current_fictiousCoord)
+		current_force = self.sysForce(current_disp) + self.withFiction_sysForce(current_disp, springConst, current_disp_fictitious)
+		current_force_fictitious = 0.
 
 		Ct = (0.5 * tintv * tintv * (current_force / mass - frictCoeff * current_vel)) + \
+         sigma * (tintv**1.5) * (0.5 * random_xi + 0.288675 * random_theta) 
+		Ct_fictitious = (0.5 * tintv * tintv * (current_force_fictitious / mass - frictCoeff * current_vel_fictitious)) + \
          sigma * (tintv**1.5) * (0.5 * random_xi + 0.288675 * random_theta) 
 
 		next_disp = current_disp + tintv * current_vel + Ct
 		next_disp -= (round(next_disp / box_length) * box_length) # PBC
 
-		if next_disp == 0:
-			next_fictiousCoord = 0.1
-		else:
-			next_fictiousCoord = 1 / (next_disp)  
-			next_fictiousCoord -= (round(next_fictiousCoord / box_length) * box_length) 
+		next_disp_fictitious = current_disp_fictitious + tintv * current_vel_fictitious + Ct_fictitious
+		next_disp_fictitious -= (round(next_disp_fictitious / box_length) * box_length) # PBC
 
-		next_force = self.sysForce(next_disp) + self.withFiction_sysForce(next_disp, springConst, next_fictiousCoord)
+
+		next_force = self.sysForce(next_disp) + self.withFiction_sysForce(next_disp, springConst, next_disp_fictitious)
+		next_force_fictitious = 0.
+
 		next_vel = current_vel + (0.5 * tintv * (next_force + current_force) / mass) - \
 							 tintv * frictCoeff * current_vel + sigma * np.sqrt(tintv) * random_xi - \
                frictCoeff * Ct 
+		next_vel_fictitious = current_vel_fictitious + (0.5 * tintv * (next_force_fictitious + current_force_fictitious) / mass) - \
+							            tintv * frictCoeff * current_vel_fictitious + sigma * np.sqrt(tintv) * random_xi - \
+                          frictCoeff * Ct_fictitious 
 
 		next_time = current_time + tintv
 		
 		MD_PARM[0] = next_disp
 		MD_PARM[1] = next_vel
 		MD_PARM[2] = next_time
-		MD_PARM[11] = next_fictiousCoord 
+		MD_PARM[9] = next_disp_fictitious 
+		MD_PARM[10] = next_vel_fictitious
 	
 		return MD_PARM
 		
-
-
 if __name__ == "__main__":
 
 	# The Followings are the testing codes
 
 	'''
 	startTime = time.time()
-	fout = open("LDeABF_gamma_1_TL_100000_temp_10_weABF.dat", "w") 
+	fout = open("LDABF_gamma_1_TL_100000_temp_10_wABF.dat", "w") 
 	MD_PARM = [0.,3.1622776601683795, 0., 0.005, 1, 6.283185307179586, 1, 10, 100000, 0]
 	disp[0], vel[1], time[2], tintv[3], mass[4], boxL[5], frictCoeff[6], temp[7], TimeL[8], initfm[9]
 	onedim 0.5 * mv^2 = 0.5 * kbT -> equipartition theorem 
@@ -141,23 +133,25 @@ if __name__ == "__main__":
 		print("step %d with time %f " % (MD_PARM[9], time.time() - startTime))
 		T_REAL = MD_PARM[1]**2 *  MD_PARM[4] / 1 
 		fout.write(str(MD_PARM[9]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(T_REAL) + "\n")
-	'''
+
+'''
 
 	startTime = time.time()
-	fout = open("LDeABF_gamma_10_TL_100000_temp_4_k_0.001_weABF.dat", "w") 
-	MD_PARM = [0.,3.1622776601683795, 0., 0.005, 1, 6.283185307179586, 10, 4, 0.001, 100000, 0, 0]
-	fout.write(str(MD_PARM[10]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(MD_PARM[11]) + "\n")
-	# disp[0], vel[1], time[2], tintv[3], mass[4], boxL[5], frictCoeff[6], temp[7], springConst[8], TimeL[9], initfm[10]
-	# fictiousCoord[11]
+	fout = open("LDeABF_v2_gamma_0.01_TL_100000_temp_4_k_0.1_weABF.dat", "w") 
+	MD_PARM = [0.,3.1622776601683795, 0., 0.005, 1, 6.283185307179586, 0.01, 4, 0.1, 0., 0., 100000, 0]
+	fout.write(str(MD_PARM[12]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(MD_PARM[9]) + "\n")
+	# disp[0], vel[1], time[2], tintv[3], mass[4], boxL[5], frictCoeff[6], temp[7], springConst[8], fic_disp[9], fic_vel[10], TimeL[11], inifm[12] 
 
 	s = importanceSampling()
 
-	while MD_PARM[2] < MD_PARM[9]:
-		simResult = s.eABF(MD_PARM[0], MD_PARM[1], MD_PARM[2], MD_PARM[3], MD_PARM[4], MD_PARM[5], MD_PARM[6], MD_PARM[7], MD_PARM[8], MD_PARM)
+	while MD_PARM[2] < MD_PARM[11]:
+		simResult = s.eABF(MD_PARM[0], MD_PARM[1], MD_PARM[2], MD_PARM[3], MD_PARM[4], MD_PARM[5], MD_PARM[6], MD_PARM[7], MD_PARM[8], MD_PARM[9], MD_PARM[10], MD_PARM)
 		MD_PARM[0] = simResult[0]
 		MD_PARM[1] = simResult[1]
 		MD_PARM[2] = simResult[2]
-		MD_PARM[10] += 1	
-		print("step %d with time %f " % (MD_PARM[10], time.time() - startTime))
-		fout.write(str(MD_PARM[10]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(MD_PARM[11]) + "\n")
+		MD_PARM[9] = simResult[9]
+		MD_PARM[10] = simResult[10]
+		MD_PARM[12] += 1	
+		print("step %d with time %f " % (MD_PARM[12], time.time() - startTime))
+		fout.write(str(MD_PARM[12]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(MD_PARM[9]) + "\n")
 
