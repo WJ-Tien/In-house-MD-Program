@@ -5,9 +5,10 @@ import time
 class importanceSampling(object):
 	
 	def __init__(self, current_coord, current_time, time_step, time_length, frame, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, mode, filename_conventional, filename_force):
-		self.kb              = 1          # dimensionless kb
+
 		self.fileOut         = open(str(filename_conventional), "w") 
 		self.fileOutForce    = open(str(filename_force), "w") 
+		self.kb              = 1   # dimensionless kb
 		self.binNum          = 360 # cut into 360 bins 
 		self.binw            = 2 * np.pi / self.binNum
 		self.force_storage   = [0] * (self.binNum + 1)

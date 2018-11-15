@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import tensorflow as tf
 import pickle
+import numpy as np
 
 class trainingNN(object):
 	
