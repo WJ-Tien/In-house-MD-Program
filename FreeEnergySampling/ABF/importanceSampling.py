@@ -137,9 +137,9 @@ if __name__ == "__main__":
 '''
 
 	startTime = time.time()
-	fout = open("LDeABF_v2_gamma_0.01_TL_100000_temp_4_k_0.1_weABF.dat", "w") 
-	MD_PARM = [0.,3.1622776601683795, 0., 0.005, 1, 6.283185307179586, 0.01, 4, 0.1, 0., 0., 100000, 0]
-	fout.write(str(MD_PARM[12]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(MD_PARM[9]) + "\n")
+	fout = open("LDeABF_v2_gamma_1_TL_100000_temp_4_k_10000_weABF.dat", "w") 
+	MD_PARM = [0.,3.1622776601683795, 0., 0.005, 1, 6.283185307179586, 1, 4, 1000, 0., 3.1622776601683795, 100000, 0]
+	fout.write(str(MD_PARM[12]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(round(MD_PARM[9], 6)) + "\n")
 	# disp[0], vel[1], time[2], tintv[3], mass[4], boxL[5], frictCoeff[6], temp[7], springConst[8], fic_disp[9], fic_vel[10], TimeL[11], inifm[12] 
 
 	s = importanceSampling()
@@ -153,5 +153,5 @@ if __name__ == "__main__":
 		MD_PARM[10] = simResult[10]
 		MD_PARM[12] += 1	
 		print("step %d with time %f " % (MD_PARM[12], time.time() - startTime))
-		fout.write(str(MD_PARM[12]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(MD_PARM[9]) + "\n")
+		fout.write(str(MD_PARM[12]) + " " + str(MD_PARM[2]) + " " + str(round(MD_PARM[0], 6)) + " " + str(round(MD_PARM[9], 6)) + "\n")
 

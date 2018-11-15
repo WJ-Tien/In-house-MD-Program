@@ -20,3 +20,27 @@
 ## Equipartition theorem
 1. For three dimensions molecular dynamics, the kinetic energy equals to 3/2 * kb * T
 2. For one dimnesion molecular dynamics, the kinetic energy equals to 1/2 * kb * T
+
+
+## oldest paper for neural network on PES or free energy 
+1. https://aip.scitation.org/doi/pdf/10.1063/1.469597?class=pdf (1995)
+2. http://www.eoht.info/page/Energy+landscape (difference PES FES)
+3. https://pubs.acs.org/doi/pdf/10.1021/jp0680544 (difference PES FES)
+4. https://www.researchgate.net/post/What_is_the_difference_between_potential_energy_surface_and_free_energy_surface
+
+## Compile Colvars
+1. make -f Makefile-g++
+   make yes-USER-COLVARS
+   make serial (re-compile)
+2. ~/src/LAMMPS/lammps-16Mar18/lib (how to install and compile)
+
+3. ~/src/LAMMPS/lammps-16Mar18/src/lmp_serial -in in.run
+
+## Compile lammps and gromacs
+1. For lammps ---> g++ && openmpi/mpich (one of them) && fftw are needed
+              ---> src/MAKE/MINE/makefile_mod
+   The makefile is copied from OPTIONS and modified by users 
+
+2. make makefile_mod
+
+3. Add lmp_executable to ~/bin or ~/.bashrc

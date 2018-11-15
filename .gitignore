@@ -1,13 +1,19 @@
 *.o
 *.mp4
-knowledge/
 *.dat
 *.agr
-note
-run
-analysis/*.dat
-analysis/*.agr
-FreeEnergySampling/visualizer.py
 *.swp
 *.png
+analysis/*.dat
+analysis/*.agr
+toyCppMDcode/analysis
+knowledge/
+MDknowledge/
+FreeEnergySampling/ABF
+FreeEnergySampling/eABF
+FreeEnergySampling/colvar_test
+FreeEnergySampling/NNABF/codeTests
+FreeEnergySampling/NNABF/trainingSet
+note
+run
 
