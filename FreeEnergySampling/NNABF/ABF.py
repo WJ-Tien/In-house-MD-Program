@@ -2,12 +2,16 @@
 import numpy as np
 import time
 
+
+
+# Fsys = Fu(due to total energy, biased force should be included in this term!) + Fvis + Frandom (without abf)
+# F'sys = (Fu + Fabf) + Fvis + Frandom --> in my system cc = rc ---> Fu+Fabf=0 ---> F'sys = Fvis + Frandom
+
+
 class importanceSampling(object):
 	
 	def __init__(self, current_coord, current_time, time_step, time_length, frame, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, mode, filename_conventional, filename_force):
 
-		self.fileOut         = open(str(filename_conventional), "w") 
-		self.fileOutForce    = open(str(filename_force), "w") 
 		self.kb              = 1   # dimensionless kb
 		self.binNum          = 360 # cut into 360 bins 
 		self.binw            = 2 * np.pi / self.binNum
@@ -23,10 +27,13 @@ class importanceSampling(object):
 		self.boxsize_x       = boxsize_x
 		self.temperature     = temperature
 		self.current_vel     = np.sqrt(self.kb * self.temperature / self.mass)
+		self.beta            = 1/self.kb/self.temperature
 		self.frictCoeff      = frictCoeff
-		self.abfCheckFlag    = abfCheckFlag 
 		self.mode            = mode
 		self.startTime       = time.time()
+		self.abfCheckFlag    = abfCheckFlag 
+		self.fileOut         = open(str(filename_conventional), "w") 
+		self.fileOutForce    = open(str(filename_force), "w") 
 
 	def printIt(self):
 		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime))
@@ -58,43 +65,46 @@ class importanceSampling(object):
 		# Reaction Coordinate (colvars) == Cartesian Coordinate  so Jacobian J = 1
 		return np.sin(CartesianCoord) + 2*np.sin(2*CartesianCoord) + 3*np.sin(3*CartesianCoord)
 
-	def visForce(self):
-		return -self.frictCoeff * self.current_vel * self.mass
+	def visForce(self, half_vel):
+		return -self.frictCoeff * half_vel * self.mass
 
-	def randForce(self, random_xi, random_theta):
-		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature) * (0.5 * random_xi + 0.288675 * random_theta) 
+	def randForce(self):
+		random_xi = np.random.normal(0, 1)
+		random_theta = np.random.normal(0, 1)
+		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature) * (0.333333 * random_xi + 0.288675 * random_theta) 
+
+	def calForce(self, coord, vel):
+
+		if self.abfCheckFlag == "yes":
+			self.force_storage[int(np.floor(coord / self.binw)) + self.binNum//2] += (self.PotentialForce(coord) + self.visForce(vel) + self.randForce()) 
+			self.colvars_count[int(np.floor(coord / self.binw)) + self.binNum//2] += 1
+			return self.visForce(vel) + self.randForce() # current_force
+
+		else:
+				return self.PotentialForce(coord) + self.visForce(vel) + self.randForce() 
 
 	def LangevinEngine(self):
 
-		random_theta = np.random.normal(0, 1)
-		random_xi = np.random.normal(0, 1)
+		# http://www.complexfluids.ethz.ch/Langevin_Velocity_Verlet.pdf (2018/11/22)
 
-		if self.abfCheckFlag == "yes":
-			self.force_storage[int(np.floor(self.current_coord / self.binw)) + self.binNum//2] += (self.PotentialForce(self.current_coord) + self.visForce() + self.randForce(random_xi, random_theta)) 
-			self.colvars_count[int(np.floor(self.current_coord / self.binw)) + self.binNum//2] += 1
-			current_force = 0. # biased force applied
-		else:
-			current_force = self.PotentialForce(self.current_coord)
+		a = (2 - self.frictCoeff * self.time_step) / (2 + self.frictCoeff * self.time_step)
+		b = np.sqrt(self.kb * self.temperature * self.time_step / 2)
+		c = (2 * self.time_step) / (2 + (self.frictCoeff * self.time_step))
+		random_eta = np.random.normal(0, 1)
 
-		sigma = np.sqrt(2.0 * self.kb * self.temperature * self.frictCoeff / self.mass)
+		current_force = self.calForce(self.current_coord, self.current_vel)
 
-		Ct = (0.5 * self.time_step * self.time_step * (current_force / self.mass - self.frictCoeff * self.current_vel)) + \
-         sigma * (self.time_step**1.5) * (0.5 * random_xi + 0.288675 * random_theta) 
+		next_vel_half = self.current_vel + (current_force * self.time_step / 2) + (b * random_eta) #half time step
+		next_coord_half = self.current_coord + c * next_vel_half
+		next_coord_half -= (round(next_coord_half / self.boxsize_x) * self.boxsize_x) # PBC
+		
+		current_force = self.calForce(next_coord_half, next_vel_half)
 
-		next_coord = self.current_coord + self.time_step * self.current_vel + Ct
+		next_vel = (a * next_vel_half) + (b * random_eta) + (self.time_step / 2) * current_force # full time_step
+		next_time = self.current_time + self.time_step 
+		next_coord = next_coord_half + c * next_vel
 		next_coord -= (round(next_coord / self.boxsize_x) * self.boxsize_x) # PBC
 
-		if self.abfCheckFlag == "yes":
-			next_force = 0. # biased force applied 
-		else:
-			next_force = self.PotentialForce(next_coord)
-
-		next_vel = self.current_vel + (0.5 * self.time_step * (next_force + current_force) / self.mass) - \
-							 self.time_step * self.frictCoeff * self.current_vel + sigma * np.sqrt(self.time_step) * random_xi - \
-               self.frictCoeff * Ct 
-			
-		next_time = self.current_time + self.time_step 
-		
 		self.current_coord = next_coord
 		self.current_vel = next_vel
 		self.current_time = next_time
@@ -123,5 +133,5 @@ if __name__ == "__main__":
 	# current_coord, current_time, time_step, time_length, fm, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, mode, fname_conventional, fname_force):
 	# boxsize_x ranges from -pi ~ pi
 
-	s = importanceSampling(0., 0., 0.005, 50000, 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", "wABF000.dat", "wABF_force000.dat").mdrun()
+	s = importanceSampling(0., 0., 0.005, 50000, 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", "wABF_test.dat", "wABF_Force_test.dat").mdrun()
 
