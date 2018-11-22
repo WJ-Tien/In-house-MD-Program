@@ -2,4 +2,4 @@
 
 ./ABF.py
 wait
-./checkBoltzmannDist.py long4nn.dat 2 longout.dat
+./checkBoltzmannDist.py wABF000.dat 2 wABFHistogram000.dat
