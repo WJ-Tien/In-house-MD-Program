@@ -2,10 +2,6 @@
 import numpy as np
 import time
 
-# Fsys = Fu(due to total energy, biased force should be included in this term!) + Fvis + Frandom (without abf)
-# F'sys = biased average force
-# F'sys = (Fu + Fabf) + Fvis + Frandom --> in my system cc = rc ---> Fu+Fabf=0 ---> F'sys = Fvis + Frandom
-
 class importanceSampling(object):
 	
 	def __init__(self, current_coord, current_time, time_step, time_length, frame, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, mode, filename_conventional, filename_force):
@@ -25,7 +21,7 @@ class importanceSampling(object):
 		self.boxsize_x       = boxsize_x
 		self.temperature     = temperature
 		self.current_vel     = np.sqrt(self.kb * self.temperature / self.mass)
-		self.beta            = 1/self.kb/self.temperature
+		self.beta            = 1 / self.kb / self.temperature
 		self.frictCoeff      = frictCoeff
 		self.mode            = mode
 		self.startTime       = time.time()
@@ -91,17 +87,11 @@ class importanceSampling(object):
 		random_eta         = np.random.normal(0, 1)
 
 		current_force      = self.calForce(self.current_coord, self.current_vel)
-
 		next_vel_half      = self.current_vel + (current_force * self.time_step / 2) + (b * random_eta) #half time step
-		next_coord_half    = self.current_coord + c * next_vel_half
-		next_coord_half   -= (round(next_coord_half / self.boxsize_x) * self.boxsize_x) # PBC
-		
-		current_force      = self.calForce(next_coord_half, next_vel_half)
-
+		next_coord         = self.current_coord + c * next_vel_half
+		next_coord        -= (round(next_coord / self.boxsize_x) * self.boxsize_x) # PBC
 		next_vel           = (a * next_vel_half) + (b * random_eta) + (self.time_step / 2) * current_force # full time_step
 		next_time          = self.current_time + self.time_step 
-		next_coord         = next_coord_half + c * next_vel
-		next_coord        -= (round(next_coord / self.boxsize_x) * self.boxsize_x) # PBC
 
 		self.current_coord = next_coord
 		self.current_vel   = next_vel
