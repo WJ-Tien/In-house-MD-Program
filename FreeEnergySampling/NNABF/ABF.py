@@ -87,7 +87,7 @@ class importanceSampling(object):
 		random_eta         = np.random.normal(0, 1)
 
 		current_force      = self.calForce(self.current_coord, self.current_vel)
-		next_vel_half      = self.current_vel + (current_force * self.time_step / 2) + (b * random_eta) #half time step
+		next_vel_half      = self.current_vel + (current_force * self.time_step / 2) + (b * random_eta)    # half time step
 		next_coord         = self.current_coord + c * next_vel_half
 		next_coord        -= (round(next_coord / self.boxsize_x) * self.boxsize_x) # PBC
 		next_vel           = (a * next_vel_half) + (b * random_eta) + (self.time_step / 2) * current_force # full time_step
@@ -120,6 +120,7 @@ if __name__ == "__main__":
 
 	# current_coord, current_time, time_step, time_length, fm, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, mode, fname_conventional, fname_force):
 	# boxsize_x ranges from -pi ~ pi
-
-	s = importanceSampling(0., 0., 0.005, 50000, 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", "wABF_test2.dat", "wABF_Force_test2.dat").mdrun()
+	import sys
+	#s = importanceSampling(0., 0., 0.005, 10, 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", "wABF001.dat", "wABF_Force001.dat").mdrun()
+	s = importanceSampling(0., 0., 0.005, float(sys.argv[3]), 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
 
