@@ -6,7 +6,7 @@ w/o ABF, the histogram should be propotional to exp(-U(x)/kbT)
 w ABF, the histogram should be flat
 
 * early_stage:
- early stage of ABF (not stable)
+ early stage of ABF 
 
 * trainingSet:
 training data for NN
