@@ -41,8 +41,8 @@ class trainingNN(object):
 	
 	def training(self, learning_rate, step, outputFreq):
 
-		# assume 1 input layer; 1 hidden layer; 1 output layer; each with one neuron
-		# activation function: tanh 
+		# assume 1 input layer; 4 hidden layer; 1 output layer; each with one neuron
+		# activation function: tanh and relu 
 
 		# data initialization
 		self.cv     = np.array(self.cv)
@@ -70,10 +70,9 @@ class trainingNN(object):
 		# define loss function and associated optimizer
 
 		regularizer = tf.nn.l2_loss(w) * 2
-		beta        = 5 
+		alpha       = 5 
 		loss        = tf.reduce_mean(tf.square(y_predicted - y_real))
-		loss        = tf.reduce_mean(loss + beta * regularizer)
-		#loss        = tf.reduce_mean(tf.square(y_predicted - y_real))
+		loss        = tf.reduce_mean(loss + alpha * regularizer)
 		optimizer   = tf.train.GradientDescentOptimizer(learning_rate)
 		train       = optimizer.minimize(loss)
 
@@ -91,7 +90,7 @@ class trainingNN(object):
 				print("Loss %f"          % (sess.run(loss)))
 				self.Loss_train.write(str(steps) + " " + str(sess.run(loss)) + "\n")
 
-		self.hp_train.write("beta" + " " + str(beta) + "\n")
+		self.hp_train.write("Regularization factor" + " " + str(alpha) + "\n")
 		self.hp_train.write("learning_rate" + " " + str(learning_rate) + "\n")
 
 		#y = tf.cast(sess.run(w)*x_data, tf.float32) + tf.cast(sess.run(b), tf.float32)
