@@ -15,11 +15,9 @@ class trainingNN(object):
 		self.hp_train        = open(str(filehyperparam), "w")
 		self.force_result    = open(str(fileforceResult), "w")
 		
-	def readData(self, file_boltzHistogram, file_force_to_train, file_force_to_learn): 
-
+	def readData(self, file_force_to_train, file_force_to_learn): 
 		self.fileIn_force_to_train = open(str(file_force_to_train), "r") # 0 3
 		self.fileIn_force_to_learn = open(str(file_force_to_learn), "r") # 0 3
-
 
 		for line_force_to_train in self.fileIn_force_to_train:
 			self.cv.append(float(line_force_to_train.split()[0]))
@@ -40,26 +38,42 @@ class trainingNN(object):
 				self.cv.pop() 
 			while(len(self.force_to_train) < len(self.force_to_learn)):
 				self.force_to_learn.pop()
-
-		# must shuffle the data before training 
-		#np.random.shuffle(self.force_to_train)
 	
 	def training(self, learning_rate, step, outputFreq):
 
 		# assume 1 input layer; 1 hidden layer; 1 output layer; each with one neuron
-		# activation function: sigmoid
+		# activation function: tanh 
 
 		# data initialization
 		self.cv     = np.array(self.cv)
-		x_data      = np.array(self.force_to_learn)
-		w           = tf.Variable(tf.random_uniform([len(self.force_to_train)], -1, 1))
-		b           = tf.Variable(tf.zeros([len(self.force_to_train)]))
+		x_data      = tf.cast(np.array(self.force_to_learn), tf.float32)
+		w           = tf.Variable(tf.random_uniform([len(self.force_to_train)], -1, 1), dtype=tf.float32)
+		w2          = tf.Variable(tf.random_uniform([len(self.force_to_train)], -1, 1), dtype=tf.float32)
+		w3          = tf.Variable(tf.random_uniform([len(self.force_to_train)], -1, 1), dtype=tf.float32)
+		w4          = tf.Variable(tf.random_uniform([len(self.force_to_train)], -1, 1), dtype=tf.float32)
+		b           = tf.Variable(tf.zeros([len(self.force_to_train)]), dtype=tf.float32)
+		b2          = tf.Variable(tf.zeros([len(self.force_to_train)]), dtype=tf.float32)
+		b3          = tf.Variable(tf.zeros([len(self.force_to_train)]), dtype=tf.float32)
+		b4          = tf.Variable(tf.zeros([len(self.force_to_train)]), dtype=tf.float32)
+		
+		#save_weight_l = open("weight.pkl", "rb")	
+		#save_bias_l   = open("bias.pkl", "rb")	
+		#w = tf.Variable(pickle.load(save_weight_l))
+		#b = tf.Variable(pickle.load(save_bias_l))
+		#w2 = tf.Variable(pickle.load(save_weight_l))
+		#b2 = tf.Variable(pickle.load(save_bias_l))
+
 		y_real      = np.array(self.force_to_train)  
-		y_predicted = tf.nn.relu(w * x_data + b)
+		#y_predicted = tf.nn.tanh(tf.nn.tanh(tf.nn.relu(w * x_data + b) * w2 + b2)) * w3 + b3 #perfect!!!
+		y_predicted = tf.nn.relu(tf.nn.tanh(tf.nn.tanh(tf.nn.relu(w * x_data + b) * w2 + b2)) * w3 + b3) * w4 + b4
 
 		# define loss function and associated optimizer
-		#loss = tf.reduce_sum(tf.square(y_predicted - y_real))
+
+		regularizer = tf.nn.l2_loss(w) * 2
+		beta        = 5 
 		loss        = tf.reduce_mean(tf.square(y_predicted - y_real))
+		loss        = tf.reduce_mean(loss + beta * regularizer)
+		#loss        = tf.reduce_mean(tf.square(y_predicted - y_real))
 		optimizer   = tf.train.GradientDescentOptimizer(learning_rate)
 		train       = optimizer.minimize(loss)
 
@@ -70,37 +84,46 @@ class trainingNN(object):
 		sess = tf.Session()
 		sess.run(init)
 
-		for step in range(step):
+		for steps in range(step):
 			sess.run(train)
-			if step % outputFreq == 0:
-				print("Training Step %d" % (step))
+			if steps % outputFreq == 0:
+				print("Training Step %d" % (steps))
 				print("Loss %f"          % (sess.run(loss)))
-				#print("Weight %f"        % (sess.run(w)[0]))
-				#print("Bias %f"          % (sess.run(b)[0]))
-				self.Loss_train.write(str(step) + " " + str(sess.run(loss)) + "\n")
-				self.hp_train.write(str(sess.run(w)) + " " + str(sess.run(b)) + "\n")
+				self.Loss_train.write(str(steps) + " " + str(sess.run(loss)) + "\n")
 
-		#x = np.arange(-np.pi, np.pi + 2*np.pi/360, 2*np.pi/360)
-		
-		y = tf.cast(sess.run(w)*x_data, tf.float32) + tf.cast(sess.run(b), tf.float32)
+		self.hp_train.write("beta" + " " + str(beta) + "\n")
+		self.hp_train.write("learning_rate" + " " + str(learning_rate) + "\n")
+
+		#y = tf.cast(sess.run(w)*x_data, tf.float32) + tf.cast(sess.run(b), tf.float32)
+		y = sess.run(w4)*(sess.run(w3) * (sess.run(w2)*(sess.run(w)*x_data + sess.run(b)) + sess.run(b2)) + sess.run(b3)) + sess.run(b4)
 
 		for i in range(len(self.cv)):
-			self.force_result.write(str(self.cv[i]) + " " + str(sess.run(y)[i]) + "\n")
+			self.force_result.write(str(self.cv[i]) + " " + str(0) + " " + str(0) + " " + str(sess.run(y)[i]) + "\n")
 
+		save_weight = open("weight.pkl", "wb")	
+		save_bias   = open("bias.pkl", "wb")	
+		pickle.dump(list(sess.run(w)), save_weight)
+		pickle.dump(list(sess.run(b)), save_bias)
+		pickle.dump(list(sess.run(w2)), save_weight)
+		pickle.dump(list(sess.run(b2)), save_bias)
+		pickle.dump(list(sess.run(w3)), save_weight)
+		pickle.dump(list(sess.run(b3)), save_bias)
+		pickle.dump(list(sess.run(w4)), save_weight)
+		pickle.dump(list(sess.run(b4)), save_bias)
+
+		save_weight.close()
+		save_bias.close()
+		#save_weight_l.close()
+		#save_bias_l.close()
 		self.Loss_train.close()
 		self.hp_train.close()
 		self.force_result.close() 
 		sess.close()
 
-	def saveData(self):
-
-		# save training data using pickle
-		pass
 
 if __name__ == "__main__":
 	
-	s = trainingNN("analysis/loss_500k.dat", "analysis/hyperparam_500k.dat", "analysis/force_result_500k.dat")
-	s.readData("trainingSet/wABFHistogram_test.dat", "trainingSet/wABF_Force_test.dat", "early_stage/wABF_Force001.dat")
-	s.training(0.001, 5000001, 100)
-#	s.readData("trainingSet/wABFHistogram004.dat", "trainingSet/wABF_Force004.dat")
-#	s.readData("trainingSet/wABFHistogram005.dat", "trainingSet/wABF_Force005.dat")
+	s = trainingNN("analysis/loss_X.dat", "analysis/hyperparam_X.dat", "analysis/force_result_X.dat")
+	s.readData("trainingSet/wABF_Force_test.dat", "early_stage/wABF_Force001.dat")
+	#s.readData("trainingSet/wABF_Force_test.dat", "analysis/force_result_X.dat") #second time
+	s.training(0.05, 50001, 100)

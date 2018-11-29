@@ -121,10 +121,11 @@ class importanceSampling(object):
 
 if __name__ == "__main__":
 
-	import sys
 	# current_coord, current_time, time_step, time_length, fm, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, mode, fname_conventional, fname_force):
 	# boxsize_x ranges from -pi ~ pi
 
-	#s = importanceSampling(0., 0., 0.005, 10, 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", "wABF001.dat", "wABF_Force001.dat").mdrun()
+	import sys
 	s = importanceSampling(0., 0., 0.005, float(sys.argv[3]), 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
+
+	# s = importanceSampling(0., 0., 0.005, 10, 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", "wABF001.dat", "wABF_Force001.dat").mdrun()
 
