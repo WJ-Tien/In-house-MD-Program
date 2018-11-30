@@ -4,16 +4,14 @@
 *.agr
 *.swp
 *.png
-analysis/*.dat
-analysis/*.agr
-toyCppMDcode/analysis
-knowledge/
+*.pkl
+toyCppMDcode/
 MDknowledge/
-FreeEnergySampling/ABF
-FreeEnergySampling/eABF
+NNknowledge/
 FreeEnergySampling/colvar_test
 FreeEnergySampling/NNABF/codeTests
 FreeEnergySampling/NNABF/trainingSet
-note
-run
+FreeEnergySampling/NNABF/analysis
+FreeEnergySampling/NNABF/early_stage
+FreeEnergySampling/NNABF/pklsave
 
