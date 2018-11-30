@@ -6,7 +6,7 @@ import pickle
 
 class trainingNN(object):
 	
-	def __init__(self, fileLoss, filehyperparam, fileforceResult):
+	def __init__(self, fileLoss, filehyperparam, fileforceResult, fileweight, filebias):
 
 		self.force_to_train  = []
 		self.force_to_learn  = []
@@ -14,17 +14,19 @@ class trainingNN(object):
 		self.Loss_train      = open(str(fileLoss), "w")
 		self.hp_train        = open(str(filehyperparam), "w")
 		self.force_result    = open(str(fileforceResult), "w")
+		self.save_weight     = open(str(fileweight), "wb")	
+		self.save_bias       = open(str(filebias), "wb")	
 		
 	def readData(self, file_force_to_train, file_force_to_learn): 
 		self.fileIn_force_to_train = open(str(file_force_to_train), "r") # 0 3
 		self.fileIn_force_to_learn = open(str(file_force_to_learn), "r") # 0 3
 
-		for line_force_to_train in self.fileIn_force_to_train:
-			self.cv.append(float(line_force_to_train.split()[0]))
-			self.force_to_train.append(float(line_force_to_train.split()[3]))
+		for line in self.fileIn_force_to_train:
+			self.cv.append(float(line.split()[0]))
+			self.force_to_train.append(float(line.split()[3]))
 		
-		for line_force_to_learn in self.fileIn_force_to_learn:
-			self.force_to_learn.append(float(line_force_to_learn.split()[3]))
+		for line in self.fileIn_force_to_learn:
+			self.force_to_learn.append(float(line.split()[3]))
 
 		self.fileIn_force_to_train.close()
 		self.fileIn_force_to_learn.close()
@@ -39,10 +41,10 @@ class trainingNN(object):
 			while(len(self.force_to_train) < len(self.force_to_learn)):
 				self.force_to_learn.pop()
 	
-	def training(self, learning_rate, step, outputFreq):
+	def training(self, learning_rate, regularFactor, step, outputFreq):
 
-		# assume 1 input layer; 4 hidden layer; 1 output layer; each with one neuron
-		# activation function: tanh and relu 
+		# assume 1 input layer; 4 hidden layers; 1 output layer; each with one neuron
+		# activation function: relu 
 
 		# data initialization
 		self.cv     = np.array(self.cv)
@@ -56,23 +58,13 @@ class trainingNN(object):
 		b3          = tf.Variable(tf.zeros([len(self.force_to_train)]), dtype=tf.float32)
 		b4          = tf.Variable(tf.zeros([len(self.force_to_train)]), dtype=tf.float32)
 		
-		#save_weight_l = open("weight.pkl", "rb")	
-		#save_bias_l   = open("bias.pkl", "rb")	
-		#w = tf.Variable(pickle.load(save_weight_l))
-		#b = tf.Variable(pickle.load(save_bias_l))
-		#w2 = tf.Variable(pickle.load(save_weight_l))
-		#b2 = tf.Variable(pickle.load(save_bias_l))
-
 		y_real      = np.array(self.force_to_train)  
-		#y_predicted = tf.nn.tanh(tf.nn.tanh(tf.nn.relu(w * x_data + b) * w2 + b2)) * w3 + b3 #perfect!!!
-		y_predicted = tf.nn.relu(tf.nn.tanh(tf.nn.tanh(tf.nn.relu(w * x_data + b) * w2 + b2)) * w3 + b3) * w4 + b4
+		y_predicted = tf.nn.relu(tf.nn.relu(tf.nn.relu(tf.nn.relu(w * x_data + b) * w2 + b2)) * w3 + b3) * w4 + b4
 
 		# define loss function and associated optimizer
-
 		regularizer = tf.nn.l2_loss(w) * 2
-		alpha       = 5 
 		loss        = tf.reduce_mean(tf.square(y_predicted - y_real))
-		loss        = tf.reduce_mean(loss + alpha * regularizer)
+		loss        = tf.reduce_mean(loss + regularFactor * regularizer)
 		optimizer   = tf.train.GradientDescentOptimizer(learning_rate)
 		train       = optimizer.minimize(loss)
 
@@ -90,30 +82,27 @@ class trainingNN(object):
 				print("Loss %f"          % (sess.run(loss)))
 				self.Loss_train.write(str(steps) + " " + str(sess.run(loss)) + "\n")
 
-		self.hp_train.write("Regularization factor" + " " + str(alpha) + "\n")
+		self.hp_train.write("Regularization factor" + " " + str(regularFactor) + "\n")
 		self.hp_train.write("learning_rate" + " " + str(learning_rate) + "\n")
 
-		#y = tf.cast(sess.run(w)*x_data, tf.float32) + tf.cast(sess.run(b), tf.float32)
+		# After training
 		y = sess.run(w4)*(sess.run(w3) * (sess.run(w2)*(sess.run(w)*x_data + sess.run(b)) + sess.run(b2)) + sess.run(b3)) + sess.run(b4)
 
 		for i in range(len(self.cv)):
 			self.force_result.write(str(self.cv[i]) + " " + str(0) + " " + str(0) + " " + str(sess.run(y)[i]) + "\n")
+		
+		# save weights and biases via pickle
+		pickle.dump(list(sess.run(w)),  self.save_weight)
+		pickle.dump(list(sess.run(b)),  self.save_bias)
+		pickle.dump(list(sess.run(w2)), self.save_weight)
+		pickle.dump(list(sess.run(b2)), self.save_bias)
+		pickle.dump(list(sess.run(w3)), self.save_weight)
+		pickle.dump(list(sess.run(b3)), self.save_bias)
+		pickle.dump(list(sess.run(w4)), self.save_weight)
+		pickle.dump(list(sess.run(b4)), self.save_bias)
 
-		save_weight = open("weight.pkl", "wb")	
-		save_bias   = open("bias.pkl", "wb")	
-		pickle.dump(list(sess.run(w)), save_weight)
-		pickle.dump(list(sess.run(b)), save_bias)
-		pickle.dump(list(sess.run(w2)), save_weight)
-		pickle.dump(list(sess.run(b2)), save_bias)
-		pickle.dump(list(sess.run(w3)), save_weight)
-		pickle.dump(list(sess.run(b3)), save_bias)
-		pickle.dump(list(sess.run(w4)), save_weight)
-		pickle.dump(list(sess.run(b4)), save_bias)
-
-		save_weight.close()
-		save_bias.close()
-		#save_weight_l.close()
-		#save_bias_l.close()
+		self.save_weight.close()
+		self.save_bias.close()
 		self.Loss_train.close()
 		self.hp_train.close()
 		self.force_result.close() 
@@ -122,7 +111,6 @@ class trainingNN(object):
 
 if __name__ == "__main__":
 	
-	s = trainingNN("analysis/loss_X.dat", "analysis/hyperparam_X.dat", "analysis/force_result_X.dat")
+	s = trainingNN("analysis/loss.dat", "analysis/hyperparam.dat", "analysis/force_result.dat", "pklsave/weight.pkl", "pklsave/bias.pkl")
 	s.readData("trainingSet/wABF_Force_test.dat", "early_stage/wABF_Force001.dat")
-	#s.readData("trainingSet/wABF_Force_test.dat", "analysis/force_result_X.dat") #second time
-	s.training(0.05, 50001, 100)
+	s.training(0.05, 5, 50001, 100)
