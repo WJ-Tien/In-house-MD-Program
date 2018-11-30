@@ -6,16 +6,16 @@
 	3. wABF, the histogram should be (almost) flat 
 
 * early_stage:
-	short ABF run 
+	1. short ABF run 
 
 * trainingSet:
-	training data for NN (long ABF run)
+	1. training data for NN (long ABF run)
 
-* analysis
+* analysis:
 	1. hyperparams for NN (learning_rate and regularization factor alpha included)
 	2. loss per step for NN
 	3. force distribution after NN training 
 	4. plots for force distribution
 
-* pklsave
-	weights and biases trained from NN
+* pklsave:
+	1. weights and biases trained from NN
