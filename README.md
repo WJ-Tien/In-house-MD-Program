@@ -1,5 +1,4 @@
 ### One Dimensional MD - a Toy Model 
 * conventional Newtonian/Langevin MD
 * ABF method
-* eABF method
-* ABF method with Neural Network (TODO)
+* ABF method with Neural Network (on the way)
