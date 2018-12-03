@@ -1,10 +1,10 @@
 ## Scripts and Directories Description
 
 ### genData.sh (ABF.py)
-	1. run (ABF) simulation 
+	1. run (OTFNN) simulation 
 
-### run.sh (NN.py)
-	1. run NN
+### testrun.sh (NN.py)
+	1. test NN.py
 
 ### checkBoltzmannDist.py
 	1. check the probability distribution (histogram) of the system
