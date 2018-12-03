@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 
-import pickle
-import numpy as np
+class test(object):
+	def __init__(self, x):
+		self.x = x 
+	
+	def __repr__():
+		return str(self.x)
 
-a = [1,2,3]
-b = [4,5,6]
-a = np.array(a)
-b = np.array(b)
-print(a*b)
 
-#a = [1,2,3]
-#f = open("s.pkl","wb")
-#pickle.dump(a, f)
-#f = open("weight.pkl","rb")
-#b = pickle.load(f)
-#f.close()
-#print(b)
+if __name__ == "__main__":
+	s = test(3)
+	print(s)
 
+
+	
+
+
+		
 

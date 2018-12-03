@@ -1,4 +1,4 @@
-## Scripts and directories Description
+## Scripts and Directories Description
 
 ### genData.sh (ABF.py)
 	1. run (ABF) simulation 

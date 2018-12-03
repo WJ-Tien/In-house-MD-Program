@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 import numpy as np
 import time
+from NN import trainingNN 
 
 class importanceSampling(object):
 	
-	def __init__(self, current_coord, current_time, time_step, time_length, frame, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, mode, filename_conventional, filename_force):
+	def __init__(self, current_coord, current_time, time_step, time_length, frame, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, Frequency, mode, filename_conventional, filename_force):
 
 		self.kb              = 1   # dimensionless kb
 		self.binNum          = 360 # cut into 360 bins 
 		self.binw            = 2 * np.pi / self.binNum
 		self.force_storage   = [0] * (self.binNum + 1)
+		self.force_train     = [0] * (self.binNum + 1)
 		self.colvars_count   = [0] * (self.binNum + 1)
-		self.colvars_coord   = np.arange(-np.pi, np.pi + 2*np.pi/self.binNum, 2*np.pi/self.binNum)
+		self.colvars_coord   = np.arange(-np.pi, np.pi + self.binw, 2*np.pi/self.binNum)
 		self.current_coord   = current_coord
 		self.current_time    = current_time
 		self.time_step       = time_step
@@ -26,11 +28,14 @@ class importanceSampling(object):
 		self.mode            = mode
 		self.startTime       = time.time()
 		self.abfCheckFlag    = abfCheckFlag 
+		self.nnCheckFlag     = nnCheckFlag 
+		self.Frequency       = Frequency
+		self.loss            = 1e9
 		self.fileOut         = open(str(filename_conventional), "w") 
 		self.fileOutForce    = open(str(filename_force), "w") 
 
 	def printIt(self):
-		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime))
+		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime)) 
 
 	def writeFileHead(self):
 		self.fileOut.write("#" + " " + "Mode"         + " " + str(self.mode)         + "\n")
@@ -39,6 +44,7 @@ class importanceSampling(object):
 		self.fileOut.write("#" + " " + "Time_length"  + " " + str(self.time_length)  + "\n") 
 		self.fileOut.write("#" + " " + "Time_step"    + " " + str(self.time_step)    + "\n") 
 		self.fileOut.write("#" + " " + "abfCheckFlag" + " " + str(self.abfCheckFlag) + "\n")
+		self.fileOut.write("#" + " " + "nnCheckFlag"  + " " + str(self.nnCheckFlag)  + "\n")
 		self.fileOut.write("#" + " " + "Frame" + " "  + "Time" + " " + "Coordinates" + " " + "Velocity" + " " + "Fluctuated Temperature" + "\n")
 
 	def conventionalDataOutput(self):
@@ -56,7 +62,7 @@ class importanceSampling(object):
 		# For 1D toy model
 		# Potential surface of the system: cosx + cos2x + cos3x
 		# np.cos(CartesianCoord) + np.cos(2*CartesianCoord) + np.cos(3*CartesianCoord)
-		# Reaction Coordinate (colvars) == Cartesian Coordinate  so Jacobian J = 1
+		# Reaction Coordinate (colvars) == Cartesian Coordinate, so Jacobian J = 1
 		return np.sin(coord) + 2*np.sin(2*coord) + 3*np.sin(3*coord)
 
 	def visForce(self, vel):
@@ -69,16 +75,37 @@ class importanceSampling(object):
 
 	def calForce(self, coord, vel):
 
-		if self.abfCheckFlag == "yes":
+		if self.abfCheckFlag == "no" and self.nnCheckFlag == "yes": # (O)
+			print("Something went wrong!")
+			exit(0)
+
+		if self.abfCheckFlag == "no" and self.nnCheckFlag == "no":  # only LD (O)
+			return self.PotentialForce(coord) + self.visForce(vel) + self.randForce() 
+
+		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "no": # LD with ABF (O)
 			self.force_storage[int(np.floor(coord / self.binw)) + self.binNum//2] += (self.PotentialForce(coord) + self.visForce(vel) + self.randForce()) 
 			self.colvars_count[int(np.floor(coord / self.binw)) + self.binNum//2] += 1
 			#return  self.visForce(vel) + self.randForce()
 			fabf = self.force_storage[int(np.floor(coord / self.binw)) + self.binNum//2] / (self.colvars_count[int(np.floor(coord / self.binw)) + self.binNum//2])
-
 			return self.PotentialForce(coord) + self.visForce(vel) + self.randForce() - fabf 
 
-		else:
-			return self.PotentialForce(coord) + self.visForce(vel) + self.randForce() 
+		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": # LD with ABF and NN (I)
+			if round(self.loss, 3) != 0.000:
+				self.force_storage[int(np.floor(coord / self.binw)) + self.binNum//2] += (self.PotentialForce(coord) + self.visForce(vel) + self.randForce()) 
+				self.colvars_count[int(np.floor(coord / self.binw)) + self.binNum//2] += 1
+				fabf = self.force_storage[int(np.floor(coord / self.binw)) + self.binNum//2] / (self.colvars_count[int(np.floor(coord / self.binw)) + self.binNum//2])
+
+				if self.frame % self.Frequency== 0 and self.frame != 0 and round(self.loss, 3) != 0.000 :
+					output = trainingNN("analysis/loss.dat", "analysis/hyperparam.dat", "analysis/force_result.dat", "pklsave/weight.pkl", "pklsave/bias.pkl") 
+					output.readData("trainingSet/wABF_Force_test.dat",  self.force_storage)
+					self.force_storage, self.loss = output.training(0.05, 5, 18001, 100)
+					return self.PotentialForce(coord) + self.visForce(vel) + self.randForce() - fabf 
+				else:
+					return self.PotentialForce(coord) + self.visForce(vel) + self.randForce() - fabf
+
+			else:
+				fabf = self.force_storage[int(np.floor(coord / self.binw)) + self.binNum//2]
+				return self.PotentialForce(coord) + self.visForce(vel) + self.randForce() - fabf
 
 	def LangevinEngine(self):
 
@@ -120,12 +147,10 @@ class importanceSampling(object):
 		self.fileOutForce.close()
 
 if __name__ == "__main__":
-
-	# current_coord, current_time, time_step, time_length, fm, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, mode, fname_conventional, fname_force):
-	# boxsize_x ranges from -pi ~ pi
-
+	
+	# current_coord, current_time, time_step, time_length, fm, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, Frequency, mode, fname_conventional, fname_force):
 	import sys
-	s = importanceSampling(0., 0., 0.005, float(sys.argv[3]), 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
+	#s = importanceSampling(0., 0., 0.005, float(sys.argv[3]), 0, 1., 6.283185307179586, 4, 1., "yes", "no", 1000,  "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
+	s = importanceSampling(0., 0., 0.005, float(sys.argv[3]), 0, 1., 6.283185307179586, 4, 0.01, sys.argv[4], sys.argv[5], 50, "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
 
-	# s = importanceSampling(0., 0., 0.005, 10, 0, 1., 6.283185307179586, 4, 1., "yes", "LangevinEngine", "wABF001.dat", "wABF_Force001.dat").mdrun()
 

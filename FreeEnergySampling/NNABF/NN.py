@@ -16,7 +16,7 @@ class trainingNN(object):
 		self.force_result    = open(str(fileforceResult), "w")
 		self.save_weight     = open(str(fileweight), "wb")	
 		self.save_bias       = open(str(filebias), "wb")	
-		
+	'''	
 	def readData(self, file_force_to_train, file_force_to_learn): 
 		self.fileIn_force_to_train = open(str(file_force_to_train), "r") # 0 3
 		self.fileIn_force_to_learn = open(str(file_force_to_learn), "r") # 0 3
@@ -26,12 +26,32 @@ class trainingNN(object):
 			self.force_to_train.append(float(line.split()[3]))
 		
 		for line in self.fileIn_force_to_learn:
-			self.force_to_learn.append(float(line.split()[3]))
+			#self.force_to_learn.append(float(line.split()[3]))
 
 		self.fileIn_force_to_train.close()
 		self.fileIn_force_to_learn.close()
 		
 		# equalize the sample numbers for training and learning array
+		if len(self.force_to_train) == len(self.force_to_learn):
+			pass
+		else:
+			while(len(self.force_to_train) > len(self.force_to_learn)):
+				self.force_to_train.pop() 
+				self.cv.pop() 
+			while(len(self.force_to_train) < len(self.force_to_learn)):
+				self.force_to_learn.pop()
+	'''
+	def readData(self, file_force_to_train, array_force_to_learn): 
+		self.fileIn_force_to_train = open(str(file_force_to_train), "r") # 0 3
+
+		for line in self.fileIn_force_to_train:
+			self.cv.append(float(line.split()[0]))
+			self.force_to_train.append(float(line.split()[3]))
+
+		self.fileIn_force_to_train.close()
+
+		self.force_to_learn = array_force_to_learn
+
 		if len(self.force_to_train) == len(self.force_to_learn):
 			pass
 		else:
@@ -78,12 +98,12 @@ class trainingNN(object):
 		for steps in range(step):
 			sess.run(train)
 			if steps % outputFreq == 0:
-				print("Training Step %d" % (steps))
-				print("Loss %f"          % (sess.run(loss)))
+				#print("Training Step %d" % (steps))
+				#print("Loss %f"          % (sess.run(loss)))
 				self.Loss_train.write(str(steps) + " " + str(sess.run(loss)) + "\n")
 
 		self.hp_train.write("Regularization factor" + " " + str(regularFactor) + "\n")
-		self.hp_train.write("learning_rate" + " " + str(learning_rate) + "\n")
+		self.hp_train.write("learning_rate"         + " " + str(learning_rate) + "\n")
 
 		# After training
 		y = sess.run(w4)*(sess.run(w3) * (sess.run(w2)*(sess.run(w)*x_data + sess.run(b)) + sess.run(b2)) + sess.run(b3)) + sess.run(b4)
@@ -101,16 +121,21 @@ class trainingNN(object):
 		pickle.dump(list(sess.run(w4)), self.save_weight)
 		pickle.dump(list(sess.run(b4)), self.save_bias)
 
+		absol_loss = float(sess.run(loss))
+		absol_force_result = list(sess.run(y))
+
 		self.save_weight.close()
 		self.save_bias.close()
 		self.Loss_train.close()
 		self.hp_train.close()
 		self.force_result.close() 
 		sess.close()
+	
+		return absol_force_result, absol_loss 
 
 
 if __name__ == "__main__":
-	
-	s = trainingNN("analysis/loss.dat", "analysis/hyperparam.dat", "analysis/force_result.dat", "pklsave/weight.pkl", "pklsave/bias.pkl")
-	s.readData("trainingSet/wABF_Force_test.dat", "early_stage/wABF_Force001.dat")
-	s.training(0.05, 5, 50001, 100)
+	pass	
+	#s = trainingNN("analysis/loss.dat", "analysis/hyperparam.dat", "analysis/force_result.dat", "pklsave/weight.pkl", "pklsave/bias.pkl")
+	#s.readData("trainingSet/wABF_Force_test.dat", "early_stage/wABF_Force001.dat")
+	#s.training(0.05, 5, 50001, 100)
