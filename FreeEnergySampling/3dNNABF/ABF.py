@@ -35,8 +35,8 @@ class importanceSampling(object):
 		self.Frequency        = Frequency
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
-		self.weightList       = np.array([])
-		self.biasList         = np.array([])
+		self.weightArr        = np.array([])
+		self.biasArr          = np.array([])
 
 	def printIt(self):
 		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime)) 
@@ -129,21 +129,21 @@ class importanceSampling(object):
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
 
 				trainedWeightArr, trainedBiasArr, self.colvars_force_NN = \
-				output.training(self.weightList, self.biasList, self.colvars_coord, self.colvars_force, 0.0005, 10, 1000, 10) #TODO NN.py
+				output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, 0.0005, 10, 1000, 10) #TODO NN.py
 
 				self.colvars_force  = (self.colvars_force * self.colvars_count)
 
-				if self.weightList.size == 0 and self.biasList.size == 0:
-					self.weightList       = np.zeros((5, self.binNum+1), dtype=np.float32)
-					self.biasList         = np.zeros((5, self.binNum+1), dtype=np.float32)
+				if self.weightArr.size == 0 and self.biasArr.size == 0:
+					self.weightArr       = np.zeros((5, self.binNum+1), dtype=np.float32)
+					self.biasArr         = np.zeros((5, self.binNum+1), dtype=np.float32)
 					for i in range(5):
-						self.weightList[i] = trainedWeightArr[i]
-						self.biasList[i] = trainedBiasArr[i] 
+						self.weightArr[i] = trainedWeightArr[i]
+						self.biasArr[i] = trainedBiasArr[i] 
 
 				else:
 					for i in range(5):
-						self.weightList[i] = trainedWeightArr[i]
-						self.biasList[i] = trainedBiasArr[i] 
+						self.weightArr[i] = trainedWeightArr[i]
+						self.biasArr[i] = trainedBiasArr[i] 
 
 				self.colvars_force[d][int(np.floor(coord / self.binw)) + self.binNum//2] += (self.colvars_force_NN[d][int(np.floor(coord/self.binw)) + self.binNum//2]) 
 				self.colvars_count[d][int(np.floor(coord / self.binw)) + self.binNum//2] += 1

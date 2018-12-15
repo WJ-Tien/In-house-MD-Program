@@ -1,16 +1,1 @@
-yesNN (9000): 0.000123935 0.000129031 0.000137340 0.000125011 0.000162476 0.000139763 -> 0.0001362593333333333
-noNN_short (9000): 0.000140282 0.000118876 0.000197407 0.000118934 0.000165379 0.000123691 -> 0.00014409483333333335
-noNN_long  (15000): 0.0000952289 0.0000936334 0.0000981816 -> 9.56813e-05
-yesNN_long  (15000): 0.0000937105 0.0000876037 0.000110911 -> 9.740839999999999e-05
-(delete large deviation )
-gamma 1
-----------------------------------
-yesNN_short_g0.01 (9000) 4.76807 4.88938 4.70562 (all e-5)  --> 4.7876900000000004
-noNN_short_g0.01  (9000) 5.36493 5.01304 5.53043 (all e-5) -->  5.3028
-yesNN_long_g0.01  (15000) 3.66732 3.70200 3.61425 (all e-5)--> 3.66119
-noNN_long_g0.01   (15000) 3.67937 3.60635 3.67903 (all e-5) --> 3.6549166666666664
-
-lower gamma --> better sampling due to lower resistance(viscous term), especially for NN enhanced ABF 
-
-
-https://github.com/WillyTien/One-dimensional-MD/tree/master/FreeEnergySampling/NNABF
+y = A0*exp(-(cos(x) +cos(2*x)  + cos(3*x))/4) 

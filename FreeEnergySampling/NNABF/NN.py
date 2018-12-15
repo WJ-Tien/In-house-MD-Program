@@ -2,7 +2,7 @@
 
 import tensorflow as tf 
 import numpy as np
-import pickle
+#import pickle
 
 class trainingNN(object):
 	
@@ -14,8 +14,8 @@ class trainingNN(object):
 		self.Loss_train      = open(str(fileLoss), "w")
 		self.hp_train        = open(str(filehyperparam), "w")
 		self.force_result    = open(str(fileforceResult), "w")
-		self.save_weight     = open(str(fileweight), "wb")	
-		self.save_bias       = open(str(filebias), "wb")	
+		#self.save_weight     = open(str(fileweight), "wb")	
+		#self.save_bias       = open(str(filebias), "wb")	
 	'''	
 	def readData(self, file_force_to_train, file_force_to_learn): 
 		self.fileIn_force_to_train = open(str(file_force_to_train), "r") # 0 3
@@ -61,7 +61,7 @@ class trainingNN(object):
 			while(len(self.force_to_train) < len(self.force_to_learn)):
 				self.force_to_learn.pop()
 	
-	def training(self, learning_rate, regularFactor, step, outputFreq):
+	def training(self, learning_rate, regularFactor, epoch, outputFreq):
 
 		# assume 1 input layer; 4 hidden layers; 1 output layer; each with one neuron
 		# activation function: relu 
@@ -95,11 +95,9 @@ class trainingNN(object):
 		sess = tf.Session()
 		sess.run(init)
 
-		for steps in range(step):
+		for steps in range(epoch):
 			sess.run(train)
 			if steps % outputFreq == 0:
-				#print("Training Step %d" % (steps))
-				#print("Loss %f"          % (sess.run(loss)))
 				self.Loss_train.write(str(steps) + " " + str(sess.run(loss)) + "\n")
 
 		self.hp_train.write("Regularization factor" + " " + str(regularFactor) + "\n")
@@ -112,20 +110,20 @@ class trainingNN(object):
 			self.force_result.write(str(self.cv[i]) + " " + str(0) + " " + str(0) + " " + str(sess.run(y)[i]) + "\n")
 		
 		# save weights and biases via pickle
-		pickle.dump(list(sess.run(w)),  self.save_weight)
-		pickle.dump(list(sess.run(b)),  self.save_bias)
-		pickle.dump(list(sess.run(w2)), self.save_weight)
-		pickle.dump(list(sess.run(b2)), self.save_bias)
-		pickle.dump(list(sess.run(w3)), self.save_weight)
-		pickle.dump(list(sess.run(b3)), self.save_bias)
-		pickle.dump(list(sess.run(w4)), self.save_weight)
-		pickle.dump(list(sess.run(b4)), self.save_bias)
+		#pickle.dump(list(sess.run(w)),  self.save_weight)
+		#pickle.dump(list(sess.run(b)),  self.save_bias)
+		#pickle.dump(list(sess.run(w2)), self.save_weight)
+		#pickle.dump(list(sess.run(b2)), self.save_bias)
+		#pickle.dump(list(sess.run(w3)), self.save_weight)
+		#pickle.dump(list(sess.run(b3)), self.save_bias)
+		#pickle.dump(list(sess.run(w4)), self.save_weight)
+		#pickle.dump(list(sess.run(b4)), self.save_bias)
 
 		absol_loss = float(sess.run(loss))
 		absol_force_result = list(sess.run(y))
 
-		self.save_weight.close()
-		self.save_bias.close()
+		#self.save_weight.close()
+		#self.save_bias.close()
 		self.Loss_train.close()
 		self.hp_train.close()
 		self.force_result.close() 
