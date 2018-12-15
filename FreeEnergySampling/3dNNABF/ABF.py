@@ -15,7 +15,7 @@ class importanceSampling(object):
 		self.colvars_coord    = np.array([np.arange(-np.pi, np.pi + self.binw, self.binw)] * self.ndims) # identical in xyz 
 		self.colvars_force    = np.zeros((self.ndims, self.binNum+1), dtype=np.float32) # ixj
 		self.colvars_force_NN = np.zeros((self.ndims, self.binNum+1), dtype=np.float32) 
-		self.colvars_count    = np.zeros((self.ndims, self.binNum+1), dtype=np.int32) 
+		self.colvars_count    = np.zeros((self.ndims, self.binNum+1), dtype=np.float32) 
 		self.current_coord    = np.zeros((self.particles, self.ndims), dtype=np.float32) 
 		self.current_time     = current_time
 		self.time_step        = time_step
@@ -64,6 +64,7 @@ class importanceSampling(object):
 		self.fileOut.write(str((1/self.ndims) *self.mass*avg_vel_sq / self.kb) + "\n")
 
 	def forceOnColvarsOutput(self): #TODO
+		
 		self.colvars_force = (self.colvars_force / self.colvars_count)
 		self.colvars_force[np.isnan(self.colvars_force)] = 0
 
@@ -86,15 +87,13 @@ class importanceSampling(object):
 		return -self.frictCoeff * vel * self.mass
 
 	def randForce(self): 
-		random_xi    = np.random.normal(0, 1)
 		random_theta = np.random.normal(0, 1)
-		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature) * (random_theta) 
+		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (random_theta) 
 
 	def calForce(self, coord, vel, d=None):
 
 		if self.abfCheckFlag == "no" and self.nnCheckFlag == "yes": # (O)
 			print("Something went wrong")
-			exit(1)
 
 	
 		# conventional LD (O)
@@ -129,7 +128,7 @@ class importanceSampling(object):
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
 
 				trainedWeightArr, trainedBiasArr, self.colvars_force_NN = \
-				output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, 0.0005, 10, 1000, 10) #TODO NN.py
+				output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, 0.001, 20, 100, 10) #TODO NN.py
 
 				self.colvars_force  = (self.colvars_force * self.colvars_count)
 
@@ -163,18 +162,18 @@ class importanceSampling(object):
 		# http://www.complexfluids.ethz.ch/Langevin_Velocity_Verlet.pdf (2018/11/22)
 
 		a                  = (2 - self.frictCoeff * self.time_step) / (2 + self.frictCoeff * self.time_step)
-		b                  = np.sqrt(self.kb * self.temperature * self.frictCoeff * self.time_step / 2)
+		b                  = np.sqrt(self.kb * self.temperature * self.frictCoeff * self.time_step / 2 / self.mass)
 		c                  = (2 * self.time_step) / (2 + (self.frictCoeff * self.time_step))
 		random_eta         = np.random.normal(0, 1)
 
 		for n in range(self.particles):
 			for d in range(self.ndims):
 				current_force               = self.calForce(self.current_coord[n][d], self.current_vel[n][d], d)
-				self.current_vel[n][d]      = self.current_vel[n][d] + (current_force * self.time_step / 2) + (b * random_eta)    # half time step
+				self.current_vel[n][d]      = self.current_vel[n][d] + (current_force * self.time_step / 2 / self.mass) + (b * random_eta) # half time step
 				self.current_coord[n][d]    = self.current_coord[n][d] + c * self.current_vel[n][d] # full time step 
 				self.current_coord[n][d]   -= (round(self.current_coord[n][d] / self.box[d]) * self.box[d]) # PBC
 				current_force               = self.calForce(self.current_coord[n][d], self.current_vel[n][d], d)
-				self.current_vel[n][d]      = (a *self.current_vel[n][d]) + (b * random_eta) + (self.time_step / 2) * current_force # full time_step
+				self.current_vel[n][d]      = (a *self.current_vel[n][d]) + (b * random_eta) + ((self.time_step / 2) * current_force/self.mass) # full time_step
 
 		self.current_time += self.time_step 
 		self.frame        += 1
@@ -201,6 +200,6 @@ if __name__ == "__main__":
 	
 	# Particles, Ndim, current_coord current_time, time_step, time_length, fm, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, Frequency, mode, fname_conventional, fname_force):
 	import sys
-	s = importanceSampling(1, 1, [0.], 0., 0.005, float(sys.argv[3]), 0, 2., [6.283185307179586], 1., float(sys.argv[6]), sys.argv[4], sys.argv[5], 250, "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
+	s = importanceSampling(1, 1, [[0.]], 0., 0.005, float(sys.argv[3]), 0, 2., [6.283185307179586], 4., float(sys.argv[6]), sys.argv[4], sys.argv[5], 10000, "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
 
 

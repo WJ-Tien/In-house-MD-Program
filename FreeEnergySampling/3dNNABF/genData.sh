@@ -2,9 +2,9 @@
 
 for i in $(seq 1 1 1)
 	do
-	order="_noNN_100_gamma0.1_$i"
+	order="_noNN_1000_gamma0.1_$i"
 
-	./ABF.py wABF$order.dat wABF_Force$order.dat 100 "yes" "yes" 0.1 
+	./ABF.py wABF$order.dat wABF_Force$order.dat 1000 "yes" "no" 0.1 
 
 	# argv[1] = original data, argv[2] = force data, argv[3] = time length, argv[4] = abfflag, argv[5] = nnCheckFlag, argv[6] = frictCoeff
 
