@@ -1,0 +1,1 @@
+A0*exp(-(cos(x)+cos(2*x)+cos(3*x))/7)
