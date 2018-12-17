@@ -11,7 +11,7 @@ for filename in os.listdir(curdir):
 	avg_vel_sq = 0.0 
 	count      = 0
 	#count_real = 0
-	if filename.startswith("wABF_m"):
+	if filename.startswith("conventional"):
 		with open(filename, "r") as fin:
 			for line in fin:
 				line = line.split()

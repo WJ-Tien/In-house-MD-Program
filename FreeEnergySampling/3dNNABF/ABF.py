@@ -5,7 +5,7 @@ from NN import trainingNN
 
 class importanceSampling(object):
 	
-	def __init__(self, particles, ndims, current_time, time_step, time_length, frame, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, Frequency, mode, filename_conventional, filename_force):
+	def __init__(self, particles, ndims, current_time, time_step, time_length, frame, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, trainingFrequency, mode, learning_rate, regularCoeff, epoch, NNoutputFreq, filename_conventional, filename_force):
 
 		self.particles        = particles
 		self.ndims            = ndims
@@ -32,12 +32,16 @@ class importanceSampling(object):
 		self.startTime        = time.time()
 		self.abfCheckFlag     = abfCheckFlag 
 		self.nnCheckFlag      = nnCheckFlag 
-		self.Frequency        = Frequency
+		self.Frequency        = trainingFrequency
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
 		self.weightArr        = np.array([])
 		self.biasArr          = np.array([])
 		self.avg_vel_sq       = 0.
+		self.learning_rate    = learning_rate 
+		self.regularCoeff     = regularCoeff 
+		self.epoch            = epoch 
+		self.NNoutputFreq     = NNoutputFreq 
 
 	def printIt(self):
 		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime)) 
@@ -127,8 +131,9 @@ class importanceSampling(object):
 				self.colvars_force = (self.colvars_force / self.colvars_count)
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
 
+				#output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, 0.001, 150, 4000, 10) 
 				trainedWeightArr, trainedBiasArr, self.colvars_force_NN = \
-				output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, 0.001, 150, 4000, 10) #TODO NN.py
+				output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, self.learning_rate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
 
 				self.colvars_force  = (self.colvars_force * self.colvars_count)
 
@@ -169,7 +174,7 @@ class importanceSampling(object):
 		for n in range(self.particles):
 			for d in range(self.ndims):
 
-				self.avg_vel_sq            += ((self.current_vel[n][d])**2) # for validation
+				self.avg_vel_sq            += ((self.current_vel[n][d])**2) # for targetTemp validation
 				sigma                       = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
 				current_force               = self.calForce(self.current_coord[n][d], self.current_vel[n][d], d) 
 				Ct                          = (0.5*self.time_step**2) * (current_force - self.frictCoeff * self.current_vel[n][d]) + \
@@ -204,8 +209,8 @@ class importanceSampling(object):
 		self.fileOutForce.close()
 
 if __name__ == "__main__":
-	
+	pass	
 	# Particles, Ndim, current_time, time_step, time_length, fm, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, Frequency, mode, fname_conventional, fname_force):
-	import sys
-	s = importanceSampling(1, 1, 0., 0.005, float(sys.argv[3]), 0, 2.0, [6.283185307179586], 6., float(sys.argv[6]), sys.argv[4], sys.argv[5], 10000, "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
+	#import sys
+	#s = importanceSampling(1, 1, 0., 0.005, float(sys.argv[3]), 0, 2.0, [6.283185307179586], 6., float(sys.argv[6]), sys.argv[4], sys.argv[5], 10000, "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
 
