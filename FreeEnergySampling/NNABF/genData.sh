@@ -2,9 +2,9 @@
 
 for i in $(seq 1 1 1)
 do
-order="_noNN_50000_gamma1_$i"
+order="_noNN_5000_gamma1_$i"
 
-./ABF.py wABF$order.dat wABF_Force$order.dat 50000 "no" "no" 1
+./ABF.py wABF$order.dat wABF_Force$order.dat 5000 "no" "no" 0.1 
 
 # argv[1] = original data, argv[2] = force data, argv[3] = time length, argv[4] = abfflag, argv[5] = nnCheckFlag
 

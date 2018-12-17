@@ -162,6 +162,6 @@ if __name__ == "__main__":
 	
 	# current_coord, current_time, time_step, time_length, fm, mass, boxsize_x, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, Frequency, mode, fname_conventional, fname_force):
 	import sys
-	s = importanceSampling(0., 0., 0.005, float(sys.argv[3]), 0, 1., 6.283185307179586, 4, float(sys.argv[6]), sys.argv[4], sys.argv[5], 10, "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
+	s = importanceSampling(0., 0., 0.005, float(sys.argv[3]), 0, 1., 6.283185307179586, 1, float(sys.argv[6]), sys.argv[4], sys.argv[5], 10, "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
 
 

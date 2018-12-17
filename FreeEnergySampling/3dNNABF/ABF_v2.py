@@ -128,7 +128,7 @@ class importanceSampling(object):
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
 
 				trainedWeightArr, trainedBiasArr, self.colvars_force_NN = \
-				output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, 0.001, 150, 1000, 10) #TODO NN.py
+				output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, 0.001, 150, 4000, 10) #TODO NN.py
 
 				self.colvars_force  = (self.colvars_force * self.colvars_count)
 
@@ -207,5 +207,5 @@ if __name__ == "__main__":
 	
 	# Particles, Ndim, current_time, time_step, time_length, fm, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, Frequency, mode, fname_conventional, fname_force):
 	import sys
-	s = importanceSampling(1, 1, 0., 0.005, float(sys.argv[3]), 0, 1.0, [6.283185307179586], 4., float(sys.argv[6]), sys.argv[4], sys.argv[5], 10000, "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
+	s = importanceSampling(1, 1, 0., 0.005, float(sys.argv[3]), 0, 2.0, [6.283185307179586], 6., float(sys.argv[6]), sys.argv[4], sys.argv[5], 10000, "LangevinEngine", sys.argv[1], sys.argv[2]).mdrun()
 
