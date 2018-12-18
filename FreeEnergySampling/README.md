@@ -1,2 +1,2 @@
 * colvar_test = Module from LAMMPS
-* NNABF = Neural Network Adaptive Biasing Force method (latest version) (2018/12/17)
+* NNABF = Neural Network Adaptive Biasing Force method (latest version) (2018/12/18)

@@ -24,7 +24,6 @@ class trainingNN(object):
 		# activation function: relu 
 
 		# data initialization
-
 		x_data       = tf.cast(np.array(array_force_to_train), tf.float32)
 
 		if array_weightList.size == 0 and array_biasList.size == 0:
@@ -81,8 +80,8 @@ class trainingNN(object):
 
 		
 		# save weights and biases via pickle
-		#pickle.dump(list(sess.run(w)),  self.save_weight)
-		#pickle.dump(list(sess.run(b)),  self.save_bias)
+		#pickle.dump(list(sess.run(w1)),  self.save_weight)
+		#pickle.dump(list(sess.run(b1)),  self.save_bias)
 		#pickle.dump(list(sess.run(w2)), self.save_weight)
 		#pickle.dump(list(sess.run(b2)), self.save_bias)
 		#pickle.dump(list(sess.run(w3)), self.save_weight)
@@ -109,7 +108,6 @@ class trainingNN(object):
 		sess.close()
 	
 		return self.saveWeightArr, self.saveBiasArr, est_force 
-
 
 if __name__ == "__main__":
 	pass	

@@ -11,12 +11,12 @@ with open(sys.argv[1], "r") as fin:
 	for line in fin:
 		line = line.split()
 		if line[0] != "#":	
-			coord.append(round(float(line[int(sys.argv[2])]), 7)) # 2 for cartcoord
+			coord.append(round(float(line[2]), 7)) # 2 for cartcoord
 	coord.sort()
 	nsamples = len(coord) 
 			
 #binw = float(sys.argv[2]) # bin width
-binw = 0.01745329 
+binw = 2 * np.pi / 360 
 minb = int(np.floor(coord[0] / binw))  # lower boundary
 maxb = int(np.floor(coord[-1] / binw)) # upper boundary
 
@@ -29,6 +29,6 @@ prob = np.array(prob)
 prob = (prob / nsamples) # final probability distribution 
 x_axis = np.arange(coord[0], coord[-1], binw) # initialization of x-axis
 
-with open(sys.argv[3], "w") as fout:
+with open(sys.argv[2], "w") as fout:
 	for i in range(len(prob)-1): # discard the point on pi (PBC issues)
 		fout.write(str(x_axis[i]) + " " + str(prob[i]) + "\n")

@@ -10,7 +10,6 @@ mass = float(sys.argv[1])
 for filename in os.listdir(curdir):
 	avg_vel_sq = 0.0 
 	count      = 0
-	#count_real = 0
 	if filename.startswith("conventional"):
 		with open(filename, "r") as fin:
 			for line in fin:
@@ -22,7 +21,6 @@ for filename in os.listdir(curdir):
 		avg_vel_sq /= count
 		avg_vel_sq *= mass
 		save.write(str(filename) + "    " + str(avg_vel_sq) + "\n")
-
 
 save.close()
 					
