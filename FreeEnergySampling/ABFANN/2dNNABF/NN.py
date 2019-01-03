@@ -6,14 +6,15 @@ import numpy as np
 
 class trainingNN(object):
 	
-	def __init__(self, fileLoss, filehyperparam, fileweight, filebias, ndims):
+	def __init__(self, fileLoss, filehyperparam, fileweight, filebias, ndims, size):
 
-
-		self.Loss_train      = open(str(fileLoss), "w")
-		self.hp_train        = open(str(filehyperparam), "w")
-		self.saveWeightArr   = np.zeros((5, 361), dtype=np.float32)
-		self.saveBiasArr     = np.zeros((5, 361), dtype=np.float32)
-		self.ndims           = ndims
+		self.Loss_train     = open(str(fileLoss), "w")
+		self.hp_train       = open(str(filehyperparam), "w")
+		self.ndims          = ndims
+		self.size           = size
+		self.trainingLayers = 5 # magic number
+		self.saveWeightArr  = np.zeros((self.trainingLayers, (self.size)**self.ndims), dtype=np.float32)
+		self.saveBiasArr    = np.zeros((self.trainingLayers, (self.size)**self.ndims), dtype=np.float32)
 
 		#self.save_weight     = open(str(fileweight), "wb")	
 		#self.save_bias       = open(str(filebias), "wb")	
@@ -26,17 +27,30 @@ class trainingNN(object):
 		# data initialization
 		x_data       = tf.cast(np.array(array_force_to_train), tf.float32)
 
-		if array_weightList.size == 0 and array_biasList.size == 0:
-			w1           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
-			w2           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
-			w3           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
-			w4           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
-			w5           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
-			b1           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-0.2, 0.2)), dtype=tf.float32)
-			b2           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-0.4, 0.4)), dtype=tf.float32)
-			b3           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-0.3, 0.3)), dtype=tf.float32)
-			b4           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-0.5, 0.5)), dtype=tf.float32)
-			b5           = tf.Variable(np.full((self.ndims, len(array_force_to_learn)), np.random.uniform(-0.1, 0.1)), dtype=tf.float32)
+		if np.sum(array_weightList) == 0.0 and np.sum(array_biasList) == 0.0:
+			if self.ndims == 1:			
+				w1           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				w2           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				w3           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				w4           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				w5           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				b1           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-0.2, 0.2)), dtype=tf.float32)
+				b2           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-0.4, 0.4)), dtype=tf.float32)
+				b3           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-0.3, 0.3)), dtype=tf.float32)
+				b4           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-0.5, 0.5)), dtype=tf.float32)
+				b5           = tf.Variable(np.full((len(array_force_to_learn)), np.random.uniform(-0.1, 0.1)), dtype=tf.float32)
+
+			if self.ndims == 2:			
+				w1           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				w2           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				w3           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				w4           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				w5           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-1, 1)),     dtype=tf.float32)
+				b1           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-0.2, 0.2)), dtype=tf.float32)
+				b2           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-0.4, 0.4)), dtype=tf.float32)
+				b3           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-0.3, 0.3)), dtype=tf.float32)
+				b4           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-0.5, 0.5)), dtype=tf.float32)
+				b5           = tf.Variable(np.full((len(array_force_to_learn), len(array_force_to_learn)), np.random.uniform(-0.1, 0.1)), dtype=tf.float32)
 
 		else:
 			w1 = tf.Variable(array_weightList[0], dtype=tf.float32)
@@ -89,7 +103,7 @@ class trainingNN(object):
 		#pickle.dump(list(sess.run(w4)), self.save_weight)
 		#pickle.dump(list(sess.run(b4)), self.save_bias)
 
-		est_force             = list(sess.run(y))
+		est_force             = np.array((sess.run(y[0])))
 		self.saveWeightArr[0] = sess.run(w1)
 		self.saveWeightArr[1] = sess.run(w2)
 		self.saveWeightArr[2] = sess.run(w3)

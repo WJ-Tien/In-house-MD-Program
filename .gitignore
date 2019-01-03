@@ -11,19 +11,9 @@ MDknowledge/
 NNknowledge/
 
 FreeEnergySampling/colvar_test
+FreeEnergySampling/old_ABFANN/
 
-FreeEnergySampling/NNABF/codeTests
-FreeEnergySampling/NNABF/trainingSet
-FreeEnergySampling/NNABF/analysis
-FreeEnergySampling/NNABF/early_stage
-FreeEnergySampling/NNABF/pklsave
-
-FreeEnergySampling/3dNNABF/plot
-FreeEnergySampling/3dNNABF/m1T4 
-FreeEnergySampling/3dNNABF/m2T6 
-FreeEnergySampling/3dNNABF/m3T7 
-FreeEnergySampling/3dNNABF/m5T4 
-FreeEnergySampling/3dNNABF/m1T3.5
-FreeEnergySampling/3dNNABF/m2T4 
-FreeEnergySampling/3dNNABF/m1.0T5.0 
-
+FreeEnergySampling/ABFANN/old_ABFANN
+FreeEnergySampling/ABFANN/plot
+FreeEnergySampling/ABFANN/2dNNABF/analysis
+FreeEnergySampling/ABFANN/2dNNABF/2dValidation
