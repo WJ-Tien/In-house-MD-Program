@@ -72,12 +72,13 @@ with open(sys.argv[4], "r") as fin:
 
 		X, Y = np.meshgrid(x_axis, y_axis, indexing="ij")
 
-		plt.contourf(X, Y, prob_xy, 6, alpha=.75, cmap=plt.cm.hot)
+		cs = plt.contourf(X, Y, prob_xy, 6, alpha=.75, cmap=plt.cm.hot)
 		C = plt.contour(X, Y, prob_xy, 6, colors='black', linewidth=.5)
 		plt.clabel(C, inline=True, fontsize=10)
 		plt.xlim(x_axis[0],x_axis[-1])
 		plt.ylim(y_axis[0],y_axis[-1])
 		plt.xticks(np.arange(-half_boxboundary, half_boxboundary, binw*4))
 		plt.yticks(np.arange(-half_boxboundary, half_boxboundary, binw*4))
+		plt.colorbar(cs)
 		plt.savefig(abfcheckflag + "_" + nncheckflag + "_" + "boltz2d.png")	
 

@@ -33,22 +33,26 @@ with open(sys.argv[4], "r") as fin:
 		y_axis = np.arange(-half_boxboundary, half_boxboundary, binw)
 		X, Y = np.meshgrid(x_axis, y_axis, indexing="ij")
 
-		plt.contourf(X, Y, force_x, 6, alpha=.75, cmap=plt.cm.hot)
+		cs = plt.contourf(X, Y, force_x, 6, alpha=.75, cmap=plt.cm.hot)
 		C = plt.contour(X, Y, force_x, 6, colors='black', linewidth=.5)
 		plt.clabel(C, inline=True, fontsize=10)
-		plt.xticks(())
-		plt.yticks(())
+		plt.xlim(x_axis[0],x_axis[-1])
+		plt.ylim(y_axis[0],y_axis[-1])
+		plt.xticks(np.arange(-half_boxboundary, half_boxboundary, binw*4))
+		plt.yticks(np.arange(-half_boxboundary, half_boxboundary, binw*4))
+		plt.colorbar(cs)
 		plt.savefig(abfcheckflag + "_" + nncheckflag + "_" + "forcex.png")	
 
 		plt.gcf().clear()
 
-		plt.contourf(X, Y, force_y, 6, alpha=.75, cmap=plt.cm.hot)
+		cs = plt.contourf(X, Y, force_y, 6, alpha=.75, cmap=plt.cm.hot)
 		D = plt.contour(X, Y, force_y, 6, colors='black', linewidth=.5)
 		plt.clabel(D, inline=True, fontsize=10)
 		plt.xlim(x_axis[0],x_axis[-1])
 		plt.ylim(y_axis[0],y_axis[-1])
 		plt.xticks(np.arange(-half_boxboundary, half_boxboundary, binw*4))
 		plt.yticks(np.arange(-half_boxboundary, half_boxboundary, binw*4))
+		plt.colorbar(cs)
 		plt.savefig(abfcheckflag + "_" + nncheckflag + "_" + "forcey.png")	
 		
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from sympy import *
 
 # This code aims at rendering 2d contour plots for 2d langevin toy model
@@ -56,13 +57,14 @@ class render2D(object):
 
 
 	def render(self, a, b, func):
-		plt.contourf(a, b, func(a, b), 6, alpha=.75, cmap=plt.cm.hot)
+		cs = plt.contourf(a, b, func(a, b), 6, alpha=.75, cmap=plt.cm.hot)
 		R = plt.contour(a, b, func(a, b), 6, colors='black', linewidth=.5)
 		plt.clabel(R, inline=True, fontsize=10)
 		plt.xlim(self.x[0],self.x[-1])
 		plt.ylim(self.y[0],self.y[-1])
 		plt.xticks(np.arange(-self.half_boundary, self.half_boundary, self.binw*4))
 		plt.yticks(np.arange(-self.half_boundary, self.half_boundary, self.binw*4))
+		plt.colorbar(cs)
 		plt.savefig(func.__name__ + ".png")
 		plt.gcf().clear()
 
