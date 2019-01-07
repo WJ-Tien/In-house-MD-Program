@@ -17,6 +17,7 @@ class render2D(object):
 		self.y = np.arange(-self.half_boundary, self.half_boundary , self.binw)
 		self.X, self.Y = np.meshgrid(self.x, self.y, indexing="ij")
 
+
 	def partitionFunc(self, a, b): # canonical partition function: exp(-U/kbT) / sigma(exp(-U/kbT))
 		x, y = symbols("x y")	
 		Q = sympify(exp(-((0.0011- x*0.421 + x**4 + 2*x**3 + 3*y + y**3 + y**2 + x*2) * exp(-x**2 - y**2)) / self.temperature))  
