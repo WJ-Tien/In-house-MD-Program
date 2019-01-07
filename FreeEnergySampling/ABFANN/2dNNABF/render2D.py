@@ -25,9 +25,10 @@ class render2D(object):
 	
 	def boltz(self, a, b): # exp(-(K+U)/kbT) ~= exp(-K/kbT)exp(-U/kbT) ~= exp(-2/2) * exp(-U/kbT)
 		q  = self.partitionFunc(a, b)
-		q  = q.sum(axis=1)
+		q  = q.sum(axis=0)
 		q  = q.sum(axis=0)
 		q *= np.exp(-1) # exp(-2/2) for 2d system
+		print(q)
 
 		x, y = symbols("x y")	
 		fb = sympify(exp(-((0.0011- x*0.421 + x**4 + 2*x**3 + 3*y + y**3 + y**2 + x*2) * exp(-x**2 - y**2)) / self.temperature))  
