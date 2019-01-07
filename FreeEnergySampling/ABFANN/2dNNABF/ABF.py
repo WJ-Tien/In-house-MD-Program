@@ -15,7 +15,8 @@ class importanceSampling(object):
 		self.binNum           = binNum 
 		self.half_boxboundary = half_boxboundary
 		self.binw             = 2 * self.half_boxboundary / self.binNum # -half_boxboundary ~ +half_boxboundary
-		self.colvars_coord    = np.array([np.arange(-self.half_boxboundary, self.half_boxboundary, self.binw)] * self.ndims) 
+		#self.colvars_coord    = np.array([np.arange(-self.half_boxboundary, self.half_boxboundary, self.binw)] * self.ndims) 
+		self.colvars_coord    = np.arange(-self.half_boxboundary, self.half_boxboundary, self.binw) 
 		self.size             = np.arange(-self.half_boxboundary, self.half_boxboundary, self.binw).shape[0]
 		self.current_coord    = np.zeros((self.particles, self.ndims), dtype=np.float32) 
 		self.current_time     = current_time
@@ -60,8 +61,9 @@ class importanceSampling(object):
 		self.fileOut.write("#" + " " + "Mode"         + " " + str(self.mode)         + "\n")
 		self.fileOut.write("#" + " " + "Dims"         + " " + str(self.ndims)        + "\n")
 		self.fileOut.write("#" + " " + "Particles"    + " " + str(self.particles)    + "\n")
-		self.fileOut.write("#" + " " + "temperature"  + " " + str(self.temperature)  + "\n") 
-		self.fileOut.write("#" + " " + "frictCoeff"   + " " + str(self.frictCoeff)   + "\n") 
+		self.fileOut.write("#" + " " + "BinNumber"    + " " + str(self.binNum)       + "\n")
+		self.fileOut.write("#" + " " + "Temperature"  + " " + str(self.temperature)  + "\n") 
+		self.fileOut.write("#" + " " + "FrictCoeff"   + " " + str(self.frictCoeff)   + "\n") 
 		self.fileOut.write("#" + " " + "Time_length"  + " " + str(self.time_length)  + "\n") 
 		self.fileOut.write("#" + " " + "Time_step"    + " " + str(self.time_step)    + "\n") 
 		self.fileOut.write("#" + " " + "abfCheckFlag" + " " + str(self.abfCheckFlag) + "\n")
@@ -82,17 +84,17 @@ class importanceSampling(object):
 
 		if self.ndims == 1:
 			for i in range(self.size): 
-				self.fileOutForce.write(str(self.colvars_coord[0][i]) + " ")
+				self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
 				self.fileOutForce.write(str(self.colvars_force[i]) + " " + str(self.colvars_count[i]) + "\n")  
 
 		if self.ndims == 2:
 			for i in range(self.size):
 				for j in range(self.size):
-					self.fileOutForce.write(str(self.colvars_coord[0][i]) + " ")
-					self.fileOutForce.write(str(self.colvars_coord[1][j]) + " ")
+					self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
+					self.fileOutForce.write(str(self.colvars_coord[j]) + " ")
 					self.fileOutForce.write(str(self.colvars_force[0][i][j]) + " " + str(self.colvars_count[0][i][j]) + " " +str(self.colvars_force[1][i][j]) + " " + str(self.colvars_count[1][i][j]) + "\n")  
 
-	def myround(self, x):
+	def myRound(self, x):
 		if (x - np.floor(x)) < 0.5:
 			return np.floor(x)
 		else:
@@ -119,10 +121,12 @@ class importanceSampling(object):
 			#return fx(coord_x, coord_y)
 
 			if d == 0: # force along x	
-				return -2*coord_x*(coord_x**4 + 2*coord_x**3 + 1.579*coord_x + coord_y**3 + coord_y**2 + 3*coord_y + 0.0011)*np.exp(-coord_x**2 - coord_y**2) + (4*coord_x**3 + 6*coord_x**2 + 1.579)*np.exp(-coord_x**2 - coord_y**2)
+				return -2*coord_x*(coord_x**4 + 2*coord_x**3 + 1.579*coord_x + coord_y**3 + coord_y**2 + 3*coord_y + 0.0011)*np.exp(-coord_x**2 - coord_y**2) +\
+               (4*coord_x**3 + 6*coord_x**2 + 1.579)*np.exp(-coord_x**2 - coord_y**2)
 
 			if d == 1: # force along y	
-				return -2*coord_y*(coord_x**4 + 2*coord_x**3 + 1.579*coord_x + coord_y**3 + coord_y**2 + 3*coord_y + 0.0011)*np.exp(-coord_x**2 - coord_y**2) + (3*coord_y**2 + 2*coord_y + 3)*np.exp(-coord_x**2 - coord_y**2)
+				return -2*coord_y*(coord_x**4 + 2*coord_x**3 + 1.579*coord_x + coord_y**3 + coord_y**2 + 3*coord_y + 0.0011)*np.exp(-coord_x**2 - coord_y**2) +\
+               (3*coord_y**2 + 2*coord_y + 3)*np.exp(-coord_x**2 - coord_y**2)
 
 	def visForce(self, vel):
 		return -self.frictCoeff * vel * self.mass
@@ -224,7 +228,7 @@ class importanceSampling(object):
 																			sigma * (self.time_step**1.5) * (0.5 * random_xi_x + (np.sqrt(3)/6) * random_theta_x)
 
 				self.current_coord[n][0]    = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
-				self.current_coord[n][0]   -= (self.myround(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
+				self.current_coord[n][0]   -= (self.myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
 
 				updated_force_x               = self.getForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
@@ -256,9 +260,9 @@ class importanceSampling(object):
 																			sigma * (self.time_step**1.5) * (0.5 * random_xi_y + (np.sqrt(3)/6) * random_theta_y)
 
 				self.current_coord[n][0]    = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
-				self.current_coord[n][0]   -= (self.myround(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
+				self.current_coord[n][0]   -= (self.myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
 				self.current_coord[n][1]    = self.current_coord[n][1] + (self.time_step * self.current_vel[n][1]) + Ct_y
-				self.current_coord[n][1]   -= (self.myround(self.current_coord[n][1] / self.box[1]) * self.box[1]) # PBC
+				self.current_coord[n][1]   -= (self.myRound(self.current_coord[n][1] / self.box[1]) * self.box[1]) # PBC
 
 				updated_force_x             = self.getForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
 				updated_force_y             = self.getForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 

@@ -2,12 +2,13 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-from sympy import *
 
-ndims = int(sys.argv[1])
+ndims            = int(sys.argv[1])
 half_boxboundary = float(sys.argv[2])
-binNum = int(sys.argv[3])
-binw = 2 * half_boxboundary/ binNum  #sys.argv[2] =  half_boxboundary, sys.argv[3] = binNum
+binNum           = int((sys.argv[3]))
+binw             = 2 * half_boxboundary/ binNum  #sys.argv[2] =  half_boxboundary, sys.argv[3] = binNum
+abfcheckflag     = sys.argv[6]
+nncheckflag      = sys.argv[7]
 
 with open(sys.argv[4], "r") as fin:
 	
@@ -30,21 +31,27 @@ with open(sys.argv[4], "r") as fin:
 				
 		x_axis = np.arange(-half_boxboundary, half_boxboundary, binw)
 		y_axis = np.arange(-half_boxboundary, half_boxboundary, binw)
-		X, Y = np.meshgrid(x_axis, y_axis)
+		X, Y = np.meshgrid(x_axis, y_axis, indexing="ij")
 
-#		plt.contourf(X, Y, force_x, 8, alpha=.75, cmap=plt.cm.hot)
-#		C = plt.contour(X, Y, force_x, 8, colors='black', linewidth=.5)
-#		plt.clabel(C, inline=True, fontsize=10)
-#		plt.xticks(())
-#		plt.yticks(())
-#		plt.savefig("force_test_x.png")	
-
-		plt.contourf(X, Y, force_y, 8, alpha=.75, cmap=plt.cm.hot)
-		C = plt.contour(X, Y, force_y, 8, colors='black', linewidth=.5)
+		plt.contourf(X, Y, force_x, 6, alpha=.75, cmap=plt.cm.hot)
+		C = plt.contour(X, Y, force_x, 6, colors='black', linewidth=.5)
 		plt.clabel(C, inline=True, fontsize=10)
 		plt.xticks(())
 		plt.yticks(())
-		plt.savefig("force_test_y.png")	
+		plt.savefig(abfcheckflag + "_" + nncheckflag + "_" + "forcex.png")	
+
+		plt.gcf().clear()
+
+		plt.contourf(X, Y, force_y, 6, alpha=.75, cmap=plt.cm.hot)
+		D = plt.contour(X, Y, force_y, 6, colors='black', linewidth=.5)
+		plt.clabel(D, inline=True, fontsize=10)
+		plt.xlim(self.x[0],self.x[-1])
+		plt.ylim(self.y[0],self.y[-1])
+		plt.xticks(np.arange(-self.half_boundary, self.half_boundary, self.binw*4))
+		plt.yticks(np.arange(-self.half_boundary, self.half_boundary, self.binw*4))
+		plt.savefig(abfcheckflag + "_" + nncheckflag + "_" + "forcey.png")	
+		
+
 
 
 

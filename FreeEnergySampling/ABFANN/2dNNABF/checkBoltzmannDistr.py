@@ -2,18 +2,17 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-from sympy import *
 
 # p(x) ~ exp(-(K+U)/kbT) ~= A*exp(-U(x) / kbT)
 # Apprantly, the kinetic energy term is constant when the temperature is constant
 # U(x) = cos(x) + cos(2*x) + cos(3*x)
-
-# binNum +1 to prevent boundary errors
-
-ndims = int(sys.argv[1])
+# binNum +1 to prevent boundary errors 
+ndims            = int(sys.argv[1])
 half_boxboundary = float(sys.argv[2])
-binNum = int((sys.argv[3]))
-binw = 2 * half_boxboundary / binNum  
+binNum           = int((sys.argv[3]))
+binw             = 2 * half_boxboundary / binNum  
+abfcheckflag     = sys.argv[6]
+nncheckflag      = sys.argv[7]
 
 with open(sys.argv[4], "r") as fin:
 
@@ -70,14 +69,15 @@ with open(sys.argv[4], "r") as fin:
 
 		prob_xy = np.delete(prob_xy, -1, 0) # To equalize x & y & prob_xy array size
 		prob_xy = np.delete(prob_xy, -1, 1)
-		X, Y = np.meshgrid(x_axis, y_axis)
 
-		plt.contourf(X, Y, prob_xy, 8, alpha=.75, cmap=plt.cm.hot)
-		C = plt.contour(X, Y, prob_xy, 8, colors='black', linewidth=.5)
+		X, Y = np.meshgrid(x_axis, y_axis, indexing="ij")
+
+		plt.contourf(X, Y, prob_xy, 6, alpha=.75, cmap=plt.cm.hot)
+		C = plt.contour(X, Y, prob_xy, 6, colors='black', linewidth=.5)
 		plt.clabel(C, inline=True, fontsize=10)
-		plt.xticks(())
-		plt.yticks(())
-		plt.savefig("boltzmann_test.png")	
-
-
+		plt.xlim(self.x[0],self.x[-1])
+		plt.ylim(self.y[0],self.y[-1])
+		plt.xticks(np.arange(-self.half_boundary, self.half_boundary, self.binw*4))
+		plt.yticks(np.arange(-self.half_boundary, self.half_boundary, self.binw*4))
+		plt.savefig(abfcheckflag + "_" + nncheckflag + "_" + "boltz2d.png")	
 
