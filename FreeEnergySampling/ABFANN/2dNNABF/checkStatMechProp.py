@@ -111,7 +111,7 @@ class checkStatMechProp(object):
 						avg_vel_sq /= (count)
 						TargetTemp = (avg_vel_sq * (self.mass / self.ndims))
 
-						with open(fileOut, "w") as fout:
+						with open(fileOut, "a") as fout:
 							fout.write(str(filename) + "    " + str(TargetTemp) + "\n")
 
 					if self.ndims == 2:
@@ -125,11 +125,11 @@ class checkStatMechProp(object):
 						avg_vel_sq /= (count)
 						TargetTemp = (avg_vel_sq * (self.mass / self.ndims))
 
-						with open(fileOut, "w") as fout:
+						with open(fileOut, "a") as fout:
 							fout.write(str(filename) + "    " + str(TargetTemp) + "\n")
 
 
-	def relativeError(self, ideal_estimate, file_ABFANN, file_ABF, file_RegularMD, name):
+	def relativeError(self, ideal_estimate, file_RegularMD, file_ABF, file_ABFANN, name):
 		def readData(f):
 			with open(f, "r") as fin:
 				saveForce = []
