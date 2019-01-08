@@ -84,6 +84,7 @@ class trainingNN(object):
 
 				if epoch % outputFreq == 0:
 					self.Loss_train.write(str(epoch) + " " + str(sess.run(loss, feed_dict={x: array_colvar_to_train, y: array_force_to_learn})) + "\n")
+
 			self.Loss_train.close()	
 
 			y_estimated           = sess.run(y_estimated, feed_dict={x: array_colvar_to_train})
@@ -97,7 +98,10 @@ class trainingNN(object):
 			self.saveBiasArr[2]   = sess.run(b3)
 			self.saveBiasArr[3]   = sess.run(b4)
 			self.saveBiasArr[4]   = sess.run(b5)
+
+	
 		
+
 
 
 		return self.saveWeightArr, self.saveBiasArr, y_estimated 
