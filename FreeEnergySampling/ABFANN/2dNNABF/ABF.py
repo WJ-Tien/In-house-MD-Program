@@ -138,16 +138,16 @@ class importanceSampling(object):
 				self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys
 				self.colvars_count[getIndices(coord_x, self.bins)] += 1
 			else:                                       # refined force from NN, which is a np.ndarray
-				self.colvars_force += updated_Fsys		
-				self.colvars_count += 1
+				self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys[getIndices(coord_x, self.bins)]
+				self.colvars_count[getIndices(coord_x, self.bins)] += 1
 
 		if self.ndims == 2:
 			if isinstance(updated_Fsys, float) == True:
 				self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys 
 				self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
 			else: 
-				self.colvars_force += updated_Fsys		
-				self.colvars_count += 1
+				self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
+				self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
 				
 	def getForce(self, coord_x, coord_y, vel, d=None):
 
