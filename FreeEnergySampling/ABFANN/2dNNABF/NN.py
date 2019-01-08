@@ -99,10 +99,6 @@ class trainingNN(object):
 			self.saveBiasArr[3]   = sess.run(b4)
 			self.saveBiasArr[4]   = sess.run(b5)
 
-	
-		
-
-
 
 		return self.saveWeightArr, self.saveBiasArr, y_estimated 
 

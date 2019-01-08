@@ -218,7 +218,7 @@ class importanceSampling(object):
 				self.current_coord[n][0]    = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
 				self.current_coord[n][0]   -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
 
-				updated_force_x               = self.getForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
+				updated_force_x             = self.getForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
 				self.current_vel[n][0]      = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_x) - (self.frictCoeff * Ct_x)

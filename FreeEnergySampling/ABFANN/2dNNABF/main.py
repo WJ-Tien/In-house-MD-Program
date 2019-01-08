@@ -6,7 +6,7 @@ import os
 
 Ndims                 = 2
 mass                  = 1 
-temperature           = 0.01 
+temperature           = 0.1 
 frictCoeff            = 0.05
 
 
@@ -31,7 +31,7 @@ init_frame            = 0
 mode                  = "LangevinEngine"
 NNoutputFreq          = 50 
 force_distr           = ["estimate"]
-tl                    = [100]
+tl                    = [150000]
 
 
 #abf_switch  = ["no","yes","yes"]

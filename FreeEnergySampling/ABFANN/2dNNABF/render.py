@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from customMathFunc import forcex2D, forcey2D, Usurface2D, boltz2D, Usurface1D, forcex1D, boltz1D
 
-# This code aims at rendering 2d contour plots for 2d langevin toy model
+# This code aims at rendering 1d x-y plots and 2d contour plots for Langevin toy model
 
 class rendering(object):
 
@@ -19,7 +19,7 @@ class rendering(object):
 
 		if self.ndims == 1:
 
-			if hasattr(renderObj, '__call__'):
+			if hasattr(renderObj, '__call__'): # is function
 				if renderObj.__name__ == "boltz1D":
 					plt.plot(self.x_axis, renderObj(self.x_axis, self.temperature))
 				else:
@@ -58,15 +58,15 @@ class rendering(object):
 
 if __name__ == "__main__":
 	pass
-#	s = rendering(ndims=2, half_boxboundary=3, binNum=40, temperature=10)
-#	s.render(boltz2D, name="boltz2D")
+	#s = rendering(ndims=2, half_boxboundary=3, binNum=40, temperature=10)
+	#s.render(boltz2D, name="boltz2D")
 	#s = rendering(ndims=2, half_boxboundary=3, binNum=40)
 	#s.render(forcex2D  ,name="forcex2D")
 	#s.render(forcey2D  ,name="forcey2D")
 	#s.render(Usurface2D,name="Usurface")
 
-	s = rendering(ndims=1, half_boxboundary=np.pi, binNum=360, temperature=1)
-	s.render(boltz1D, name="boltz1D")
+	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=360, temperature=1)
+	#s.render(boltz1D, name="boltz1D")
 	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=360)
 	#s.render(forcex1D  ,name="forcex1D")
 	#s.render(Usurface1D, name="Usurface1D")
