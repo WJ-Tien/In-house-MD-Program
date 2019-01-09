@@ -12,20 +12,22 @@ class rendering(object):
 		self.ndims            = ndims
 		self.half_boxboundary = half_boxboundary
 		self.binNum           = binNum
-		self.x_axis           = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum)
-		self.y_axis           = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum)
 
 	def render(self, renderObj, name):
 
 		if self.ndims == 1:
 
+			x_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum)
+			x_axis = np.delete(x_axis, -1 , 0) # prevent boundary error
+
 			if hasattr(renderObj, '__call__'): # is function
 				if renderObj.__name__ == "boltz1D":
-					plt.plot(self.x_axis, renderObj(self.x_axis, self.temperature))
+					plt.plot(x_axis, renderObj(x_axis, self.temperature))
 				else:
-					plt.plot(self.x_axis, renderObj(self.x_axis))
-			else:
-					plt(self.x_axis, renderObj)
+					plt.plot(x_axis, renderObj(x_axis))
+
+			else: # is array
+					plt(x_axis, renderObj)
 
 			plt.xticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 8))
 			plt.savefig(name + ".png")
@@ -33,9 +35,14 @@ class rendering(object):
 
 		if self.ndims == 2: 
 
-			A, B = np.meshgrid(self.x_axis, self.y_axis, indexing="ij")
+			x_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum)
+			y_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum)
+			x_axis = np.delete(x_axis, -1 , 0) # prevent boundary error
+			y_axis = np.delete(y_axis, -1 , 0) # prevent boundary error
 
-			if hasattr(renderObj, '__call__'): # is function
+			A, B = np.meshgrid(x_axis, y_axis, indexing="ij")
+
+			if hasattr(renderObj, '__call__'):
 				if renderObj.__name__ == "boltz2D":
 					cs = plt.contourf(A, B, renderObj(A, B, self.temperature), 6, alpha=.75, cmap=plt.cm.hot)
 					R  = plt.contour(A, B, renderObj(A, B, self.temperature), 6, colors='black', linewidth=.5)
@@ -48,8 +55,8 @@ class rendering(object):
 				R  = plt.contour(A, B, renderObj, 6, colors='black', linewidth=.5)
 
 			plt.clabel(R, inline=True, fontsize=10)
-			plt.xlim(self.x_axis[0],self.x_axis[-1])
-			plt.ylim(self.y_axis[0],self.y_axis[-1])
+			plt.xlim(x_axis[0],x_axis[-2])
+			plt.ylim(y_axis[0],y_axis[-2])
 			plt.xticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 6))
 			plt.yticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 6))
 			plt.colorbar(cs)
@@ -58,7 +65,7 @@ class rendering(object):
 
 if __name__ == "__main__":
 	pass
-	#s = rendering(ndims=2, half_boxboundary=3, binNum=40, temperature=10)
+	#s = rendering(ndims=2, half_boxboundary=3, binNum=40, temperature=0.1)
 	#s.render(boltz2D, name="boltz2D")
 	#s = rendering(ndims=2, half_boxboundary=3, binNum=40)
 	#s.render(forcex2D  ,name="forcex2D")

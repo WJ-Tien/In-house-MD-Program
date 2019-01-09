@@ -28,18 +28,18 @@ class checkStatMechProp(object):
 				for line in fin:
 					line = line.split()
 					if line[0] != "#":	
-						coord_x.append(round(float(line[2]), 7)) # 2 for cartcoord_1D
+						coord_x.append(float(line[2])) # 2 for cartcoord_1D
 
 				nsamples = len(coord_x) 
 
-				for i in coord_x :
+				for i in range(self.binNum): 
 					prob_x[getIndices(i, self.x_axis)] += 1 
 					
 				prob_x = np.array(prob_x)
 				prob_x = (prob_x / nsamples) # final probability distribution 
 
 				with open(fileOut, "w") as fout:
-					for i in range(len(prob_x)): # discard the point on pi (PBC issues)
+					for i in range(len(prob_x)): # in xmgrace, one can discard the point on pi (boundary error)
 						fout.write(str(self.x_axis[i]) + " " + str(prob_x[i]) + "\n")
 
 			if self.ndims == 2:
@@ -51,21 +51,24 @@ class checkStatMechProp(object):
 				for line in fin:
 					line = line.split()
 					if line[0] != "#":	
-						coord_x.append(round(float(line[2]), 7)) # 2 for cartcoord_1D, 2 4 for cartcoord_2D
-						coord_y.append(round(float(line[4]), 7)) # 2 for cartcoord_1D, 2 4 for cartcoord_2D
+						coord_x.append(float(line[2])) # 2 for cartcoord_1D, 2 4 for cartcoord_2D
+						coord_y.append(float(line[4])) # 2 for cartcoord_1D, 2 4 for cartcoord_2D
 
 				nsamples = len(coord_x) 
 
 				for i in range(len(coord_x)):
 					prob_xy[getIndices(coord_x[i], self.x_axis)][getIndices(coord_y[i], self.y_axis)] += 1
 
-				prob_xy = (prob_xy / nsamples) # final probability distribution 
+				prob_xy = (prob_xy / nsamples / nsamples) # final probability distribution 
 
 				with open(fileOut, "w") as fout:
-					for i in range(prob_xy.shape[0]): # discard the point on the positive boundary (PBC issues)
-						for j in range(prob_xy.shape[0]): # discard the point on the positive boundary (PBC issues)
+					for i in range(self.binNum): # discard the point on the positive boundary (PBC issues)
+						for j in range(self.binNum): # discard the point on the positive boundary (PBC issues)
 							fout.write(str(self.x_axis[i]) + " ")
 							fout.write(str(self.y_axis[j]) + " " +  str(prob_xy[i][j]) + "\n")
+
+				prob_xy = np.delete(prob_xy, -1, 0) # rendering; prevent boundary error
+				prob_xy = np.delete(prob_xy, -1, 1)
 
 				r = rendering(self.ndims, self.half_boxboundary, self.binNum)
 				r.render(prob_xy, name=str(self.abfCheckFlag + "_" + self.nnCheckFlag + "_" + "boltz2D"))			
@@ -74,22 +77,29 @@ class checkStatMechProp(object):
 
 		with open(fileIn, "r") as fin:
 			if self.ndims == 1:
+				# use xmgrace instead
 				pass	
 
 			if self.ndims == 2:	
 				force_x  = np.zeros((self.binNum, self.binNum), dtype=np.float32) 
 				force_y  = np.zeros((self.binNum, self.binNum), dtype=np.float32) 
-				coord_x = [] 
-				coord_y = [] 
+				i        = 0
+				j        = 0
 
 				for line in fin:
 					line = line.split()
-					if line[0] != "#":	
-						coord_x.append(round(float(line[0]), 7)) # 0 for cartcoord_x 
-						coord_y.append(round(float(line[1]), 7)) # 1 for cartcoord_y
-						force_x[getIndices(round(float(line[0]), 7), self.x_axis)][getIndices(round(float(line[1]), 7), self.y_axis)] = round(float(line[2]), 7)
-						force_y[getIndices(round(float(line[0]), 7), self.x_axis)][getIndices(round(float(line[1]), 7), self.y_axis)] = round(float(line[4]), 7)
-
+					force_x[i][j] = float(line[2])
+					force_y[i][j] = float(line[4])
+					j += 1
+					if j == self.binNum:
+						j = 0
+						i += 1
+				
+				force_x = np.delete(force_x, -1, 1) # rendering; prevent boundary error
+				force_x = np.delete(force_x, -1, 0)
+				force_y = np.delete(force_y, -1, 1)
+				force_y = np.delete(force_y, -1, 0)
+					
 				r = rendering(self.ndims, self.half_boxboundary, self.binNum)
 				r.render(force_x, name=str(self.abfCheckFlag + "_" + self.nnCheckFlag + "_" + "forcex2D"))			
 				r.render(force_y, name=str(self.abfCheckFlag + "_" + self.nnCheckFlag + "_" + "forcey2D"))			
@@ -128,7 +138,6 @@ class checkStatMechProp(object):
 						with open(fileOut, "a") as fout:
 							fout.write(str(filename) + "    " + str(TargetTemp) + "\n")
 
-
 	def relativeError(self, ideal_estimate, file_RegularMD, file_ABF, file_ABFANN, name):
 		def readData(f):
 			with open(f, "r") as fin:
@@ -153,4 +162,8 @@ class checkStatMechProp(object):
 
 		
 if __name__ == "__main__":
-	pass
+	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="no", nnCheckFlag="no").checkForceDistr("Force_m1_T0.1_noABF_noNN_TL_150000.dat")
+	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="no", nnCheckFlag="no").checkBoltzDistr("conventional_m1_T0.1_noABF_noNN_TL_150000.dat", "Histogram_m1_T0.1_noABF_noNN_TL_150000.dat")
+	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="yes", nnCheckFlag="no").checkForceDistr("Force_m1_T0.1_yesABF_noNN_TL_150000.dat")
+	checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="yes", nnCheckFlag="no").checkBoltzDistr("conventional_m1_T0.1_yesABF_noNN_TL_150000.dat", "Histogram_m1_T0.1_yesABF_noNN_TL_150000.dat")
+	
