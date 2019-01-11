@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 from render import rendering
-from customMathFunc import getIndices, forcex2D, forcey2D
+from customMathFunc import getIndices, forcex2D, forcey2D, truncateFloat
 import numpy as np
 import os
 
 class checkStatMechProp(object):
 	
-	def __init__(self, ndims, mass, half_boxboundary, binNum, abfCheckFlag, nnCheckFlag):
+	def __init__(self, ndims, mass, half_boxboundary, binNum, abfCheckFlag, nnCheckFlag, temperature=None):
+		self.temperature      = temperature
 		self.ndims            = ndims
 		self.half_boxboundary = half_boxboundary
 		self.mass             = mass
@@ -21,20 +22,16 @@ class checkStatMechProp(object):
 
 		with open(fileIn, "r") as fin:
 
-			if self.ndims == 1: 
+			if self.ndims == 1: # use xmgrace instead
 				prob_x = np.zeros((self.binNum), dtype = np.int32)  
-				coord_x = []  
+				nsamples = 0
 
 				for line in fin:
 					line = line.split()
 					if line[0] != "#":	
-						coord_x.append(float(line[2])) # 2 for cartcoord_1D
+						nsamples += 1	
+						prob_x[getIndices(truncateFloat(float(line[2])), self.x_axis)] += 1 
 
-				nsamples = len(coord_x) 
-
-				for i in range(self.binNum): 
-					prob_x[getIndices(i, self.x_axis)] += 1 
-					
 				prob_x = np.array(prob_x)
 				prob_x = (prob_x / nsamples) # final probability distribution 
 
@@ -45,19 +42,12 @@ class checkStatMechProp(object):
 			if self.ndims == 2:
 
 				prob_xy  = np.zeros((self.binNum, self.binNum), dtype = np.float32)  
-				coord_x = [] 
-				coord_y = [] 
+				nsamples = 0
 
 				for line in fin:
 					line = line.split()
 					if line[0] != "#":	
-						coord_x.append(float(line[2])) # 2 for cartcoord_1D, 2 4 for cartcoord_2D
-						coord_y.append(float(line[4])) # 2 for cartcoord_1D, 2 4 for cartcoord_2D
-
-				nsamples = len(coord_x) 
-
-				for i in range(len(coord_x)):
-					prob_xy[getIndices(coord_x[i], self.x_axis)][getIndices(coord_y[i], self.y_axis)] += 1
+						prob_xy[getIndices(truncateFloat(float(line[2])), self.x_axis)][getIndices(truncateFloat(float(line[4])), self.y_axis)] += 1 # 2 for cartcoord_1D, 2 4 for cartcoord_2D
 
 				prob_xy = (prob_xy / nsamples / nsamples) # final probability distribution 
 
@@ -70,7 +60,7 @@ class checkStatMechProp(object):
 				prob_xy = np.delete(prob_xy, -1, 0) # rendering; prevent boundary error
 				prob_xy = np.delete(prob_xy, -1, 1)
 
-				r = rendering(self.ndims, self.half_boxboundary, self.binNum)
+				r = rendering(self.ndims, self.half_boxboundary, self.binNum, self.temperature)
 				r.render(prob_xy, name=str(self.abfCheckFlag + "_" + self.nnCheckFlag + "_" + "boltz2D"))			
 
 	def checkForceDistr(self, fileIn):	
@@ -88,8 +78,8 @@ class checkStatMechProp(object):
 
 				for line in fin:
 					line = line.split()
-					force_x[i][j] = float(line[2])
-					force_y[i][j] = float(line[4])
+					force_x[i][j] = round(float(line[2]), 3)
+					force_y[i][j] = round(float(line[4]), 3) 
 					j += 1
 					if j == self.binNum:
 						j = 0
@@ -162,8 +152,9 @@ class checkStatMechProp(object):
 
 		
 if __name__ == "__main__":
+	pass
 	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="no", nnCheckFlag="no").checkForceDistr("Force_m1_T0.1_noABF_noNN_TL_150000.dat")
 	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="no", nnCheckFlag="no").checkBoltzDistr("conventional_m1_T0.1_noABF_noNN_TL_150000.dat", "Histogram_m1_T0.1_noABF_noNN_TL_150000.dat")
 	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="yes", nnCheckFlag="no").checkForceDistr("Force_m1_T0.1_yesABF_noNN_TL_150000.dat")
-	checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="yes", nnCheckFlag="no").checkBoltzDistr("conventional_m1_T0.1_yesABF_noNN_TL_150000.dat", "Histogram_m1_T0.1_yesABF_noNN_TL_150000.dat")
+	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="yes", nnCheckFlag="no").checkBoltzDistr("conventional_m1_T0.1_yesABF_noNN_TL_150000.dat", "Histogram_m1_T0.1_yesABF_noNN_TL_150000.dat")
 	

@@ -2,7 +2,7 @@
 import numpy as np
 import time
 from NN import trainingNN 
-from customMathFunc import myRound, getIndices
+from customMathFunc import myRound, getIndices, truncateFloat
 
 class importanceSampling(object):
 	
@@ -11,13 +11,12 @@ class importanceSampling(object):
 		self.startTime        = time.time()
 		self.particles        = particles
 		self.ndims            = ndims
-		self.trainingLayers   = 5 
 		self.kb               = 1   
 		self.binNum           = binNum 
 		self.half_boxboundary = half_boxboundary
-		self.bins             = np.linspace(-half_boxboundary, half_boxboundary, self.binNum)
-		self.colvars_coord    = np.linspace(-half_boxboundary, half_boxboundary, self.binNum) # should discard the last one 
-		self.current_coord    = np.zeros((self.particles, self.ndims), dtype=np.float32) 
+		self.bins             = np.linspace(-half_boxboundary, half_boxboundary, self.binNum, dtype=np.float64)
+		self.colvars_coord    = np.linspace(-half_boxboundary, half_boxboundary, self.binNum, dtype=np.float64) # should discard the last one 
+		self.current_coord    = np.zeros((self.particles, self.ndims), dtype=np.float64) 
 		self.current_time     = current_time
 		self.time_step        = time_step
 		self.time_length      = time_length
@@ -26,7 +25,7 @@ class importanceSampling(object):
 		self.box              = np.array(box)  
 		self.temperature      = temperature
 		self.pve_or_nve       = 1 if np.random.randint(1, 1001) % 2 == 0 else	-1
-		self.current_vel      = np.array([[self.pve_or_nve * (np.sqrt(self.ndims * self.kb * self.temperature / self.mass)) for j in range(self.ndims)] for i in range(self.particles)], dtype=np.float32) 
+		self.current_vel      = np.array([[self.pve_or_nve * (np.sqrt(self.ndims * self.kb * self.temperature / self.mass)) for j in range(self.ndims)] for i in range(self.particles)], dtype=np.float64) 
 		self.frictCoeff       = frictCoeff
 		self.mode             = mode
 		self.abfCheckFlag     = abfCheckFlag 
@@ -34,24 +33,25 @@ class importanceSampling(object):
 		self.Frequency        = trainingFrequency
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
+		self.trainingLayers   = 5
 		self.learning_rate    = learning_rate 
 		self.regularCoeff     = regularCoeff 
 		self.epoch            = epoch 
 		self.NNoutputFreq     = NNoutputFreq 
 
 		if self.ndims == 1:
-			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float32) 
-			self.colvars_force_NN = np.zeros(len(self.bins), dtype=np.float32) 
-			self.colvars_count    = np.zeros(len(self.bins), dtype=np.int32) 
-			self.weightArr        = np.zeros((self.trainingLayers, len(self.bins)), dtype=np.float32)
-			self.biasArr          = np.zeros((self.trainingLayers, len(self.bins)), dtype=np.float32)
+			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
+			self.colvars_force_NN = np.zeros(len(self.bins), dtype=np.float64) 
+			self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
+			self.weightArr        = np.zeros((self.trainingLayers, len(self.bins)), dtype=np.float64)
+			self.biasArr          = np.zeros((self.trainingLayers, len(self.bins)), dtype=np.float64)
 
 		if self.ndims == 2:
-			self.colvars_force    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float32) # ixj
-			self.colvars_force_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float32) 
-			self.colvars_count    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.int32) 
-			self.weightArr        = np.zeros((self.trainingLayers, len(self.bins), len(self.bins)), dtype=np.float32)
-			self.biasArr          = np.zeros((self.trainingLayers, len(self.bins), len(self.bins)), dtype=np.float32)
+			self.colvars_force    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) # ixj
+			self.colvars_force_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
+			self.colvars_count    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
+			self.weightArr        = np.zeros((self.trainingLayers, len(self.bins), len(self.bins)), dtype=np.float64)
+			self.biasArr          = np.zeros((self.trainingLayers, len(self.bins), len(self.bins)), dtype=np.float64)
 
 	def printIt(self):
 		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime)) 
@@ -81,17 +81,30 @@ class importanceSampling(object):
 		self.colvars_force = (self.colvars_force / self.colvars_count)
 		self.colvars_force[np.isnan(self.colvars_force)] = 0
 
-		if self.ndims == 1:
-			for i in range(len(self.bins)): 
-				self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
-				self.fileOutForce.write(str(self.colvars_force[i]) + " " + str(self.colvars_count[i]) + "\n")  
-
-		if self.ndims == 2:
-			for i in range(len(self.bins)):
-				for j in range(len(self.bins)):
+		if self.nnCheckFlag == "yes" and self.abfCheckFlag == "yes":
+			if self.ndims == 1:
+				for i in range(len(self.bins)): 
 					self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
-					self.fileOutForce.write(str(self.colvars_coord[j]) + " ")
-					self.fileOutForce.write(str(self.colvars_force[0][i][j]) + " " + str(self.colvars_count[0][i][j]) + " " +str(self.colvars_force[1][i][j]) + " " + str(self.colvars_count[1][i][j]) + "\n")  
+					self.fileOutForce.write(str(self.colvars_force_NN[i]) + " " + str(self.colvars_count[i]) + "\n")  
+
+			if self.ndims == 2:
+				for i in range(len(self.bins)):
+					for j in range(len(self.bins)):
+						self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
+						self.fileOutForce.write(str(self.colvars_coord[j]) + " ")
+						self.fileOutForce.write(str(self.colvars_force_NN[0][i][j]) + " " + str(self.colvars_count[0][i][j]) + " " +str(self.colvars_force_NN[1][i][j]) + " " + str(self.colvars_count[1][i][j]) + "\n")  
+		else:
+			if self.ndims == 1:
+				for i in range(len(self.bins)): 
+					self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
+					self.fileOutForce.write(str(self.colvars_force[i]) + " " + str(self.colvars_count[i]) + "\n")  
+
+			if self.ndims == 2:
+				for i in range(len(self.bins)):
+					for j in range(len(self.bins)):
+						self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
+						self.fileOutForce.write(str(self.colvars_coord[j]) + " ")
+						self.fileOutForce.write(str(self.colvars_force[0][i][j]) + " " + str(self.colvars_count[0][i][j]) + " " +str(self.colvars_force[1][i][j]) + " " + str(self.colvars_count[1][i][j]) + "\n")  
 
 	def PotentialForce(self, coord_x, coord_y, d):     
 
@@ -121,7 +134,7 @@ class importanceSampling(object):
 
 	def randForce(self): 
 		random_constant = np.random.normal(0, 1)
-		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (random_constant) 
+		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (random_constant)
 
 	def appliedBiasForce(self, coord_x, coord_y, d):
 
@@ -134,22 +147,24 @@ class importanceSampling(object):
 	def forceDistrRecord(self, coord_x, coord_y, updated_Fsys, d):
 
 		if self.ndims == 1:
-			if isinstance(updated_Fsys, float) == True: # conventional ABF collection, which is a float
+			if isinstance(updated_Fsys, float) or isinstance(updated_Fsys, int): # conventional ABF collection, which is a float
 				self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys
 				self.colvars_count[getIndices(coord_x, self.bins)] += 1
 			else:                                       # refined force from NN, which is a np.ndarray
-				self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys[getIndices(coord_x, self.bins)]
-				self.colvars_count[getIndices(coord_x, self.bins)] += 1
+				self.colvars_force += updated_Fsys
+				self.colvars_count += 1
 
 		if self.ndims == 2:
-			if isinstance(updated_Fsys, float) == True:
+			if isinstance(updated_Fsys, float) or isinstance(updated_Fsys, int):
 				self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys 
 				self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
 			else: 
-				self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
-				self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
+				self.colvars_force += updated_Fsys
+				self.colvars_count += 1
 				
-	def getForce(self, coord_x, coord_y, vel, d=None):
+	def getLocalForce(self, coord_x, coord_y, vel, d=None):
+		coord_x = truncateFloat(coord_x)
+		coord_y = truncateFloat(coord_y)
 
 		# Regular MD
 		if self.abfCheckFlag == "no" and self.nnCheckFlag == "no":  
@@ -173,7 +188,7 @@ class importanceSampling(object):
 			self.forceDistrRecord(coord_x, coord_y, Fsys, d)
 
 			if self.frame % self.Frequency == 0 and self.frame != 0: 
-				output = trainingNN("loss.dat", "hyperparam.dat", "weight.pkl", "bias.pkl", self.ndims, len(self.bins)) 
+				output = trainingNN("loss.dat", "hyperparam.dat", self.ndims, len(self.bins)) 
 
 				self.colvars_force = (self.colvars_force / self.colvars_count)
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
@@ -182,19 +197,22 @@ class importanceSampling(object):
 				output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, self.learning_rate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
 
 				self.colvars_force  = (self.colvars_force * self.colvars_count)
+				self.forceDistrRecord(coord_x, coord_y, self.colvars_force_NN, d)
 
 				for i in range(self.trainingLayers):
 					self.weightArr[i] = trainedWeightArr[i]
 					self.biasArr[i] = trainedBiasArr[i] 
 
-				self.forceDistrRecord(coord_x, coord_y, self.colvars_force_NN, d)
-				Fabf = self.appliedBiasForce(coord_x, coord_y, d) 
+				Fabf = -self.colvars_force_NN[getIndices(coord_x, self.bins)]
 				return (Fu + Fabf) / self.mass
 
 			else:
-				Fabf = self.appliedBiasForce(coord_x, coord_y, d)
-				return (Fu + Fabf) / self.mass
-
+				if self.frame < self.Frequency: 
+					Fabf = self.appliedBiasForce(coord_x, coord_y, d)
+					return (Fu + Fabf) / self.mass
+				else:
+					Fabf = -self.colvars_force_NN[getIndices(coord_x, self.bins)]
+					return (Fu + Fabf) / self.mass
 
 	def LangevinEngine(self):
 
@@ -210,7 +228,7 @@ class importanceSampling(object):
 
 				sigma                       = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
 
-				current_force_x             = self.getForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
+				current_force_x             = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
 				Ct_x                        = (0.5 * self.time_step**2) * (current_force_x - self.frictCoeff * self.current_vel[n][0]) + \
 																			sigma * (self.time_step**1.5) * (0.5 * random_xi_x + (np.sqrt(3)/6) * random_theta_x)
@@ -218,7 +236,7 @@ class importanceSampling(object):
 				self.current_coord[n][0]    = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
 				self.current_coord[n][0]   -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
 
-				updated_force_x             = self.getForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
+				updated_force_x             = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
 				self.current_vel[n][0]      = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_x) - (self.frictCoeff * Ct_x)
@@ -238,8 +256,8 @@ class importanceSampling(object):
 
 				sigma                       = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
 
-				current_force_x             = self.getForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
-				current_force_y             = self.getForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
+				current_force_x             = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
+				current_force_y             = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
 
 				Ct_x                        = (0.5 * self.time_step**2) * (current_force_x - self.frictCoeff * self.current_vel[n][0]) + \
 																			sigma * (self.time_step**1.5) * (0.5 * random_xi_x + (np.sqrt(3)/6) * random_theta_x)
@@ -252,8 +270,8 @@ class importanceSampling(object):
 				self.current_coord[n][1]    = self.current_coord[n][1] + (self.time_step * self.current_vel[n][1]) + Ct_y
 				self.current_coord[n][1]   -= (myRound(self.current_coord[n][1] / self.box[1]) * self.box[1]) 
 
-				updated_force_x             = self.getForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
-				updated_force_y             = self.getForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
+				updated_force_x             = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
+				updated_force_y             = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
 
 				self.current_vel[n][0]      = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_x) - (self.frictCoeff * Ct_x)

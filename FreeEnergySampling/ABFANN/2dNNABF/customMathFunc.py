@@ -4,8 +4,8 @@ from sympy import *
 
 # TODO issues on rendering boltz1D boltz2D
 
-def getIndices(input_arr, bins):
-	return np.digitize(input_arr, bins)-1
+#def getIndices(input_var, bins): Biases exist when applying ABF
+	#return np.digitize(input_var, bins) - 1
 
 def myRound(a):
 	if (a - np.floor(a)) < 0.5:
@@ -13,7 +13,18 @@ def myRound(a):
 	else:
 		return np.ceil(a)
 
-def partitionFunc1D(a, temperature): # canonical partition function: exp(-U/kbT) / sigma(exp(-U/kbT))
+def getIndices(input_var, bins):
+	binw       = (bins[-1] - bins[0])/ (bins.shape[0] - 1)
+	shiftValue = int(myRound(abs(bins[0]) / binw))
+	return int(np.floor(input_var/ binw)) + shiftValue
+
+def truncateFloat(f, n=6):
+		if f >= 0:
+			return np.floor(f * 10 ** n) / 10 ** n
+		else:
+			return -np.floor(abs(f) * 10 ** n) / 10 ** n
+
+def partitionFunc1D(a, temperature):    # canonical partition function: exp(-U/kbT) / sigma(exp(-U/kbT))
 	return np.exp(-(np.cos(a) + np.cos(2*a) + np.cos(3*a))/temperature)	
 
 def partitionFunc2D(a, b, temperature): # canonical partition function: exp(-U/kbT) / sigma(exp(-U/kbT))
@@ -63,4 +74,7 @@ def forcey2D(a, b):
 	return fy(a, b) 
 
 if __name__ == "__main__":
-	pass
+	pass	
+
+
+
