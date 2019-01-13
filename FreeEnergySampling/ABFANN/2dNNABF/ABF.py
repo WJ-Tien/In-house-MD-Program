@@ -43,15 +43,11 @@ class importanceSampling(object):
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_force_NN = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
-			self.weightArr        = np.zeros((self.trainingLayers, len(self.bins)), dtype=np.float64)
-			self.biasArr          = np.zeros((self.trainingLayers, len(self.bins)), dtype=np.float64)
 
 		if self.ndims == 2:
 			self.colvars_force    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) # ixj
 			self.colvars_force_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_count    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
-			self.weightArr        = np.zeros((self.trainingLayers, len(self.bins), len(self.bins)), dtype=np.float64)
-			self.biasArr          = np.zeros((self.trainingLayers, len(self.bins), len(self.bins)), dtype=np.float64)
 
 	def printIt(self):
 		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime)) 
@@ -193,15 +189,11 @@ class importanceSampling(object):
 				self.colvars_force = (self.colvars_force / self.colvars_count)
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
 
-				trainedWeightArr, trainedBiasArr, self.colvars_force_NN = \
-				output.training(self.weightArr, self.biasArr, self.colvars_coord, self.colvars_force, self.learning_rate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
+				self.colvars_force_NN = \
+				output.training(self.colvars_coord, self.colvars_force, self.learning_rate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
 
 				self.colvars_force  = (self.colvars_force * self.colvars_count)
 				self.forceDistrRecord(coord_x, coord_y, self.colvars_force_NN, d)
-
-				for i in range(self.trainingLayers):
-					self.weightArr[i] = trainedWeightArr[i]
-					self.biasArr[i] = trainedBiasArr[i] 
 
 				Fabf = -self.colvars_force_NN[getIndices(coord_x, self.bins)]
 				return (Fu + Fabf) / self.mass

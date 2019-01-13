@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
 
-a = np.linspace(-3, 3, 40)
-#print(a)
-#print(np.digitize(-3.001, a))
-#print(np.digitize(-3, a))
-print(a)
-print(np.digitize(2.99, a))
-print(np.digitize(3, a))
-print(np.digitize(-3, a))
-print(np.digitize(3.01, a))
-
-
+a = np.array([[1,2,3], [1,2,3]])
+b = np.array([[1],[1],[1]])
+print(a+b)

@@ -11,10 +11,10 @@ frictCoeff            = 0.05
 
 #m100 T0.1 2D
 
-learning_rate         = 0.001
-regularCoeff          = 150 
-epoch                 = 10000 
-trainingFreq          = 5000
+learning_rate         = 0.005
+regularCoeff          = 50 
+epoch                 = 7500 
+trainingFreq          = 10000
 
 
 half_boxboundary      = 3.141592653589793 
