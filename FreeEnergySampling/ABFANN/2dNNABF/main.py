@@ -4,25 +4,26 @@ from ABF import importanceSampling
 from checkStatMechProp import checkStatMechProp 
 import os 
 
-Ndims                 = 2
-mass                  = 100
-temperature           = 0.01 
+Ndims                 = 1
+mass                  = 10
+temperature           = 0.1 
 frictCoeff            = 0.05
 
+#m100 T0.1 2D
 
 learning_rate         = 0.001
-regularCoeff          = 1 
-epoch                 = 10000
-trainingFreq          = 40000
+regularCoeff          = 150 
+epoch                 = 10000 
+trainingFreq          = 5000
 
 
-#half_boxboundary      = 3.141592653589793 
-#binNum                = 361 
-#box                   = [2*half_boxboundary]
+half_boxboundary      = 3.141592653589793 
+binNum                = 361 
+box                   = [2*half_boxboundary]
 
-half_boxboundary      = 3 
-binNum                = 40 
-box                   = [2*half_boxboundary, 2*half_boxboundary]
+#half_boxboundary      = 3 
+#binNum                = 41 
+#box                   = [2*half_boxboundary, 2*half_boxboundary]
 
 Nparticles            = 1
 init_time             = 0.
@@ -31,14 +32,15 @@ init_frame            = 0
 mode                  = "LangevinEngine"
 NNoutputFreq          = 50 
 force_distr           = ["estimate"]
-tl                    = [150000]
+#tl                    = [150000]
+tl                    = [2500]
 
+abf_switch  = ["no", "yes"]
+NN_switch   = ["no", "no"]
 #abf_switch  = ["yes"]
 #NN_switch   = ["yes"]
 #abf_switch  = ["yes"]
 #NN_switch   = ["yes"]
-abf_switch  = ["no","yes"]
-NN_switch   = ["no","no"]
 
 
 

@@ -41,15 +41,16 @@ class checkStatMechProp(object):
 
 			if self.ndims == 2:
 
-				prob_xy  = np.zeros((self.binNum, self.binNum), dtype = np.float32)  
+				prob_xy  = np.zeros((self.binNum, self.binNum), dtype = np.float64)  
 				nsamples = 0
 
 				for line in fin:
 					line = line.split()
 					if line[0] != "#":	
+						nsamples += 1
 						prob_xy[getIndices(truncateFloat(float(line[2])), self.x_axis)][getIndices(truncateFloat(float(line[4])), self.y_axis)] += 1 # 2 for cartcoord_1D, 2 4 for cartcoord_2D
 
-				prob_xy = (prob_xy / nsamples / nsamples) # final probability distribution 
+				prob_xy = (prob_xy / nsamples) # final probability distribution 
 
 				with open(fileOut, "w") as fout:
 					for i in range(self.binNum): # discard the point on the positive boundary (PBC issues)
@@ -71,8 +72,8 @@ class checkStatMechProp(object):
 				pass	
 
 			if self.ndims == 2:	
-				force_x  = np.zeros((self.binNum, self.binNum), dtype=np.float32) 
-				force_y  = np.zeros((self.binNum, self.binNum), dtype=np.float32) 
+				force_x  = np.zeros((self.binNum, self.binNum), dtype=np.float64) 
+				force_y  = np.zeros((self.binNum, self.binNum), dtype=np.float64) 
 				i        = 0
 				j        = 0
 
@@ -153,8 +154,8 @@ class checkStatMechProp(object):
 		
 if __name__ == "__main__":
 	pass
-	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="no", nnCheckFlag="no").checkForceDistr("Force_m1_T0.1_noABF_noNN_TL_150000.dat")
-	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="no", nnCheckFlag="no").checkBoltzDistr("conventional_m1_T0.1_noABF_noNN_TL_150000.dat", "Histogram_m1_T0.1_noABF_noNN_TL_150000.dat")
+	#checkStatMechProp(ndims=2, mass=100, half_boxboundary=3, binNum=40, abfCheckFlag="no", nnCheckFlag="no", temperature=0.01).checkForceDistr("Force_m100_T0.01_noABF_noNN_TL_150000.dat")
+	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="no", nnCheckFlag="no", temperature=0.01).checkBoltzDistr("conventional_m100_T0.01_noABF_noNN_TL_150000.dat", "Histogram_m100_T0.01_noABF_noNN_TL_150000.dat")
 	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="yes", nnCheckFlag="no").checkForceDistr("Force_m1_T0.1_yesABF_noNN_TL_150000.dat")
 	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="yes", nnCheckFlag="no").checkBoltzDistr("conventional_m1_T0.1_yesABF_noNN_TL_150000.dat", "Histogram_m1_T0.1_yesABF_noNN_TL_150000.dat")
 	

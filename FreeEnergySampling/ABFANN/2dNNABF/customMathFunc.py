@@ -65,13 +65,13 @@ def forcex2D(a, b):
 	x, y = symbols("x y")	
 	fx = sympify(diff((0.0011- x*0.421 + x**4 + 2*x**3 + 3*y + y**3 + y**2 + x*2) * exp(-x**2 - y**2), x)) 
 	fx = lambdify([x,y], fx, "numpy")
-	return fx(a, b) 
+	return -fx(a, b) 
 
 def forcey2D(a, b):
 	x, y = symbols("x y")	
 	fy = sympify(diff((0.0011- x*0.421 + x**4 + 2*x**3 + 3*y + y**3 + y**2 + x*2) * exp(-x**2 - y**2), y)) 
 	fy = lambdify([x,y], fy, "numpy")
-	return fy(a, b) 
+	return -fy(a, b) 
 
 if __name__ == "__main__":
 	pass	
