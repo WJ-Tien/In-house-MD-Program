@@ -39,7 +39,7 @@ class trainingNN(object):
 		b2          = tf.Variable(tf.zeros([self.size, node_23]))
 		y2          = tf.nn.relu(tf.matmul(y1, w2) + b2)
 
-		node_34     = 6		
+		node_34     = 12 		
 		w3          = tf.Variable(tf.truncated_normal([node_23, node_34], stddev=0.05)) #361*4 * (4*2)=361*2
 		b3          = tf.Variable(tf.zeros([self.size, node_34]))
 		y3          = tf.nn.relu(tf.matmul(y2, w3) + b3)
@@ -79,7 +79,7 @@ class trainingNN(object):
 
 if __name__ == "__main__":
 	pass
-	'''	
+	'''
 	output = trainingNN("loss.dat", "hyperparam.dat", 1, 361)
 	array_force_to_learn = []
 
@@ -89,11 +89,12 @@ if __name__ == "__main__":
 	array_force_to_learn = np.array(array_force_to_learn)
 	array_colvar_to_train = np.linspace(-np.pi, np.pi, 361)
 
-	force = output.training(array_colvar_to_train, array_force_to_learn, learning_rate=0.0083, regularFactor=0.0, epochs=10000, outputFreq=100)
+	force = output.training(array_colvar_to_train, array_force_to_learn, learning_rate=0.0083, regularFactor=0.0, epochs=5000, outputFreq=100)
 	with open("out", "w") as fout:
 		for cv, force in zip(array_colvar_to_train, force):
 			fout.write(str(cv) +  " " + str(force) + "\n")
 	'''
+	
 	
 	#import pickle
 	#self.save_weight     = open(str(fileweight), "wb")	
