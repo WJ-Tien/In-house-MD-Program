@@ -25,7 +25,7 @@ class trainingNN(object):
 		x  = tf.placeholder(tf.float32, [len(array_colvar_to_train), 1])  # feature
 		y  = tf.placeholder(tf.float32, [len(array_force_to_learn), 1])  # real data; training set; label	
 
-		# 1-48-24-6-1
+		# 1-48-24-12-1
 
 		# layer 1
 		node_12     = 48		
