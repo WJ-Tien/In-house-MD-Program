@@ -25,34 +25,35 @@ class trainingNN(object):
 		x  = tf.placeholder(tf.float32, [len(array_colvar_to_train), 1])  # feature
 		y  = tf.placeholder(tf.float32, [len(array_force_to_learn), 1])  # real data; training set; label	
 
-		# 1-48-24-12-1
+		# 1-64-48-1
 
 		# layer 1
-		node_12     = 48		
+		node_12     = 96		
 		w1          = tf.Variable(tf.truncated_normal([1, node_12], stddev=0.05)) #361*1 * 1*4 = 361*4
 		b1          = tf.Variable(tf.zeros([self.size, node_12]))
 		y1          = tf.nn.relu(tf.matmul(x, w1) + b1)
 			
 		# layer 2
-		node_23     = 24	
+		node_23     = 48	
 		w2          = tf.Variable(tf.truncated_normal([node_12, node_23], stddev=0.05)) #361*4 * (4*2)=361*2
 		b2          = tf.Variable(tf.zeros([self.size, node_23]))
 		y2          = tf.nn.relu(tf.matmul(y1, w2) + b2)
 
-		node_34     = 12 		
+
+		node_34     = 1 		
 		w3          = tf.Variable(tf.truncated_normal([node_23, node_34], stddev=0.05)) #361*4 * (4*2)=361*2
 		b3          = tf.Variable(tf.zeros([self.size, node_34]))
-		y3          = tf.nn.relu(tf.matmul(y2, w3) + b3)
+		y_estimated = (tf.matmul(y2, w3) + b3)
 
 		# layer 3
-		node_45     = 1		
-		w4          = tf.Variable(tf.truncated_normal([node_34, node_45], stddev=0.05)) #361*2* 2*1 = 361*1
-		b4          = tf.Variable(tf.zeros([self.size, 1]))
-		y_estimated = (tf.matmul(y3, w4) + b4)
+		#node_45     = 1		
+		#w4          = tf.Variable(tf.truncated_normal([node_34, node_45], stddev=0.05)) #361*2* 2*1 = 361*1
+		#b4          = tf.Variable(tf.zeros([self.size, 1]))
+		#y_estimated = (tf.matmul(y3, w4) + b4)
 
 
 		#reg_losses   = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-		loss         = tf.reduce_mean(tf.square(y_estimated - y) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3) + tf.nn.l2_loss(w4))*2)
+		loss         = tf.reduce_mean(tf.square(y_estimated - y) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) #+ tf.nn.l2_loss(w4))*2)
 		#loss        += regularFactor * tf.reduce_sum(reg_losses)
 		optimizer    = tf.train.GradientDescentOptimizer(learning_rate)
 		train        = optimizer.minimize(loss)
@@ -78,8 +79,7 @@ class trainingNN(object):
 		return self.estForce
 
 if __name__ == "__main__":
-	pass
-	'''
+
 	output = trainingNN("loss.dat", "hyperparam.dat", 1, 361)
 	array_force_to_learn = []
 
@@ -89,11 +89,10 @@ if __name__ == "__main__":
 	array_force_to_learn = np.array(array_force_to_learn)
 	array_colvar_to_train = np.linspace(-np.pi, np.pi, 361)
 
-	force = output.training(array_colvar_to_train, array_force_to_learn, learning_rate=0.0083, regularFactor=0.0, epochs=5000, outputFreq=100)
+	force = output.training(array_colvar_to_train, array_force_to_learn, learning_rate=0.024, regularFactor=0.0, epochs=2350, outputFreq=100)
 	with open("out", "w") as fout:
 		for cv, force in zip(array_colvar_to_train, force):
 			fout.write(str(cv) +  " " + str(force) + "\n")
-	'''
 	
 	
 	#import pickle

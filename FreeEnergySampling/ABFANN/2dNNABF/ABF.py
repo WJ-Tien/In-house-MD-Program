@@ -33,7 +33,7 @@ class importanceSampling(object):
 		self.Frequency        = trainingFrequency
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
-		self.trainingLayers   = 5
+		#self.Nzero            = 150
 		self.learning_rate    = learning_rate 
 		self.regularCoeff     = regularCoeff 
 		self.epoch            = epoch 
@@ -135,10 +135,16 @@ class importanceSampling(object):
 	def appliedBiasForce(self, coord_x, coord_y, d):
 
 		if self.ndims == 1:
-			return -self.colvars_force[getIndices(coord_x, self.bins)] / self.colvars_count[getIndices(coord_x, self.bins)]
+			if self.colvars_count[getIndices(coord_x, self.bins)] == 0:
+				return 0
+			else:
+				return -(self.colvars_force[getIndices(coord_x, self.bins)] / self.colvars_count[getIndices(coord_x, self.bins)]) 
 
 		if self.ndims == 2:
-			return -self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] / self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
+			if self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] == 0:
+				return 0
+			else:
+				return -(self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] / self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]) 
 
 	def forceDistrRecord(self, coord_x, coord_y, updated_Fsys, d):
 
@@ -149,6 +155,8 @@ class importanceSampling(object):
 			else:                                       # refined force from NN, which is a np.ndarray
 				self.colvars_force += updated_Fsys
 				self.colvars_count += 1
+				#self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys[getIndices(coord_x, self.bins)]
+				#self.colvars_count[getIndices(coord_x, self.bins)] += 1
 
 		if self.ndims == 2:
 			if isinstance(updated_Fsys, float) or isinstance(updated_Fsys, int):
@@ -157,6 +165,8 @@ class importanceSampling(object):
 			else: 
 				self.colvars_force += updated_Fsys
 				self.colvars_count += 1
+				#self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
+				#self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
 				
 	def getLocalForce(self, coord_x, coord_y, vel, d=None):
 		coord_x = truncateFloat(coord_x)
@@ -173,15 +183,14 @@ class importanceSampling(object):
 		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "no":
 			Fu = self.PotentialForce(coord_x, coord_y, d) 
 			Fsys = self.PotentialForce(coord_x, coord_y, d) + self.visForce(vel) + self.randForce()
-			self.forceDistrRecord(coord_x, coord_y, Fsys, d)
 			Fabf = self.appliedBiasForce(coord_x, coord_y, d)
+			self.forceDistrRecord(coord_x, coord_y, Fsys, d)
 			return (Fu + Fabf) / self.mass
 
 		# Regular MD with ABF and ANN (I)
 		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": 
 			Fu = self.PotentialForce(coord_x, coord_y, d) 
 			Fsys = self.PotentialForce(coord_x, coord_y, d) + self.visForce(vel) + self.randForce()
-			self.forceDistrRecord(coord_x, coord_y, Fsys, d)
 
 			if self.frame % self.Frequency == 0 and self.frame != 0: 
 				output = trainingNN("loss.dat", "hyperparam.dat", self.ndims, len(self.bins)) 
@@ -201,8 +210,10 @@ class importanceSampling(object):
 			else:
 				if self.frame < self.Frequency: 
 					Fabf = self.appliedBiasForce(coord_x, coord_y, d)
+					self.forceDistrRecord(coord_x, coord_y, Fsys, d)
 					return (Fu + Fabf) / self.mass
 				else:
+					self.forceDistrRecord(coord_x, coord_y, Fsys, d)
 					Fabf = -self.colvars_force_NN[getIndices(coord_x, self.bins)]
 					return (Fu + Fabf) / self.mass
 
