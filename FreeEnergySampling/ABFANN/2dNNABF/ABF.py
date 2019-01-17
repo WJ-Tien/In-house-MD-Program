@@ -33,7 +33,6 @@ class importanceSampling(object):
 		self.Frequency        = trainingFrequency
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
-		#self.Nzero            = 150
 		self.learning_rate    = learning_rate 
 		self.regularCoeff     = regularCoeff 
 		self.epoch            = epoch 
@@ -155,8 +154,6 @@ class importanceSampling(object):
 			else:                                       # refined force from NN, which is a np.ndarray
 				self.colvars_force += updated_Fsys
 				self.colvars_count += 1
-				#self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys[getIndices(coord_x, self.bins)]
-				#self.colvars_count[getIndices(coord_x, self.bins)] += 1
 
 		if self.ndims == 2:
 			if isinstance(updated_Fsys, float) or isinstance(updated_Fsys, int):
@@ -165,57 +162,45 @@ class importanceSampling(object):
 			else: 
 				self.colvars_force += updated_Fsys
 				self.colvars_count += 1
-				#self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
-				#self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
-				
-	def getLocalForce(self, coord_x, coord_y, vel, d=None):
-		coord_x = truncateFloat(coord_x)
-		coord_y = truncateFloat(coord_y)
 
-		# Regular MD
-		if self.abfCheckFlag == "no" and self.nnCheckFlag == "no":  
-			Fu = self.PotentialForce(coord_x, coord_y, d) 
-			Fsys = self.PotentialForce(coord_x, coord_y, d) + self.visForce(vel) + self.randForce()
-			self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
-			return Fu / self.mass 
-
-	  # Regular MD with ABF
-		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "no":
-			Fu = self.PotentialForce(coord_x, coord_y, d) 
-			Fsys = self.PotentialForce(coord_x, coord_y, d) + self.visForce(vel) + self.randForce()
-			Fabf = self.appliedBiasForce(coord_x, coord_y, d)
-			self.forceDistrRecord(coord_x, coord_y, Fsys, d)
-			return (Fu + Fabf) / self.mass
-
-		# Regular MD with ABF and ANN (I)
-		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": 
-			Fu = self.PotentialForce(coord_x, coord_y, d) 
-			Fsys = self.PotentialForce(coord_x, coord_y, d) + self.visForce(vel) + self.randForce()
-
+	def learningProxy(self):
+		if self.nnCheckFlag == "yes":
 			if self.frame % self.Frequency == 0 and self.frame != 0: 
 				output = trainingNN("loss.dat", "hyperparam.dat", self.ndims, len(self.bins)) 
 
 				self.colvars_force = (self.colvars_force / self.colvars_count)
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
 
-				self.colvars_force_NN = \
-				output.training(self.colvars_coord, self.colvars_force, self.learning_rate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
+				self.colvars_force_NN = output.training(self.colvars_coord, self.colvars_force, self.learning_rate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
+	
+				self.colvars_force = (self.colvars_force * self.colvars_count)
+				self.forceDistrRecord(None, None, self.colvars_force_NN, None)
+				
+	def getLocalForce(self, coord_x, coord_y, vel, d=None):
 
-				self.colvars_force  = (self.colvars_force * self.colvars_count)
-				self.forceDistrRecord(coord_x, coord_y, self.colvars_force_NN, d)
+		coord_x = truncateFloat(coord_x)
+		coord_y = truncateFloat(coord_y)
+		Fu = self.PotentialForce(coord_x, coord_y, d) 
+		Fsys = self.PotentialForce(coord_x, coord_y, d) + self.visForce(vel) + self.randForce()
+		self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 
-				Fabf = -self.colvars_force_NN[getIndices(coord_x, self.bins)]
+		# Regular MD
+		if self.abfCheckFlag == "no" and self.nnCheckFlag == "no":  
+			return Fu / self.mass 
+
+	  # Regular MD with ABF
+		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "no":
+			Fabf = self.appliedBiasForce(coord_x, coord_y, d)
+			return (Fu + Fabf) / self.mass
+
+		# Regular MD with ABF and ANN (I)
+		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": 
+			if self.frame < self.Frequency: 
+				Fabf = self.appliedBiasForce(coord_x, coord_y, d)
 				return (Fu + Fabf) / self.mass
-
 			else:
-				if self.frame < self.Frequency: 
-					Fabf = self.appliedBiasForce(coord_x, coord_y, d)
-					self.forceDistrRecord(coord_x, coord_y, Fsys, d)
-					return (Fu + Fabf) / self.mass
-				else:
-					self.forceDistrRecord(coord_x, coord_y, Fsys, d)
-					Fabf = -self.colvars_force_NN[getIndices(coord_x, self.bins)]
-					return (Fu + Fabf) / self.mass
+				Fabf = -self.colvars_force_NN[getIndices(coord_x, self.bins)] if self.ndims == 1 else -self.colvars_force_NN[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
+				return (Fu + Fabf) / self.mass
 
 	def LangevinEngine(self):
 
@@ -223,9 +208,11 @@ class importanceSampling(object):
 		# http://itf.fys.kuleuven.be/~enrico/Teaching/molecular_dynamics_2015.pdf
 		# https://pdfs.semanticscholar.org/f393/85336df44c2af1fd6f293540b18a701b1c56.pdf
 
+
 		if self.ndims == 1:
 			random_xi_x       = np.random.normal(0, 1)
 			random_theta_x    = np.random.normal(0, 1)
+			self.learningProxy()
 
 			for n in range(self.particles):
 
@@ -243,10 +230,7 @@ class importanceSampling(object):
 
 				self.current_vel[n][0]      = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_x) - (self.frictCoeff * Ct_x)
-
-			self.current_time += self.time_step 
-			self.frame        += 1
-
+				
 
 		if self.ndims == 2:
 
@@ -254,6 +238,7 @@ class importanceSampling(object):
 			random_theta_x    = np.random.normal(0, 1)
 			random_xi_y       = np.random.normal(0, 1)
 			random_theta_y    = np.random.normal(0, 1)
+			self.learningProxy()
 
 			for n in range(self.particles):
 
@@ -281,8 +266,8 @@ class importanceSampling(object):
 				self.current_vel[n][1]      = self.current_vel[n][1] + (0.5 * self.time_step * (current_force_y + updated_force_y)) - (self.time_step * self.frictCoeff * self.current_vel[n][1]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_y) - (self.frictCoeff * Ct_y)
 
-			self.current_time += self.time_step 
-			self.frame        += 1
+		self.current_time += self.time_step 
+		self.frame        += 1
 
 	def mdrun(self):
 
