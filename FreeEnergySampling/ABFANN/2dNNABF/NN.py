@@ -91,15 +91,20 @@ class trainingNN(object):
 			b1          = tf.Variable(tf.zeros([self.ndims*self.size**self.ndims, node_12]))
 			y1          = tf.nn.relu(tf.matmul(CV_x, w1[0]) + tf.matmul(CV_y, w1[1]) + b1)
 				
-			node_23     = 24	
+			node_23     = 24 	
 			w2          = tf.Variable(tf.truncated_normal([node_12, node_23], stddev=0.05)) #3362*96 * (96*48)=3362*48
 			b2          = tf.Variable(tf.zeros([self.ndims*self.size**self.ndims, node_23]))
 			y2          = tf.nn.relu(tf.matmul(y1, w2) + b2)
-			
-			node_34     = 1 		
-			w3          = tf.Variable(tf.truncated_normal([node_23, node_34], stddev=0.05)) #3362*48 * (48*1)=3362*1
+
+			node_34     = 6 	
+			w3          = tf.Variable(tf.truncated_normal([node_23, node_34], stddev=0.05)) #3362*96 * (96*48)=3362*48
 			b3          = tf.Variable(tf.zeros([self.ndims*self.size**self.ndims, node_34]))
-			y_estimated = (tf.matmul(y2, w3) + b3)
+			y3          = tf.nn.relu(tf.matmul(y2, w3) + b3)
+			
+			node_45     = 1 		
+			w4          = tf.Variable(tf.truncated_normal([node_34, node_45], stddev=0.05)) #3362*48 * (48*1)=3362*1
+			b4          = tf.Variable(tf.zeros([self.ndims*self.size**self.ndims, node_45]))
+			y_estimated = (tf.matmul(y3, w4) + b4)
 
 			loss         = tf.reduce_mean(tf.square(y_estimated - y) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
 			optimizer    = tf.train.GradientDescentOptimizer(learning_rate)
