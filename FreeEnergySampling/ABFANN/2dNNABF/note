@@ -1,0 +1,21 @@
+* Baisc Concepts
+	Collective Variables CVs != Reaction Coordinates
+	ForceOnColvars = (-dV(x)/d(CVs) + kbT*dln|J|/d(CVs)) (d=parital diff)
+	V = effective potential. For Langevin dynamics, it is defined as the summation of  Usys & Udrag & Urandom 
+	Ftot = FUsys + Fdrag + Frandom (actually drag force can be considered to be random force in sufficiently long simulation time)
+	In average <Ftot> = <Fusys> = -<Fabf>
+	At this moement, applying biasing forces to the system would let the system undergoes random walk --> Finstataenous + Fabf = Fdrag + Fr ---> ~= random walk
+	So the simulation ends as <Ftot> = <FUsys> or the equivalent statement <Ftot + Fabf> = 0
+	The final free energy profile along collective variables (CVs) is derived by -S<FUsys> d(CVs) = S<Fabf> d(CVs)
+
+* Numerical Instability
+	Numerical Instability was found in some systems, especially in fast dynamics' .
+
+* Issues on rendering plots
+	Rendering for 2D or higher dimensions should discard the right boundary so as to prevent boundary error
+
+* Issues on binning the system
+	linspace --> binNum + 1 so that interval= 2*half_boxboudary / binNum
+	arange --> interval= 2*half_boxboudary/binNum
+
+

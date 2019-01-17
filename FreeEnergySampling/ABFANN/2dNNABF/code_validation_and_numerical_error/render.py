@@ -55,8 +55,8 @@ class rendering(object):
 				R  = plt.contour(A, B, renderObj, 6, colors='black', linewidth=.5)
 
 			plt.clabel(R, inline=True, fontsize=10)
-			plt.xlim(x_axis[0],x_axis[-1])
-			plt.ylim(y_axis[0],y_axis[-1])
+			plt.xlim(x_axis[0],x_axis[-2])
+			plt.ylim(y_axis[0],y_axis[-2])
 			plt.xticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 6))
 			plt.yticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 6))
 			plt.colorbar(cs)
@@ -64,18 +64,18 @@ class rendering(object):
 			plt.gcf().clear()
 
 if __name__ == "__main__":
-	pass
+	#pass
 	#s = rendering(ndims=2, half_boxboundary=3, binNum=41, temperature=0.1)
 	#s.render(boltz2D, name="boltz2D")
-	#s = rendering(ndims=2, half_boxboundary=3, binNum=41)
-	#s.render(forcex2D  ,name="forcex2D")
-	#s.render(forcey2D  ,name="forcey2D")
+	s = rendering(ndims=2, half_boxboundary=3, binNum=41)
+	s.render(forcex2D  ,name="forcex2D")
+	s.render(forcey2D  ,name="forcey2D")
 	#s.render(Usurface2D,name="Usurface")
 
-	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361, temperature=0.01)
+	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361, temperature=1)
 	#s.render(boltz1D, name="boltz1D")
 	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361)
 	#s.render(forcex1D  ,name="forcex1D")
-	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361, temperature=0.01)
-	#s.render(Usurface1D, name="Usurface1D")
+	#s = rendering(ndims=2, half_boxboundary=3, binNum=41, temperature=0.1)
+	#s.render(Usurface2D, name="Usurface2D")
 
