@@ -25,7 +25,7 @@ class importanceSampling(object):
 		self.box              = np.array(box)  
 		self.temperature      = temperature
 		self.pve_or_nve       = 1 if np.random.randint(1, 1001) % 2 == 0 else	-1
-		self.current_vel      = np.array([[self.pve_or_nve * (np.sqrt(self.ndims * self.kb * self.temperature / self.mass)) for j in range(self.ndims)] for i in range(self.particles)], dtype=np.float64) 
+		self.current_vel      = np.array([[self.pve_or_nve * (np.sqrt(self.kb * self.temperature / self.mass)) for j in range(self.ndims)] for i in range(self.particles)], dtype=np.float64) 
 		self.frictCoeff       = frictCoeff
 		self.mode             = mode
 		self.abfCheckFlag     = abfCheckFlag 
@@ -182,23 +182,26 @@ class importanceSampling(object):
 		coord_y = truncateFloat(coord_y)
 		Fu = self.PotentialForce(coord_x, coord_y, d) 
 		Fsys = self.PotentialForce(coord_x, coord_y, d) + self.visForce(vel) + self.randForce()
-		self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 
 		# Regular MD
 		if self.abfCheckFlag == "no" and self.nnCheckFlag == "no":  
+			self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 			return Fu / self.mass 
 
 	  # Regular MD with ABF
 		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "no":
 			Fabf = self.appliedBiasForce(coord_x, coord_y, d)
+			self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 			return (Fu + Fabf) / self.mass
 
 		# Regular MD with ABF and ANN (I)
 		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": 
 			if self.frame < self.Frequency: 
 				Fabf = self.appliedBiasForce(coord_x, coord_y, d)
+				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 				return (Fu + Fabf) / self.mass
 			else:
+				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 				Fabf = -self.colvars_force_NN[getIndices(coord_x, self.bins)] if self.ndims == 1 else -self.colvars_force_NN[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
 				return (Fu + Fabf) / self.mass
 
