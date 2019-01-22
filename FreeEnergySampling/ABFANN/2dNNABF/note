@@ -1,7 +1,8 @@
 * Baisc Concepts
 	Collective Variables CVs != Reaction Coordinates
-	ForceOnColvars = (-dV(x)/d(CVs) + kbT*dln|J|/d(CVs)) (d=parital diff)
+	ForceOnColvars = (-dV(x)/d(CVs) + kbT*dln|J|/d(CVs)) = (d=parital diff)
 	V = effective potential. For Langevin dynamics, it is defined as the summation of  Usys & Udrag & Urandom 
+	Fabf = -ForceOnColvars * d(cv)/dx
 	Ftot = FUsys + Fdrag + Frandom (actually drag force can be considered to be random force in sufficiently long simulation time)
 	In average <Ftot> = <Fusys> = -<Fabf>
 	At this moement, applying biasing forces to the system would let the system undergoes random walk --> Finstataenous + Fabf = Fdrag + Fr ---> ~= random walk
@@ -10,6 +11,13 @@
 
 * Numerical Instability
 	Numerical Instability was found in some systems, especially in fast dynamics' .
+	Faster dynamics, larger error --> due to the slow convergence 
+	Faster dynamics should come with bigger frictCoeff to reduce numerical error --> increase convergence efficiency
+	Slower dynamics should come with slower frictCoeff to increase convergence efficiency 
+	Current setup
+	1D gamma = 0.05; ANN: 1-20-16-1, opt = adam, initial:lr=0.075, regul=0.00025, mid-final:lr=0.075, regul=0 
+	2D gamma = 0.001
+	
 
 * Issues on rendering plots
 	Rendering for 2D or higher dimensions should discard the right boundary so as to prevent boundary error
@@ -17,5 +25,6 @@
 * Issues on binning the system
 	linspace --> binNum + 1 so that interval= 2*half_boxboudary / binNum
 	arange --> interval= 2*half_boxboudary/binNum
+
 
 
