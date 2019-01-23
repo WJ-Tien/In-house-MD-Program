@@ -3,10 +3,11 @@ import numpy as np
 import time
 from NN import trainingNN 
 from customMathFunc import myRound, getIndices, truncateFloat
+import tensorflow as tf
 
 class importanceSampling(object):
 	
-	def __init__(self, particles, ndims, current_time, time_step, time_length, frame, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, trainingFrequency, mode, learning_rate, regularCoeff, epoch, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force):
+	def __init__(self, particles, ndims, current_time, time_step, time_length, frame, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, trainingFrequency, mode, learningRate, regularCoeff, epoch, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force):
 
 		self.startTime        = time.time()
 		self.particles        = particles
@@ -33,7 +34,8 @@ class importanceSampling(object):
 		self.Frequency        = trainingFrequency
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
-		self.learning_rate    = learning_rate 
+		self.reduceError      = 200
+		self.learningRate    = learningRate 
 		self.regularCoeff     = regularCoeff 
 		self.epoch            = epoch 
 		self.NNoutputFreq     = NNoutputFreq 
@@ -149,7 +151,7 @@ class importanceSampling(object):
 
 		if self.ndims == 1:
 			if isinstance(updated_Fsys, float) or isinstance(updated_Fsys, int): # conventional ABF collection, which is a float
-				self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys
+				self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys 
 				self.colvars_count[getIndices(coord_x, self.bins)] += 1
 			else:                                       # refined force from NN, which is a np.ndarray
 				self.colvars_force += updated_Fsys
@@ -170,12 +172,18 @@ class importanceSampling(object):
 
 				self.colvars_force = (self.colvars_force / self.colvars_count)
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
+				if self.frame > self.Frequency * 8:
+					self.learningRate          = 0.075
+					self.epoch                 = 5000 
+					self.trainingFreq          = 500 
+					self.regularCoeff          = 0.0
 
-				self.colvars_force_NN = output.training(self.colvars_coord, self.colvars_force, self.learning_rate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
+				self.colvars_force_NN = \
+				output.training(self.colvars_coord, self.colvars_force, self.learningRate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
 	
 				self.colvars_force = (self.colvars_force * self.colvars_count)
-				self.forceDistrRecord(None, None, self.colvars_force_NN, None)
-				
+				#self.forceDistrRecord(None, None, self.colvars_force_NN, None)
+
 	def getLocalForce(self, coord_x, coord_y, vel, d=None):
 
 		coord_x = truncateFloat(coord_x)
@@ -200,9 +208,25 @@ class importanceSampling(object):
 				Fabf = self.appliedBiasForce(coord_x, coord_y, d)
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 				return (Fu + Fabf) / self.mass
-			else:
+			else: # NN takes over here
+
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
-				Fabf = -self.colvars_force_NN[getIndices(coord_x, self.bins)] if self.ndims == 1 else -self.colvars_force_NN[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
+				tf.reset_default_graph()
+				coord_x = np.array([coord_x])
+				coord_x = coord_x[:, np.newaxis]
+
+				tf.reset_default_graph()
+				with tf.Session() as sess:
+					Saver = tf.train.import_meta_graph("net1D/netSaver.ckpt.meta")
+					Saver.restore(sess, tf.train.latest_checkpoint("net1D/"))
+					graph = tf.get_default_graph()
+					#y_estimatedOP = graph.get_operation_by_name("criticalOP") 
+					y_estimated = graph.get_tensor_by_name("criticalOP:0") 
+					x = graph.get_tensor_by_name("colvars:0") 
+					Fabf = sess.run(y_estimated, feed_dict={x: coord_x}).reshape(self.particles)[0]
+
+				tf.reset_default_graph()
+
 				return (Fu + Fabf) / self.mass
 
 	def LangevinEngine(self):

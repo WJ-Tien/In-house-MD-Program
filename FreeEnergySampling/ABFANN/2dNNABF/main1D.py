@@ -12,7 +12,7 @@ frictCoeff            = 0.05
 
 learningRate          = 0.075 
 epoch                 = 2500 
-trainingFreq          = 500 
+trainingFreq          = 1000 
 regularCoeff          = 0.00025 
 
 half_boxboundary      = 3.141592653589793 
@@ -26,7 +26,7 @@ init_frame            = 0
 mode                  = "LangevinEngine"
 NNoutputFreq          = 100 
 force_distr           = ["estimate"]
-tl                    = [500]
+tl                    = [750]
 
 #abf_switch  = ["yes"]
 #NN_switch   = ["yes"]

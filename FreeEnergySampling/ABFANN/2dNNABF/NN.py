@@ -2,6 +2,7 @@
 
 import tensorflow as tf 
 import numpy as np
+import os
 
 class trainingNN(object):
 	
@@ -18,10 +19,10 @@ class trainingNN(object):
 		if self.ndims == 2:
 			self.estForce     = np.zeros((self.ndims, self.size, self.size), dtype=np.float64)
 
-	def training(self, array_colvar_to_train, array_force_to_learn, learning_rate, regularFactor, epochs, outputFreq):
+	def training(self, array_colvar_to_train, array_force_to_learn, learningRate, regularFactor, epochs, outputFreq):
 
 		self.hp_train.write("Regularization factor" + " " + str(regularFactor) + "\n")
-		self.hp_train.write("Learning_rate"         + " " + str(learning_rate) + "\n")
+		self.hp_train.write("Learning_rate"         + " " + str(learningRate) + "\n")
 		self.hp_train.close()
 
 		# 1-96-48-1
@@ -30,33 +31,34 @@ class trainingNN(object):
 
 			array_colvar_to_train = array_colvar_to_train[:, np.newaxis]  # 361*1; reshape the array
 			array_force_to_learn  = array_force_to_learn[:, np.newaxis]  # 361*1; reshape the array
-			x           = tf.placeholder(tf.float32, [len(array_colvar_to_train), 1]) # feature
-			y           = tf.placeholder(tf.float32, [len(array_force_to_learn), 1])  # real data; training set; label	
+			x           = tf.placeholder(tf.float32, [None, 1], name="colvars") # feature
+			y           = tf.placeholder(tf.float32, [None, 1])  # real data; training set; label	
 
 			# layer 1
-			node_12     = 96		
-			w1          = tf.Variable(tf.truncated_normal([1, node_12], stddev=0.05)) #361*1 * 1*96 = 361*96
-			b1          = tf.Variable(tf.zeros([self.size, node_12]))
-			y1          = tf.nn.relu(tf.matmul(x, w1) + b1)
+			node_12     = 20		
+			w1          = tf.Variable(tf.truncated_normal([1, node_12], stddev=0.5)) #361*1 * 1*96 = 361*96
+			b1          = tf.Variable(tf.zeros([1, node_12]))
+			y1          = tf.nn.sigmoid(tf.matmul(x, w1) + b1)
 				
 			# layer 2
-			node_23     = 48	
-			w2          = tf.Variable(tf.truncated_normal([node_12, node_23], stddev=0.05)) #361*96 * (96*48)=361*48 
-			b2          = tf.Variable(tf.zeros([self.size, node_23]))
-			y2          = tf.nn.relu(tf.matmul(y1, w2) + b2)
+			node_23     = 16	
+			w2          = tf.Variable(tf.truncated_normal([node_12, node_23], stddev=0.5)) #361*96 * (96*48)=361*48 
+			b2          = tf.Variable(tf.zeros([1, node_23]))
+			y2          = tf.nn.sigmoid(tf.matmul(y1, w2) + b2)
 			
 			# output layer
 			node_34     = 1 		
-			w3          = tf.Variable(tf.truncated_normal([node_23, node_34], stddev=0.05)) #361*48 * (48*1)=361*1 
-			b3          = tf.Variable(tf.zeros([self.size, node_34]))
-			y_estimated = (tf.matmul(y2, w3) + b3)
+			w3          = tf.Variable(tf.truncated_normal([node_23, node_34], stddev=0.5)) #361*48 * (48*1)=361*1 
+			b3          = tf.Variable(tf.zeros([1, node_34]))
+			y_estimated = tf.add(x=tf.matmul(y2, w3), y=b3, name="criticalOP")
 
 			loss         = tf.reduce_mean(tf.square(y_estimated - y) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
-			optimizer    = tf.train.GradientDescentOptimizer(learning_rate)
+			#optimizer    = tf.train.GradientDescentOptimizer(learning_rate)
+			optimizer    = tf.train.AdamOptimizer(learning_rate=learningRate)
 			train        = optimizer.minimize(loss)
 
+			#with tf.Session() as sess:
 			with tf.Session() as sess:
-
 				sess.run(tf.global_variables_initializer())
 
 				for epoch in range(epochs):
@@ -67,7 +69,11 @@ class trainingNN(object):
 				self.Loss_train.close()	
 
 				self.estForce = sess.run(y_estimated, feed_dict={x: array_colvar_to_train, y:array_force_to_learn})
+				#self.estForce = sess.run(y_estimated, feed_dict={x: array_colvar_to_train})
 				self.estForce = self.estForce.reshape(self.size)
+				os.system("rm -r net1D")
+				os.system("mkdir")
+				tf.train.Saver().save(sess, "net1D/netSaver.ckpt")
 
 			tf.reset_default_graph()
 			return self.estForce
@@ -86,28 +92,28 @@ class trainingNN(object):
 			CV_y        = tf.placeholder(tf.float32, [self.ndims * self.size**self.ndims, 1])
 			y           = tf.placeholder(tf.float32, [self.ndims * self.size**self.ndims, 1])  
 
-			node_12     = 48		
-			w1          = tf.Variable(tf.truncated_normal([self.ndims, 1, node_12], stddev=0.05)) #3362*1 * 1*96 = 3362*96
+			node_12     = 84		
+			w1          = tf.Variable(tf.truncated_normal([self.ndims, 1, node_12], stddev=0.05)) #3362*1 * 1*48 = 3362*48
 			b1          = tf.Variable(tf.zeros([self.ndims*self.size**self.ndims, node_12]))
-			y1          = tf.nn.relu(tf.matmul(CV_x, w1[0]) + tf.matmul(CV_y, w1[1]) + b1)
+			y1          = tf.nn.sigmoid(tf.matmul(CV_x, w1[0]) + tf.matmul(CV_y, w1[1]) + b1)
 				
-			node_23     = 24 	
-			w2          = tf.Variable(tf.truncated_normal([node_12, node_23], stddev=0.05)) #3362*96 * (96*48)=3362*48
+			node_23     = 42 	
+			w2          = tf.Variable(tf.truncated_normal([node_12, node_23], stddev=0.05)) #3362*48 * (48*24)=3362*48
 			b2          = tf.Variable(tf.zeros([self.ndims*self.size**self.ndims, node_23]))
-			y2          = tf.nn.relu(tf.matmul(y1, w2) + b2)
+			y2          = tf.nn.sigmoid(tf.matmul(y1, w2) + b2)
 
-			node_34     = 6 	
-			w3          = tf.Variable(tf.truncated_normal([node_23, node_34], stddev=0.05)) #3362*96 * (96*48)=3362*48
+			node_34     = 7 	
+			w3          = tf.Variable(tf.truncated_normal([node_23, node_34], stddev=0.05)) #3362*48 * (48*6)=3362*6
 			b3          = tf.Variable(tf.zeros([self.ndims*self.size**self.ndims, node_34]))
-			y3          = tf.nn.relu(tf.matmul(y2, w3) + b3)
+			y3          = tf.nn.sigmoid(tf.matmul(y2, w3) + b3)
 			
 			node_45     = 1 		
-			w4          = tf.Variable(tf.truncated_normal([node_34, node_45], stddev=0.05)) #3362*48 * (48*1)=3362*1
+			w4          = tf.Variable(tf.truncated_normal([node_34, node_45], stddev=0.05)) #3362*6 * (6*1)=3362*1
 			b4          = tf.Variable(tf.zeros([self.ndims*self.size**self.ndims, node_45]))
 			y_estimated = (tf.matmul(y3, w4) + b4)
 
 			loss         = tf.reduce_mean(tf.square(y_estimated - y) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
-			optimizer    = tf.train.GradientDescentOptimizer(learning_rate)
+			optimizer    = tf.train.GradientDescentOptimizer(learningRate)
 			train        = optimizer.minimize(loss)
 
 			with tf.Session() as sess:
