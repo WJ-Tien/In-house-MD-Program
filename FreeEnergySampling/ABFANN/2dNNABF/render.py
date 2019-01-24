@@ -44,33 +44,38 @@ class rendering(object):
 
 			if hasattr(renderObj, '__call__'):
 				if renderObj.__name__ == "boltz2D":
-					cs = plt.contourf(A, B, renderObj(A, B, self.temperature), 6, alpha=.75, cmap=plt.cm.hot)
-					R  = plt.contour(A, B, renderObj(A, B, self.temperature), 6, colors='black', linewidth=.5)
+					cs = plt.contourf(A, B, renderObj(A, B, self.temperature), 8, cmap=plt.cm.plasma)
+					R  = plt.contour(A, B, renderObj(A, B, self.temperature), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
 				else:
-					cs = plt.contourf(A, B, renderObj(A, B), 6, alpha=.75, cmap=plt.cm.hot)
-					R  = plt.contour(A, B, renderObj(A, B), 6, colors='black', linewidth=.5)
+					cs = plt.contourf(A, B, renderObj(A, B), 8, cmap=plt.cm.plasma)
+					R  = plt.contour(A, B, renderObj(A, B), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
 					
 			else:	
-				cs = plt.contourf(A, B, renderObj, 6, alpha=.75, cmap=plt.cm.hot)
-				R  = plt.contour(A, B, renderObj, 6, colors='black', linewidth=.5)
+				cs = plt.contourf(A, B, renderObj, 8, cmap=plt.cm.plasma)
+				R  = plt.contour(A, B, renderObj, 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
 
-			plt.clabel(R, inline=True, fontsize=10)
+			plt.clabel(R, inline=True, fontsize=8)
 			plt.xlim(x_axis[0],x_axis[-1])
 			plt.ylim(y_axis[0],y_axis[-1])
-			plt.xticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 6))
-			plt.yticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 6))
+			plt.xticks(np.linspace(-self.half_boxboundary, self.half_boxboundary-2*self.half_boxboundary/(self.binNum-1), 6))
+			plt.yticks(np.linspace(-self.half_boxboundary, self.half_boxboundary-2*self.half_boxboundary/(self.binNum-1), 6))
 			plt.colorbar(cs)
 			plt.savefig(name + ".png")
 			plt.gcf().clear()
 
 if __name__ == "__main__":
-	pass
+	#pass
 	#s = rendering(ndims=2, half_boxboundary=3, binNum=41, temperature=0.1)
 	#s.render(boltz2D, name="boltz2D")
-	#s = rendering(ndims=2, half_boxboundary=3, binNum=41)
+	#s = rendering(ndims=2, half_boxboundary=2, binNum=41, temperature=0.001)
+	#s.render(boltz2D, name="boltz2D")
+	#s = rendering(ndims=2, half_boxboundary=2.5, binNum=33)
 	#s.render(forcex2D  ,name="forcex2D")
 	#s.render(forcey2D  ,name="forcey2D")
-	#s.render(Usurface2D,name="Usurface")
+	s = rendering(ndims=2, half_boxboundary=2.0, binNum=41)
+	s.render(forcex2D  ,name="forcex2D")
+	s.render(forcey2D  ,name="forcey2D")
+	s.render(Usurface2D,name="Usurface")
 
 	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361, temperature=0.01)
 	#s.render(boltz1D, name="boltz1D")

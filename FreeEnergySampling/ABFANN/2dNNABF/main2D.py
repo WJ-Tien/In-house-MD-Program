@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 
-from ABF import importanceSampling
+from advSampling import ABF 
 from checkStatMechProp import checkStatMechProp 
 import os 
 
 Ndims                 = 2
-mass                  = 100 
-temperature           = 0.001 
-frictCoeff            = 0.001 
+mass                  = 10 
+temperature           = 0.01 
 
-learning_rate         = 0.0379 
-epoch                 = 5000 
-trainingFreq          = 20000 
-learning_rate         = 0.1665  
-regularCoeff          = 0.00000 
-epoch                 = 17500 
+frictCoeff            = 0.05 
+
+learningRate          = 0.075 
+epoch                 = 3200 
+regularCoeff          = 0.00025 
+
+switchSteps           = 10
+
+lateLearningRate      = 0.075
+lateEpoch             = 5000
+lateRegularCoeff      = 0.0
+
+trainingFreq          = 1000 
 
 half_boxboundary      = 2.0 
 binNum                = 41 
@@ -27,7 +33,7 @@ init_frame            = 0
 mode                  = "LangevinEngine"
 NNoutputFreq          = 100 
 force_distr           = ["estimate"]
-tl                    = [50000]
+tl                    = [1000]
 
 #abf_switch  = ["yes"]
 #NN_switch   = ["yes"]
@@ -46,8 +52,9 @@ for time_length in tl:
 
 		force_distr.append(filename_force)
 
-		importanceSampling(Nparticles, Ndims, init_time, time_step, time_length, init_frame, mass, box, temperature, frictCoeff, abfCheckFlag, \
-													nnCheckFlag, trainingFreq, mode, learning_rate, regularCoeff, epoch, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force).mdrun()
+		ABF(Nparticles, Ndims, init_time, time_step, time_length, init_frame, mass, box, temperature, frictCoeff, abfCheckFlag,\
+			 nnCheckFlag, trainingFreq, mode, learningRate, regularCoeff, epoch, lateLearningRate, lateRegularCoeff, lateEpoch,\
+       switchSteps, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force).mdrun()
 
 		checkStatMechProp(Ndims, mass, half_boxboundary, binNum, abfCheckFlag, nnCheckFlag).checkForceDistr(filename_force)
 		checkStatMechProp(Ndims, mass, half_boxboundary, binNum, abfCheckFlag, nnCheckFlag, temperature).checkBoltzDistr(filename_conventional, filename_Histogram)

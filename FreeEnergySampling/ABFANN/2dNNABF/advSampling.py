@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import numpy as np
 import time
-from NN import trainingNN 
+from ANN import trainingANN 
 from customMathFunc import myRound, getIndices, truncateFloat
 import tensorflow as tf
 
-class importanceSampling(object):
+class ABF(object):
 	
-	def __init__(self, particles, ndims, current_time, time_step, time_length, frame, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, trainingFrequency, mode, learningRate, regularCoeff, epoch, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force):
+	def __init__(self, particles, ndims, current_time, time_step, time_length, frame, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, trainingFrequency, mode, learningRate, regularCoeff, epoch, lateLearningRate, lateRegularCoeff,lateEpoch,switchSteps, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force):
 
 		self.startTime        = time.time()
 		self.particles        = particles
@@ -34,10 +34,13 @@ class importanceSampling(object):
 		self.Frequency        = trainingFrequency
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
-		self.reduceError      = 200
-		self.learningRate    = learningRate 
+		self.learningRate     = learningRate 
 		self.regularCoeff     = regularCoeff 
 		self.epoch            = epoch 
+		self.lateLearningRate = lateLearningRate 
+		self.regularCoeff     = lateRegularCoeff 
+		self.epoch            = lateEpoch 
+		self.switchSteps      = switchSteps
 		self.NNoutputFreq     = NNoutputFreq 
 
 		if self.ndims == 1:
@@ -168,21 +171,19 @@ class importanceSampling(object):
 	def learningProxy(self):
 		if self.nnCheckFlag == "yes":
 			if self.frame % self.Frequency == 0 and self.frame != 0: 
-				output = trainingNN("loss.dat", "hyperparam.dat", self.ndims, len(self.bins)) 
+				output = trainingANN("loss.dat", "hyperparam.dat", self.ndims, len(self.bins)) 
 
 				self.colvars_force = (self.colvars_force / self.colvars_count)
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
-				if self.frame > self.Frequency * 8:
-					self.learningRate          = 0.075
-					self.epoch                 = 5000 
-					self.trainingFreq          = 500 
-					self.regularCoeff          = 0.0
+				if self.frame > self.Frequency * self.switchSteps:
+					self.learningRate = lateLearningRate 
+					self.regularCoeff = lateRegularCoeff 
+					self.epoch        = lateEpoch 
 
 				self.colvars_force_NN = \
 				output.training(self.colvars_coord, self.colvars_force, self.learningRate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
 	
 				self.colvars_force = (self.colvars_force * self.colvars_count)
-				#self.forceDistrRecord(None, None, self.colvars_force_NN, None)
 
 	def getLocalForce(self, coord_x, coord_y, vel, d=None):
 
@@ -221,9 +222,9 @@ class importanceSampling(object):
 					Saver.restore(sess, tf.train.latest_checkpoint("net1D/"))
 					graph = tf.get_default_graph()
 					#y_estimatedOP = graph.get_operation_by_name("criticalOP") 
-					y_estimated = graph.get_tensor_by_name("criticalOP:0") 
-					x = graph.get_tensor_by_name("colvars:0") 
-					Fabf = sess.run(y_estimated, feed_dict={x: coord_x}).reshape(self.particles)[0]
+					layerOutput = graph.get_tensor_by_name("annOutput:0") 
+					CV = graph.get_tensor_by_name("colvars:0") 
+					Fabf = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.particles)[0]
 
 				tf.reset_default_graph()
 
