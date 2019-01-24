@@ -12,13 +12,13 @@ class trainingANN(object):
 		self.ndims          = ndims
 		self.size           = size
 		self.estForce       = np.zeros(self.size, dtype=np.float32)
-		self.colvars        = np.linspace(-np.pi, np.pi, self.size*2)
 
 	def addDenseLayer(self, input_neuron_size, output_neuron_size, activationFunc=None, nameFlag=None, *input_colvars):
 
 		weights = []
 		biases = tf.Variable(tf.truncated_normal([1, output_neuron_size], stddev=0.5))
-		matmul_xW_add_bias = tf.zeros([self.ndims * self.size**self.ndims, output_neuron_size])
+
+		matmul_xW_add_bias = tf.zeros([self.ndims*tf.shape(input_colvars[0])[0]**self.ndims, output_neuron_size])
 
 		for i in range(len(input_colvars)): # deal with nth colvar
 			weights.append(tf.Variable(tf.truncated_normal([input_neuron_size, output_neuron_size], stddev=0.5)))
@@ -44,6 +44,7 @@ class trainingANN(object):
 			# 1-20-16-1
 			CV                    = tf.placeholder(tf.float32, [None, 1], name="colvars")  # feature
 			target                = tf.placeholder(tf.float32, [None, 1], name="targets")  # real data; training set; label	
+
 			array_colvar_to_train = array_colvar_to_train[:, np.newaxis] # 361*1
 			array_target_to_learn = array_target_to_learn[:, np.newaxis]
 
@@ -55,15 +56,16 @@ class trainingANN(object):
 
 		if self.ndims == 2:
 			# 1-20-16-1
+			CV_x                  = tf.placeholder(tf.float32, [None, 1], name="colvars_x")
+			CV_y                  = tf.placeholder(tf.float32, [None, 1], name="colvars_y")
+			target                = tf.placeholder(tf.float32, [None, 1], name="target")  
+
 			CV_X, CV_Y            = np.meshgrid(array_colvar_to_train, array_colvar_to_train, indexing="ij") # 41 ---> 41*41
 			CV_X                  = CV_X.reshape(CV_X.size) # 2D (41*41) --> 1D (1681)
 			CV_X                  = np.append(CV_X, CV_X)[:, np.newaxis] #1681 * 1 --> 3362 * 1
 			CV_Y                  = CV_Y.reshape(CV_Y.size)
 			CV_Y                  = np.append(CV_Y, CV_Y)[:, np.newaxis] #1681 * 1 --> 3362 * 1
 
-			CV_x                  = tf.placeholder(tf.float32, [self.size**self.ndims, 1], name="colvars_x")
-			CV_y                  = tf.placeholder(tf.float32, [self.size**self.ndims, 1], name="colvars_y")
-			target                = tf.placeholder(tf.float32, [self.size**self.ndims, 1], name="target")  
 
 			array_target_to_learn = array_target_to_learn.reshape(self.ndims * self.size**self.ndims)[:, np.newaxis] # 3362 * 1
 
@@ -91,6 +93,8 @@ class trainingANN(object):
 			
 			self.estForce = (sess.run(layerOutput, feed_dict=variables_to_feed)).reshape(self.size) if self.ndims == 1 else \
                       (sess.run(layerOutput, feed_dict=variables_to_feed)).reshape(self.ndims, self.size, self.size)
+
+			tf.train.Saver().save(sess, "net1D/netSaver.ckpt")
 
 		tf.reset_default_graph()
 

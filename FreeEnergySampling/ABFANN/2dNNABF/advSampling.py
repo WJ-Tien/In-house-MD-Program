@@ -213,18 +213,24 @@ class ABF(object):
 
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 				tf.reset_default_graph()
-				coord_x = np.array([coord_x])
-				coord_x = coord_x[:, np.newaxis]
 
-				tf.reset_default_graph()
-				with tf.Session() as sess:
+				with tf.Session() as sess: # reload the previous training model
 					Saver = tf.train.import_meta_graph("net1D/netSaver.ckpt.meta")
 					Saver.restore(sess, tf.train.latest_checkpoint("net1D/"))
 					graph = tf.get_default_graph()
 					#y_estimatedOP = graph.get_operation_by_name("criticalOP") 
 					layerOutput = graph.get_tensor_by_name("annOutput:0") 
-					CV = graph.get_tensor_by_name("colvars:0") 
-					Fabf = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.particles)[0]
+
+					if self.ndims == 1:
+						coord_x = np.array([coord_x])[:, np.newaxis]	
+						CV = graph.get_tensor_by_name("colvars:0") 
+						Fabf = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.particles)[0]
+					if self.ndims == 2:
+						coord_x = np.array([coord_x])[:, np.newaxis]	
+						coord_y = np.array([coord_y])[:, np.newaxis]	
+						CV_x = graph.get_tensor_by_name("colvars_x:0") 
+						CV_y = graph.get_tensor_by_name("colvars_y:0") 
+						Fabf = sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.particles)[0]
 
 				tf.reset_default_graph()
 
