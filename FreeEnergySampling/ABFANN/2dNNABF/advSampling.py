@@ -38,8 +38,8 @@ class ABF(object):
 		self.regularCoeff     = regularCoeff 
 		self.epoch            = epoch 
 		self.lateLearningRate = lateLearningRate 
-		self.regularCoeff     = lateRegularCoeff 
-		self.epoch            = lateEpoch 
+		self.lateregularCoeff = lateRegularCoeff 
+		self.lateepoch        = lateEpoch 
 		self.switchSteps      = switchSteps
 		self.NNoutputFreq     = NNoutputFreq 
 
@@ -175,11 +175,13 @@ class ABF(object):
 
 				self.colvars_force = (self.colvars_force / self.colvars_count)
 				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
-				if self.frame > self.Frequency * self.switchSteps:
-					self.learningRate = lateLearningRate 
-					self.regularCoeff = lateRegularCoeff 
-					self.epoch        = lateEpoch 
 
+				if self.frame > self.Frequency * self.switchSteps:
+					self.learningRate = self.lateLearningRate 
+					self.regularCoeff = self.lateRegularCoeff 
+					self.epoch        = self.lateEpoch 
+
+				print(self.regularCoeff)
 				self.colvars_force_NN = \
 				output.training(self.colvars_coord, self.colvars_force, self.learningRate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
 	
@@ -210,8 +212,8 @@ class ABF(object):
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 				return (Fu + Fabf) / self.mass
 			else: # NN takes over here
-
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
+
 				tf.reset_default_graph()
 
 				with tf.Session() as sess: # reload the previous training model
