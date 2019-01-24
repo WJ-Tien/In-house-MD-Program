@@ -38,8 +38,8 @@ class ABF(object):
 		self.regularCoeff     = regularCoeff 
 		self.epoch            = epoch 
 		self.lateLearningRate = lateLearningRate 
-		self.lateregularCoeff = lateRegularCoeff 
-		self.lateepoch        = lateEpoch 
+		self.lateRegularCoeff = lateRegularCoeff 
+		self.lateEpoch        = lateEpoch 
 		self.switchSteps      = switchSteps
 		self.NNoutputFreq     = NNoutputFreq 
 
@@ -181,7 +181,6 @@ class ABF(object):
 					self.regularCoeff = self.lateRegularCoeff 
 					self.epoch        = self.lateEpoch 
 
-				print(self.regularCoeff)
 				self.colvars_force_NN = \
 				output.training(self.colvars_coord, self.colvars_force, self.learningRate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
 	
