@@ -18,7 +18,7 @@ class trainingANN(object):
 		weights = []
 		biases = tf.Variable(tf.truncated_normal([1, output_neuron_size], stddev=0.5))
 
-		matmul_xW_add_bias = tf.zeros([self.ndims*tf.shape(input_colvars[0])[0]**self.ndims, output_neuron_size])
+		matmul_xW_add_bias = tf.zeros([tf.shape(input_colvars[0])[0], output_neuron_size])
 
 		for i in range(len(input_colvars)): # n colvars
 			weights.append(tf.Variable(tf.truncated_normal([input_neuron_size, output_neuron_size], stddev=0.5)))
@@ -65,7 +65,6 @@ class trainingANN(object):
 			CV_X                  = np.append(CV_X, CV_X)[:, np.newaxis]                                     #1681 * 1 --> 3362 * 1
 			CV_Y                  = CV_Y.reshape(CV_Y.size)
 			CV_Y                  = np.append(CV_Y, CV_Y)[:, np.newaxis]                                     #1681 * 1 --> 3362 * 1
-
 
 			array_target_to_learn = array_target_to_learn.reshape(self.ndims * self.size**self.ndims)[:, np.newaxis] # 3362 * 1
 
