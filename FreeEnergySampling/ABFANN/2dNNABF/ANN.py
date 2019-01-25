@@ -20,7 +20,7 @@ class trainingANN(object):
 
 		matmul_xW_add_bias = tf.zeros([self.ndims*tf.shape(input_colvars[0])[0]**self.ndims, output_neuron_size])
 
-		for i in range(len(input_colvars)): # deal with nth colvar
+		for i in range(len(input_colvars)): # n colvars
 			weights.append(tf.Variable(tf.truncated_normal([input_neuron_size, output_neuron_size], stddev=0.5)))
 			matmul_xW_add_bias += tf.matmul(input_colvars[i], weights[i])
 		matmul_xW_add_bias += biases 
@@ -45,7 +45,7 @@ class trainingANN(object):
 			CV                    = tf.placeholder(tf.float32, [None, 1], name="colvars")  # feature
 			target                = tf.placeholder(tf.float32, [None, 1], name="targets")  # real data; training set; label	
 
-			array_colvar_to_train = array_colvar_to_train[:, np.newaxis] # 361*1
+			array_colvar_to_train = array_colvar_to_train[:, np.newaxis]                   # 361*1
 			array_target_to_learn = array_target_to_learn[:, np.newaxis]
 
 			layer1, w1, b1        = self.addDenseLayer(1, 20, tf.nn.sigmoid, None, CV)
@@ -61,10 +61,10 @@ class trainingANN(object):
 			target                = tf.placeholder(tf.float32, [None, 1], name="target")  
 
 			CV_X, CV_Y            = np.meshgrid(array_colvar_to_train, array_colvar_to_train, indexing="ij") # 41 ---> 41*41
-			CV_X                  = CV_X.reshape(CV_X.size) # 2D (41*41) --> 1D (1681)
-			CV_X                  = np.append(CV_X, CV_X)[:, np.newaxis] #1681 * 1 --> 3362 * 1
+			CV_X                  = CV_X.reshape(CV_X.size)                                                  # 2D (41*41) --> 1D (1681)
+			CV_X                  = np.append(CV_X, CV_X)[:, np.newaxis]                                     #1681 * 1 --> 3362 * 1
 			CV_Y                  = CV_Y.reshape(CV_Y.size)
-			CV_Y                  = np.append(CV_Y, CV_Y)[:, np.newaxis] #1681 * 1 --> 3362 * 1
+			CV_Y                  = np.append(CV_Y, CV_Y)[:, np.newaxis]                                     #1681 * 1 --> 3362 * 1
 
 
 			array_target_to_learn = array_target_to_learn.reshape(self.ndims * self.size**self.ndims)[:, np.newaxis] # 3362 * 1
@@ -74,11 +74,9 @@ class trainingANN(object):
 			layerOutput, w3, b3   = self.addDenseLayer(16, 1, None, "annOutput", layer2)
 			variables_to_feed     = {CV_x: CV_X, CV_y: CV_Y, target: array_target_to_learn}
 
-		loss         = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
-		optimizer    = tf.train.AdamOptimizer(learning_rate=learningRate) 
-		train        = optimizer.minimize(loss)
-		#optimizer    = tf.train.GradientDescentOptimizer(learningRate)
-		#optimizer    = tf.train.AdagradOptimizer(learning_rate=learningRate) 
+		loss      = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
+		optimizer = tf.train.AdamOptimizer(learning_rate=learningRate) 
+		train     = optimizer.minimize(loss)
 
 		with tf.Session() as sess:
 
@@ -102,3 +100,5 @@ class trainingANN(object):
 
 if __name__ == "__main__":
 	pass
+	#optimizer    = tf.train.GradientDescentOptimizer(learningRate)
+	#optimizer    = tf.train.AdagradOptimizer(learning_rate=learningRate) 
