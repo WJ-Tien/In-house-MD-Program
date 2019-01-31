@@ -74,7 +74,6 @@ class ABF(object):
 			self.fileOut.write(str(self.frame) + " " + str(self.current_time) + " ")
 			for d in range(self.ndims):
 				self.fileOut.write(str(self.current_coord[n][d]) + " " + str(self.current_vel[n][d]) + " ") 
-			self.fileOut.write("\n")
 
 	def forceOnColvarsOutput(self): 
 		
@@ -216,8 +215,8 @@ class ABF(object):
 				tf.reset_default_graph()
 
 				with tf.Session() as sess: # reload the previous training model
-					Saver = tf.train.import_meta_graph("net1D/netSaver.ckpt.meta")
-					Saver.restore(sess, tf.train.latest_checkpoint("net1D/"))
+					Saver = tf.train.import_meta_graph("net" + str(self.ndims) + "D" +"/netSaver.ckpt.meta")
+					Saver.restore(sess, tf.train.latest_checkpoint("net" + str(self.ndims) + "D" + "/"))
 					graph = tf.get_default_graph()
 					#y_estimatedOP = graph.get_operation_by_name("criticalOP") 
 					layerOutput = graph.get_tensor_by_name("annOutput:0") 
@@ -225,13 +224,13 @@ class ABF(object):
 					if self.ndims == 1:
 						coord_x = np.array([coord_x])[:, np.newaxis]	
 						CV = graph.get_tensor_by_name("colvars:0") 
-						Fabf = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.particles)[0]
+						Fabf = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.ndims)[d]
 					if self.ndims == 2:
 						coord_x = np.array([coord_x])[:, np.newaxis]	
 						coord_y = np.array([coord_y])[:, np.newaxis]	
 						CV_x = graph.get_tensor_by_name("colvars_x:0") 
 						CV_y = graph.get_tensor_by_name("colvars_y:0") 
-						Fabf = sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.particles)[0]
+						Fabf = sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.ndims)[d] 
 
 				tf.reset_default_graph()
 
@@ -251,19 +250,19 @@ class ABF(object):
 
 			for n in range(self.particles):
 
-				sigma                       = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
+				sigma                     = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
 
-				current_force_x             = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
+				current_force_x           = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
-				Ct_x                        = (0.5 * self.time_step**2) * (current_force_x - self.frictCoeff * self.current_vel[n][0]) + \
+				Ct_x                      = (0.5 * self.time_step**2) * (current_force_x - self.frictCoeff * self.current_vel[n][0]) + \
 																			sigma * (self.time_step**1.5) * (0.5 * random_xi_x + (np.sqrt(3)/6) * random_theta_x)
 
-				self.current_coord[n][0]    = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
-				self.current_coord[n][0]   -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
+				self.current_coord[n][0]  = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
+				self.current_coord[n][0] -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
 
-				updated_force_x             = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
+				updated_force_x           = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
-				self.current_vel[n][0]      = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
+				self.current_vel[n][0]    = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_x) - (self.frictCoeff * Ct_x)
 				
 
@@ -277,32 +276,32 @@ class ABF(object):
 
 			for n in range(self.particles):
 
-				sigma                       = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
+				sigma                     = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
 
-				current_force_x             = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
-				current_force_y             = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
+				current_force_x           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
+				current_force_y           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
 
-				Ct_x                        = (0.5 * self.time_step**2) * (current_force_x - self.frictCoeff * self.current_vel[n][0]) + \
+				Ct_x                      = (0.5 * self.time_step**2) * (current_force_x - self.frictCoeff * self.current_vel[n][0]) + \
 																			sigma * (self.time_step**1.5) * (0.5 * random_xi_x + (np.sqrt(3)/6) * random_theta_x)
 
-				Ct_y                        = (0.5 * self.time_step**2) * (current_force_y - self.frictCoeff * self.current_vel[n][1]) + \
+				Ct_y                      = (0.5 * self.time_step**2) * (current_force_y - self.frictCoeff * self.current_vel[n][1]) + \
 																			sigma * (self.time_step**1.5) * (0.5 * random_xi_y + (np.sqrt(3)/6) * random_theta_y)
 
-				self.current_coord[n][0]    = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
-				self.current_coord[n][0]   -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) 
-				self.current_coord[n][1]    = self.current_coord[n][1] + (self.time_step * self.current_vel[n][1]) + Ct_y
-				self.current_coord[n][1]   -= (myRound(self.current_coord[n][1] / self.box[1]) * self.box[1]) 
+				self.current_coord[n][0]  = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
+				self.current_coord[n][0] -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) 
+				self.current_coord[n][1]  = self.current_coord[n][1] + (self.time_step * self.current_vel[n][1]) + Ct_y
+				self.current_coord[n][1] -= (myRound(self.current_coord[n][1] / self.box[1]) * self.box[1]) 
 
-				updated_force_x             = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
-				updated_force_y             = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
+				updated_force_x           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
+				updated_force_y           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
 
-				self.current_vel[n][0]      = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
+				self.current_vel[n][0]    = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_x) - (self.frictCoeff * Ct_x)
-				self.current_vel[n][1]      = self.current_vel[n][1] + (0.5 * self.time_step * (current_force_y + updated_force_y)) - (self.time_step * self.frictCoeff * self.current_vel[n][1]) + \
+				self.current_vel[n][1]    = self.current_vel[n][1] + (0.5 * self.time_step * (current_force_y + updated_force_y)) - (self.time_step * self.frictCoeff * self.current_vel[n][1]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_y) - (self.frictCoeff * Ct_y)
 
-		self.current_time += self.time_step 
-		self.frame        += 1
+		self.current_time            += self.time_step 
+		self.frame                   += 1
 
 	def mdrun(self):
 
@@ -321,6 +320,11 @@ class ABF(object):
 		self.forceOnColvarsOutput()
 		self.fileOut.close()
 		self.fileOutForce.close()
+
+#class ABP(object):
+	#super(ABP, self).__init__()
+	#pass
+
 
 if __name__ == "__main__":
 	pass	
