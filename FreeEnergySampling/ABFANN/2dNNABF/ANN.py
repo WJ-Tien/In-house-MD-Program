@@ -98,10 +98,10 @@ class trainingANN(object):
 				self.estTarget = reshape_estTarget.reshape(self.size)
 
 			if self.ndims == 2:
-				estForceX = reshape_estTarget[:, 0].reshape(self.size, self.size)
-				estForceY = reshape_estTarget[:, 1].reshape(self.size, self.size)
-				self.estTarget[0] = estForceX
-				self.estTarget[1] = estForceY
+				estTargetX = reshape_estTarget[:, 0].reshape(self.size, self.size)
+				estTargetY = reshape_estTarget[:, 1].reshape(self.size, self.size)
+				self.estTarget[0] = estTargetX
+				self.estTarget[1] = estTargetY
 
 			tf.train.Saver().save(sess, "net" + str(self.ndims) + "D" + "/netSaver.ckpt")
 
