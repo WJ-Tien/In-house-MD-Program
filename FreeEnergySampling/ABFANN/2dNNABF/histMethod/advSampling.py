@@ -3,7 +3,6 @@ import numpy as np
 import time
 from ANN import trainingANN 
 from customMathFunc import myRound, getIndices, truncateFloat
-import tensorflow as tf
 
 class ABP(object):
 	
@@ -42,7 +41,7 @@ class ABP(object):
 		self.lateEpoch        = lateEpoch 
 		self.switchSteps      = switchSteps
 		self.NNoutputFreq     = NNoutputFreq 
-		self.Flag             = False 
+		#self.Flag             = False 
 
 		if self.ndims == 1:
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
@@ -185,15 +184,15 @@ class ABP(object):
 			if self.ndims == 2:
 				return np.cos(coord_x) + np.cos(coord_y)	
 
-	def resetZero(self):
-		self.colvars_count.fill(0.0)
-		self.rwHist.fill(0.0)
+	#def resetZero(self):
+		#self.colvars_count.fill(0.0)
+		#self.rwHist.fill(0.0)
 
 	def reweightedHist(self): #TODO issues
 		self.rwHist = self.colvars_count.copy()
 		if self.ndims == 1:
 			for i in range(len(self.colvars_count)):
-				self.rwHist[i] = self.colvars_count[i] * np.exp(-self.appliedBiasPotential(self.bins[i], 0) / self.kb / self.temperature)
+				self.rwHist[i] = self.colvars_count[i] * np.exp(self.appliedBiasPotential(self.bins[i], 0) / self.kb / self.temperature)
 		if self.ndims == 2:
 			pass
 		
@@ -246,31 +245,32 @@ class ABP(object):
 				return (Fu + Fabf) / self.mass
 			else: # NN takes over here
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
-				tf.reset_default_graph()
+				#tf.reset_default_graph()
 
-				with tf.Session() as sess: # reload the previous training model
-					Saver = tf.train.import_meta_graph("net" + str(self.ndims) + "D" +"/netSaver.ckpt.meta")
-					Saver.restore(sess, tf.train.latest_checkpoint("net" + str(self.ndims) +"D/"))
-					graph = tf.get_default_graph()
-					layerOutput = graph.get_tensor_by_name("annOutput:0") 
+				#with tf.Session() as sess: # reload the previous training model
+				#	Saver = tf.train.import_meta_graph("net" + str(self.ndims) + "D" +"/netSaver.ckpt.meta")
+				#	Saver.restore(sess, tf.train.latest_checkpoint("net" + str(self.ndims) +"D/"))
+				#	graph = tf.get_default_graph()
+				#	layerOutput = graph.get_tensor_by_name("annOutput:0") 
 
-					if self.ndims == 1:
-						coord_x = np.array([coord_x])[:, np.newaxis]	
-						CV = graph.get_tensor_by_name("colvars:0") 
+				if self.ndims == 1:
+					Fabf = -self.gradient[getIndices(coord_x, self.bins)]
+				#		coord_x = np.array([coord_x])[:, np.newaxis]	
+				#		CV = graph.get_tensor_by_name("colvars:0") 
 						#Fabf = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.ndims)[d] 
-						Fabf = -self.gradient[getIndices(coord_x, self.bins)]
 						
-					if self.ndims == 2:
-						coord_x = np.array([coord_x])[:, np.newaxis]	
-						coord_y = np.array([coord_y])[:, np.newaxis]	
-						CV_x = graph.get_tensor_by_name("colvars_x:0") 
-						CV_y = graph.get_tensor_by_name("colvars_y:0") 
-						if d == 0:
-							Fabf = tf.gradients(sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.ndims)[d], [CV_x])
-						else:
-							Fabf = tf.gradients(sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.ndims)[d], [CV_y])
+				if self.ndims == 2:
+					pass
+			#		coord_x = np.array([coord_x])[:, np.newaxis]	
+			#		coord_y = np.array([coord_y])[:, np.newaxis]	
+			#		CV_x = graph.get_tensor_by_name("colvars_x:0") 
+			#		CV_y = graph.get_tensor_by_name("colvars_y:0") 
+					#if d == 0:
+			#			Fabf = tf.gradients(sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.ndims)[d], [CV_x])
+					#else:
+					#	Fabf = tf.gradients(sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.ndims)[d], [CV_y])
 
-				tf.reset_default_graph()
+				#tf.reset_default_graph()
 
 				return (Fu + Fabf) / self.mass
 
@@ -351,12 +351,8 @@ class ABP(object):
 					self.reweightedHist()
 					self.getGlobalPartitionFunc()	
 					self.getCurrentFreeEnergy()
-					self.Flag = True
 	
 				self.LangevinEngine()
-				if self.Flag == True:
-					self.resetZero()
-					self.Flag = False
 				self.conventionalDataOutput()		
 				self.printIt()
 
