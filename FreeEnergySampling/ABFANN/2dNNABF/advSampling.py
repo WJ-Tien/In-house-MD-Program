@@ -8,7 +8,6 @@ import tensorflow as tf
 class ABF(object):
 	
 	def __init__(self, particles, ndims, current_time, time_step, time_length, frame, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, trainingFrequency, mode, learningRate, regularCoeff, epoch, lateLearningRate, lateRegularCoeff,lateEpoch,switchSteps, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force):
-
 		self.startTime        = time.time()
 		self.particles        = particles
 		self.ndims            = ndims
@@ -47,11 +46,15 @@ class ABF(object):
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_force_NN = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
+			self.colvars_FreeE    = np.zeros(len(self.bins), dtype=np.float64) 
+			self.colvars_FreeE_NN = np.zeros(len(self.bins), dtype=np.float64) 
 
 		if self.ndims == 2:
-			self.colvars_force    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) # ixj
+			self.colvars_force    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_force_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_count    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
+			self.colvars_FreeE    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64)
+			self.colvars_FreeE_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 
 	def printIt(self):
 		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime)) 
@@ -74,6 +77,7 @@ class ABF(object):
 			self.fileOut.write(str(self.frame) + " " + str(self.current_time) + " ")
 			for d in range(self.ndims):
 				self.fileOut.write(str(self.current_coord[n][d]) + " " + str(self.current_vel[n][d]) + " ") 
+			self.fileOut.write("\n")
 
 	def forceOnColvarsOutput(self): 
 		
@@ -104,6 +108,10 @@ class ABF(object):
 						self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
 						self.fileOutForce.write(str(self.colvars_coord[j]) + " ")
 						self.fileOutForce.write(str(self.colvars_force[0][i][j]) + " " + str(self.colvars_count[0][i][j]) + " " +str(self.colvars_force[1][i][j]) + " " + str(self.colvars_count[1][i][j]) + "\n")  
+
+	def closeAllFiles(self):
+		self.fileOut.close()
+		self.fileOutForce.close()
 
 	def PotentialForce(self, coord_x, coord_y, d):     
 
@@ -216,7 +224,7 @@ class ABF(object):
 
 				with tf.Session() as sess: # reload the previous training model
 					Saver = tf.train.import_meta_graph("net" + str(self.ndims) + "D" +"/netSaver.ckpt.meta")
-					Saver.restore(sess, tf.train.latest_checkpoint("net" + str(self.ndims) + "D" + "/"))
+					Saver.restore(sess, tf.train.latest_checkpoint("net" + str(self.ndims) +"D/"))
 					graph = tf.get_default_graph()
 					#y_estimatedOP = graph.get_operation_by_name("criticalOP") 
 					layerOutput = graph.get_tensor_by_name("annOutput:0") 
@@ -225,6 +233,7 @@ class ABF(object):
 						coord_x = np.array([coord_x])[:, np.newaxis]	
 						CV = graph.get_tensor_by_name("colvars:0") 
 						Fabf = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.ndims)[d]
+						print(Fabf)
 					if self.ndims == 2:
 						coord_x = np.array([coord_x])[:, np.newaxis]	
 						coord_y = np.array([coord_y])[:, np.newaxis]	
@@ -241,7 +250,6 @@ class ABF(object):
 		# molecular_dynamics_2015.pdf
 		# http://itf.fys.kuleuven.be/~enrico/Teaching/molecular_dynamics_2015.pdf
 		# https://pdfs.semanticscholar.org/f393/85336df44c2af1fd6f293540b18a701b1c56.pdf
-
 
 		if self.ndims == 1:
 			random_xi_x       = np.random.normal(0, 1)
@@ -318,13 +326,7 @@ class ABF(object):
 				self.printIt()
 
 		self.forceOnColvarsOutput()
-		self.fileOut.close()
-		self.fileOutForce.close()
-
-#class ABP(object):
-	#super(ABP, self).__init__()
-	#pass
-
+		self.closeAllFiles()
 
 if __name__ == "__main__":
 	pass	
