@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-from customMathFunc import forcex2D, forcey2D, Usurface2D, boltz2D, Usurface1D, forcex1D, boltz1D
+from customMathFunc import forcex2D, forcey2D, Usurface2D, boltz2D, Usurface1D, forcex1D, boltz1D, freeE1D
 
 # This code aims at rendering 1d x-y plots and 2d contour plots for Langevin toy model
 
@@ -21,7 +21,7 @@ class rendering(object):
 			x_axis = np.delete(x_axis, -1 , 0) # prevent boundary error
 
 			if hasattr(renderObj, '__call__'): # is function
-				if renderObj.__name__ == "boltz1D":
+				if renderObj.__name__ == "boltz1D" or renderObj.__name__ == "freeE1D":
 					plt.plot(x_axis, renderObj(x_axis, self.temperature))
 				else:
 					plt.plot(x_axis, renderObj(x_axis))
@@ -43,7 +43,7 @@ class rendering(object):
 			A, B = np.meshgrid(x_axis, y_axis, indexing="ij")
 
 			if hasattr(renderObj, '__call__'):
-				if renderObj.__name__ == "boltz2D":
+				if renderObj.__name__ == "boltz2D": #TODO freeE2D
 					cs = plt.contourf(A, B, renderObj(A, B, self.temperature), 8, cmap=plt.cm.plasma)
 					R  = plt.contour(A, B, renderObj(A, B, self.temperature), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
 				else:
@@ -64,7 +64,7 @@ class rendering(object):
 			plt.gcf().clear()
 
 if __name__ == "__main__":
-	#pass
+	pass
 	#s = rendering(ndims=2, half_boxboundary=3, binNum=41, temperature=0.1)
 	#s.render(boltz2D, name="boltz2D")
 	#s = rendering(ndims=2, half_boxboundary=2, binNum=41, temperature=0.001)
@@ -72,12 +72,11 @@ if __name__ == "__main__":
 	#s = rendering(ndims=2, half_boxboundary=2.5, binNum=33)
 	#s.render(forcex2D  ,name="forcex2D")
 	#s.render(forcey2D  ,name="forcey2D")
-	s = rendering(ndims=2, half_boxboundary=2.0, binNum=41)
-	s.render(forcex2D  ,name="forcex2D")
-	s.render(forcey2D  ,name="forcey2D")
-	s.render(Usurface2D,name="Usurface")
-
-	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361, temperature=0.01)
+	#s = rendering(ndims=2, half_boxboundary=2.0, binNum=41)
+	#s.render(forcex2D  ,name="forcex2D")
+	#s.render(forcey2D  ,name="forcey2D")
+	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361, temperature=0.75)
+	#s.render(freeE1D, name="freeE1D" )
 	#s.render(boltz1D, name="boltz1D")
 	#s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361)
 	#s.render(forcex1D  ,name="forcex1D")

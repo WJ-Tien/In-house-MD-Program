@@ -2,10 +2,7 @@
 import numpy as np
 from sympy import *
 
-# TODO issues on rendering boltz1D boltz2D
-
-#def getIndices(input_var, bins): Biases exist when applying ABF
-	#return np.digitize(input_var, bins) - 1
+# TODO FreeE2D
 
 def myRound(a):
 	if (a - np.floor(a)) < 0.5:
@@ -33,11 +30,15 @@ def partitionFunc2D(a, b, temperature): # canonical partition function: exp(-U/k
 	Q = lambdify([x, y], Q, "numpy")
 	return Q(a, b) 
 
-def boltz1D(a, temperature):
+def boltz1D(a, temperature): # return probability
 	q  = partitionFunc1D(a, temperature)
 	q  = q.sum(axis=0)
 	print(q)
 	return np.exp(-(np.cos(a) + np.cos(2*a) + np.cos(3*a))/temperature)/q
+
+def freeE1D(a, temperature):
+	p = boltz1D(a, temperature)	
+	return -1*temperature*np.log(p)
 
 def boltz2D(a, b, temperature): # exp(-(K+U)/kbT) ~= exp(-K/kbT)exp(-U/kbT) ~= exp(-2/2) * exp(-U/kbT)
 	q  = partitionFunc2D(a, b, temperature)
@@ -74,7 +75,11 @@ def forcey2D(a, b):
 	return -fy(a, b) 
 
 if __name__ == "__main__":
-	pass	
-
+	pass
+	#bins = np.linspace(-np.pi, np.pi, 361)
+	#freeE = freeE1D(bins, 0.75)
+	#with open("FreeE_1D_T0.75.dat", "w") as fout:
+	#	for b, f in zip(bins, freeE):
+	#		fout.write(str(b) + " " + str(f) + "\n")
 
 
