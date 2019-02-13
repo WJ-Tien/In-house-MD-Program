@@ -233,7 +233,6 @@ class ABF(object):
 						coord_x = np.array([coord_x])[:, np.newaxis]	
 						CV = graph.get_tensor_by_name("colvars:0") 
 						Fabf = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.ndims)[d]
-						print(Fabf)
 					if self.ndims == 2:
 						coord_x = np.array([coord_x])[:, np.newaxis]	
 						coord_y = np.array([coord_y])[:, np.newaxis]	
