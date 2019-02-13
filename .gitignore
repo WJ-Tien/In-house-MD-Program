@@ -11,9 +11,10 @@ MDknowledge/
 NNknowledge/
 
 FreeEnergySampling/colvar_test
-FreeEnergySampling/old_ABFANN/
-
-FreeEnergySampling/ABFANN/old_ABFANN
-FreeEnergySampling/ABFANN/plot
-FreeEnergySampling/ABFANN/2dNNABF/analysis
-FreeEnergySampling/ABFANN/2dNNABF/2dValidation
+FreeEnergySampling/annSampling/abfMethod/analysis
+FreeEnergySampling/annSampling/abfMethod/2dValidation_LJ4
+FreeEnergySampling/annSampling/abfMethod/code_validation_and_numerical_error
+FreeEnergySampling/annSampling/histMethod/histMethod/analysis
+FreeEnergySampling/annSampling/histMethod/histMethod/latestversion
+FreeEnergySampling/annSampling/NN_Unit_Test
+FreeEnergySampling/annSampling/Reconstruct
