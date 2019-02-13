@@ -14,7 +14,7 @@ FreeEnergySampling/colvar_test
 FreeEnergySampling/annSampling/abfMethod/analysis
 FreeEnergySampling/annSampling/abfMethod/2dValidation_LJ4
 FreeEnergySampling/annSampling/abfMethod/code_validation_and_numerical_error
-FreeEnergySampling/annSampling/histMethod/histMethod/analysis
-FreeEnergySampling/annSampling/histMethod/histMethod/latestversion
+FreeEnergySampling/annSampling/histMethod/analysis
+FreeEnergySampling/annSampling/histMethod/latestversion
 FreeEnergySampling/annSampling/NN_Unit_Test
 FreeEnergySampling/annSampling/Reconstruct
