@@ -33,6 +33,7 @@ class ABP(object):
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
 		self.fileOutFreeE     = open("FreeE.dat", "w") 
+		self.fileOutFreeETemp = open("FreeETemp.dat", "w") 
 		self.learningRate     = learningRate 
 		self.regularCoeff     = regularCoeff 
 		self.epoch            = epoch 
@@ -41,12 +42,10 @@ class ABP(object):
 		self.lateEpoch        = lateEpoch 
 		self.switchSteps      = switchSteps
 		self.NNoutputFreq     = NNoutputFreq 
-		#self.Flag             = False 
 
 		if self.ndims == 1:
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
-			self.rwHist           = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_FreeE    = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_FreeE_NN = np.zeros(len(self.bins), dtype=np.float64) 
 			self.biasingPotentialFromNN= np.zeros(len(self.bins), dtype=np.float64) 
@@ -66,6 +65,7 @@ class ABP(object):
 		self.fileOut.write("#" + " " + "Particles"    + " " + str(self.particles)    + "\n")
 		self.fileOut.write("#" + " " + "BinNumber"    + " " + str(self.binNum)       + "\n")
 		self.fileOut.write("#" + " " + "Temperature"  + " " + str(self.temperature)  + "\n") 
+		self.fileOut.write("#" + " " + "Mass"         + " " + str(self.mass)         + "\n") 
 		self.fileOut.write("#" + " " + "FrictCoeff"   + " " + str(self.frictCoeff)   + "\n") 
 		self.fileOut.write("#" + " " + "Time_length"  + " " + str(self.time_length)  + "\n") 
 		self.fileOut.write("#" + " " + "Time_step"    + " " + str(self.time_step)    + "\n") 
@@ -81,13 +81,12 @@ class ABP(object):
 			self.fileOut.write("\n")
 
 	def instantOutput(self): #TODO 2D
-		self.fileOutFreeETemp = open("FreeETemp.dat", "w") 
 		if self.nnCheckFlag == "yes" and self.abfCheckFlag == "yes":
 			if self.ndims == 1:
 				for i in range(len(self.bins)): 
 					self.fileOutFreeETemp.write(str(self.colvars_coord[i]) + " ")
 					self.fileOutFreeETemp.write(str(self.colvars_FreeE_NN[i]) + "\n")  
-		self.fileOutFreeETemp.close()
+				self.fileOutFreeETemp.write("\n")
 
 	def propertyOnColvarsOutput(self):  #issues TODO 2D
 		
@@ -125,7 +124,7 @@ class ABP(object):
 		self.fileOut.close()
 		self.fileOutForce.close()
 		self.fileOutFreeE.close()
-
+		self.fileOutFreeETemp.close()
 
 	def PotentialForce(self, coord_x, coord_y, d):     
 
@@ -157,52 +156,58 @@ class ABP(object):
 		random_constant = np.random.normal(0, 1)
 		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (random_constant)
 
-	def forceDistrRecord(self, coord_x, coord_y, updated_Fsys, d):
+	def forceDistrRecord(self, coord_x, coord_y, updated_Fsys, d): # TODO better strucuture
 
 		if self.ndims == 1:
 			self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys 
-			self.colvars_count[getIndices(coord_x, self.bins)] += 1
+			#self.colvars_count[getIndices(coord_x, self.bins)] += 1
 
 		if self.ndims == 2:
 			self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys 
+			#self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
+
+	def histDistrRecord(self, coord_x, coord_y, d): # TODO better strucuture
+		if self.ndims == 1:
+			self.colvars_count[getIndices(coord_x, self.bins)] += 1
+
+		if self.ndims == 2:
 			self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
 
 	def appliedBiasPotential(self, coord_x, coord_y, d=None):  #TODO 2D
 		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": 
 			if self.ndims == 1:
 				if self.frame <= self.Frequency: # initial sweep
-					return np.sin(coord_x)
+					return 0 # np.sin(coord_x)
 				else:
 					return self.biasingPotentialFromNN[getIndices(coord_x, self.bins)]
 			if self.ndims == 2:
 				pass
 	
-	def appliedBiasForce(self, coord_x, coord_y, d=None):# propagate the biasing potential  #TODO 2D
+	def appliedBiasForce(self, coord_x, coord_y, d=None):# propagate the biasing potential / only in the first sweep  #TODO 2D
 		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": 
 			if self.ndims == 1:
-				return -np.cos(coord_x) # initial sweep
+				return 0 #-np.cos(coord_x) 
 			if self.ndims == 2:
 				return np.cos(coord_x) + np.cos(coord_y)	
 
 	def reweightedHist(self): #TODO 2D
-		self.rwHist = self.colvars_count.copy()
+		rwHist = np.zeros(len(self.bins), dtype=np.float64) 
 		if self.ndims == 1:
 			for i in range(len(self.colvars_count)):
-				self.rwHist[i] = self.colvars_count[i] * np.exp(self.appliedBiasPotential(self.bins[i], 0) / self.kb / self.temperature)
+				rwHist[i] = self.colvars_count[i] * np.exp(self.appliedBiasPotential(self.bins[i], 0) / self.kb / self.temperature)
 		if self.ndims == 2:
 			pass
-		
-		return self.rwHist 
+		return rwHist 
 	
-	def getGlobalPartitionFunc(self): #TODO 2D 
+	def GlobalPartitionFunc(self): #TODO 2D 
 		if self.ndims == 1:
 			partitionFunc = np.sum(self.reweightedHist())
 			return partitionFunc 
 		if self.ndims == 2:
 			return 0.0	
 
-	def getCurrentFreeEnergy(self): 
-		self.colvars_FreeE = -self.kb * self.temperature * np.log(self.reweightedHist() / self.getGlobalPartitionFunc())
+	def getCurrentFreeEnergy(self):  #TODO issues 
+		self.colvars_FreeE = -self.kb * self.temperature * np.log(self.reweightedHist() / self.GlobalPartitionFunc())
 		self.colvars_FreeE[np.isneginf(self.colvars_FreeE)] = 0.0  # deal with log(0) = -inf
 		self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0  # deal with inf
 
@@ -219,8 +224,10 @@ class ABP(object):
 				self.colvars_FreeE_NN, self.gradient = \
 				output.training(self.colvars_coord, self.colvars_FreeE, self.learningRate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
 				self.instantOutput()
-				self.biasingPotentialFromNN = -self.colvars_FreeE_NN.copy() # phi(x) = -Fhat(x) 
 
+	def updateBiasingPotential(self):
+		self.biasingPotentialFromNN = -self.colvars_FreeE_NN.copy() # phi(x) = -Fhat(x) 
+			
 	def getLocalForce(self, coord_x, coord_y, vel, d=None): #TODO 2D
 
 		coord_x = truncateFloat(coord_x)
@@ -231,6 +238,7 @@ class ABP(object):
 		# Regular MD
 		if self.abfCheckFlag == "no" and self.nnCheckFlag == "no":  
 			self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
+			self.histDistrRecord(coord_x, coord_y, d)
 			return Fu / self.mass 
 
 		# Regular MD with ABF and ANN (I)
@@ -238,13 +246,15 @@ class ABP(object):
 			if self.frame < self.Frequency: 
 				Fabf = self.appliedBiasForce(coord_x, coord_y, d)
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
+				self.histDistrRecord(coord_x, coord_y, d)
 				return (Fu + Fabf) / self.mass
 			else: # NN takes over here
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
+				self.histDistrRecord(coord_x, coord_y, d)
 
 				if self.ndims == 1:
 					Fabf = -self.gradient[getIndices(coord_x, self.bins)]
-						
+
 				if self.ndims == 2:
 					pass
 
@@ -255,7 +265,6 @@ class ABP(object):
 		if self.ndims == 1:
 			random_xi_x       = np.random.normal(0, 1)
 			random_theta_x    = np.random.normal(0, 1)
-			self.learningProxy()
 
 			for n in range(self.particles):
 
@@ -274,14 +283,12 @@ class ABP(object):
 				self.current_vel[n][0]    = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_x) - (self.frictCoeff * Ct_x)
 				
-
 		if self.ndims == 2:
 
 			random_xi_x       = np.random.normal(0, 1)
 			random_theta_x    = np.random.normal(0, 1)
 			random_xi_y       = np.random.normal(0, 1)
 			random_theta_y    = np.random.normal(0, 1)
-			self.learningProxy()
 
 			for n in range(self.particles):
 
@@ -324,9 +331,9 @@ class ABP(object):
 				
 			if self.mode == "LangevinEngine":
 				if self.frame % self.Frequency == 0 and self.frame != 0 and self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes":
-					self.reweightedHist()
-					self.getGlobalPartitionFunc()	
 					self.getCurrentFreeEnergy()
+					self.learningProxy()
+					self.updateBiasingPotential()
 	
 				self.LangevinEngine()
 				self.conventionalDataOutput()		

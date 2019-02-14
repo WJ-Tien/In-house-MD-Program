@@ -33,7 +33,7 @@ init_frame            = 0
 mode                  = "LangevinEngine"
 NNoutputFreq          = 100 
 force_distr           = ["estimate"]
-tl                    = [25000]
+tl                    = [10000]
 
 abf_switch  = ["no", "yes"]
 NN_switch   = ["no", "yes"]

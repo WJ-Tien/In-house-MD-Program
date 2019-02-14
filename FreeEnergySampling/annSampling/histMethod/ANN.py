@@ -92,7 +92,7 @@ class trainingANN(object):
 			self.Loss_train.write("\n")
 			self.Loss_train.close()	
 
-			abpForce = np.array(sess.run(g, feed_dict=variables_to_feed))[0,:,0] #1 361 1 --> 361
+			gradient = np.array(sess.run(g, feed_dict=variables_to_feed))[0,:,0] #1 361 1 --> 361
 			# TODO better structure		
 			reshape_estTarget = sess.run(layerOutput, feed_dict=variables_to_feed) # remove the np.newaxis
 
@@ -109,7 +109,7 @@ class trainingANN(object):
 
 		tf.reset_default_graph()
 
-		return self.estTarget, abpForce
+		return self.estTarget, gradient 
 
 if __name__ == "__main__":
 	pass
