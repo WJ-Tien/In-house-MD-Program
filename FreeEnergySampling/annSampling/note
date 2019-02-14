@@ -16,7 +16,7 @@
 	Slower dynamics should come with slower frictCoeff to increase convergence efficiency 
 	Current setup
 	1D gamma = 0.05; ANN: 1-20-16-1, opt = adam, initial:lr=0.075, regul=0.00025, mid-final:lr=0.075, regul=0 
-	2D gamma = 0.001; ANN: 1-30-24-1, opt = adam, initial:lr=0.075, regul=0.00025, mid-final:lr=0.075, regul=0
+	2D gamma = 0.001; ANN: 1(2)-30-24-2, opt = adam, initial:lr=0.075, regul=0.00025, mid-final:lr=0.075, regul=0
 	
 
 * Issues on rendering plots
