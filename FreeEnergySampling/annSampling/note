@@ -26,5 +26,10 @@
 	linspace --> binNum + 1 so that interval= 2*half_boxboudary / binNum
 	arange --> interval= 2*half_boxboudary/binNum
 
+* Issues on chosing friction coefficient(gamma) (refer to numerical instability)
+	For 1D its ok
+	For 2D if gamma is too small --> large deviation occurr, especially for fast (very fast) dynamics system > m1T1 
+	but it is suitable for slow dynamics system --> like m1T0.1
+
 
 
