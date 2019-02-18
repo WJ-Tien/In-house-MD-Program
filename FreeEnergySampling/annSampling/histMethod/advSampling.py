@@ -33,6 +33,7 @@ class ABP(object):
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
 		self.fileOutFreeE     = open("FreeE.dat", "w") 
+		self.fileOutFreeE_com = open("FreeEcom.dat", "w") 
 		self.fileOutFreeETemp = open("FreeETemp.dat", "w") 
 		self.learningRate     = learningRate 
 		self.regularCoeff     = regularCoeff 
@@ -100,6 +101,8 @@ class ABP(object):
 					self.fileOutForce.write(str(self.colvars_force[i]) + " " + str(self.colvars_count[i]) + "\n")  
 					self.fileOutFreeE.write(str(self.colvars_coord[i]) + " ")
 					self.fileOutFreeE.write(str(self.colvars_FreeE_NN[i]) + "\n")  
+					self.fileOutFreeE_com.write(str(self.colvars_coord[i]) + " ")
+					self.fileOutFreeE_com.write(str(self.colvars_FreeE[i]) + "\n")  
 
 			#if self.ndims == 2:
 			#	for i in range(len(self.bins)):
@@ -125,6 +128,7 @@ class ABP(object):
 		self.fileOutForce.close()
 		self.fileOutFreeE.close()
 		self.fileOutFreeETemp.close()
+		self.fileOutFreeE_com.close()
 
 	def PotentialForce(self, coord_x, coord_y, d):     
 

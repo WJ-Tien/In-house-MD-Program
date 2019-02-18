@@ -6,7 +6,7 @@ import os
 
 Ndims                 = 1
 mass                  = 1 
-temperature           = 5 
+temperature           = 0.1 
 
 frictCoeff            = 0.05 
 
@@ -15,10 +15,10 @@ epoch                 = 2500
 regularCoeff          = 0.00025 
 
 switchSteps           = 10 
-trainingFreq          = 25000 
+trainingFreq          = 50000 
 
 lateLearningRate      = 0.075
-lateEpoch             = 5000
+lateEpoch             = 7500
 lateRegularCoeff      = 0.0
 
 
@@ -35,12 +35,14 @@ NNoutputFreq          = 100
 force_distr           = ["estimate"]
 tl                    = [10000]
 
-abf_switch  = ["no", "yes"]
-NN_switch   = ["no", "yes"]
+#abf_switch  = ["no", "yes"]
+#NN_switch   = ["no", "yes"]
 #abf_switch  = ["yes", "no"]
 #NN_switch   = ["yes","no"]
 #abf_switch  = ["no"]
 #NN_switch   = ["no"]
+abf_switch  = ["yes"]
+NN_switch   = ["yes"]
 
 
 for time_length in tl:
