@@ -153,8 +153,9 @@ class checkStatMechProp(object):
 
 		
 if __name__ == "__main__":
-	pass
-	#checkStatMechProp(ndims=2, mass=10, half_boxboundary=3, binNum=41, abfCheckFlag="yes", nnCheckFlag="yes", temperature=0.1).checkForceDistr("Force_m10_T0.1_yesABF_yesNN_TL_10000.dat")
+	#pass
+	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=2, binNum=41, abfCheckFlag="no", nnCheckFlag="no", temperature=10).checkForceDistr("Force_m1_T10_noABF_noNN_TL_100000.dat")
+	checkStatMechProp(ndims=2, mass=1, half_boxboundary=2, binNum=41, abfCheckFlag="no", nnCheckFlag="no", temperature=10).getTargetTemp("check.dat")
 	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="no", nnCheckFlag="no", temperature=0.01).checkBoltzDistr("conventional_m100_T0.01_noABF_noNN_TL_150000.dat", "Histogram_m100_T0.01_noABF_noNN_TL_150000.dat")
 	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="yes", nnCheckFlag="no").checkForceDistr("Force_m1_T0.1_yesABF_noNN_TL_150000.dat")
 	#checkStatMechProp(ndims=2, mass=1, half_boxboundary=3, binNum=40, abfCheckFlag="yes", nnCheckFlag="no").checkBoltzDistr("conventional_m1_T0.1_yesABF_noNN_TL_150000.dat", "Histogram_m1_T0.1_yesABF_noNN_TL_150000.dat")

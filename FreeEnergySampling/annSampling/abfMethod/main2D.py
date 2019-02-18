@@ -5,10 +5,10 @@ from checkStatMechProp import checkStatMechProp
 import os 
 
 Ndims                 = 2
-mass                  = 0.1 
-temperature           = 20 
+mass                  = 1 
+temperature           = 5 
 
-frictCoeff            = 0.05 
+frictCoeff            = 0.001 
 
 learningRate          = 0.031
 epoch                 = 5000 
@@ -33,14 +33,14 @@ init_frame            = 0
 mode                  = "LangevinEngine"
 NNoutputFreq          = 100 
 force_distr           = ["estimate"]
-tl                    = [2500]
+tl                    = [100000]
 
 #abf_switch  = ["yes"]
 #NN_switch   = ["yes"]
-abf_switch  = ["yes", "yes", "no"]
-NN_switch   = ["yes", "no", "no"]
-#abf_switch  = ["yes", "no"]
-#NN_switch   = ["no", "no"]
+#abf_switch  = ["yes", "yes", "no"]
+#NN_switch   = ["yes", "no", "no"]
+abf_switch  = ["no"]
+NN_switch   = ["no"]
 
 
 for time_length in tl:

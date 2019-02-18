@@ -46,15 +46,11 @@ class ABF(object):
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_force_NN = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
-			self.colvars_FreeE    = np.zeros(len(self.bins), dtype=np.float64) 
-			self.colvars_FreeE_NN = np.zeros(len(self.bins), dtype=np.float64) 
 
 		if self.ndims == 2:
 			self.colvars_force    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_force_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_count    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
-			self.colvars_FreeE    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64)
-			self.colvars_FreeE_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 
 	def printIt(self):
 		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime)) 
@@ -65,6 +61,7 @@ class ABF(object):
 		self.fileOut.write("#" + " " + "Particles"    + " " + str(self.particles)    + "\n")
 		self.fileOut.write("#" + " " + "BinNumber"    + " " + str(self.binNum)       + "\n")
 		self.fileOut.write("#" + " " + "Temperature"  + " " + str(self.temperature)  + "\n") 
+		self.fileOut.write("#" + " " + "mass"         + " " + str(self.mass)         + "\n") 
 		self.fileOut.write("#" + " " + "FrictCoeff"   + " " + str(self.frictCoeff)   + "\n") 
 		self.fileOut.write("#" + " " + "Time_length"  + " " + str(self.time_length)  + "\n") 
 		self.fileOut.write("#" + " " + "Time_step"    + " " + str(self.time_step)    + "\n") 
