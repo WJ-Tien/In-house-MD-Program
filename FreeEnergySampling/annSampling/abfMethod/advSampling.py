@@ -110,7 +110,7 @@ class ABF(object):
 		self.fileOut.close()
 		self.fileOutForce.close()
 
-	def PotentialForce(self, coord_x, coord_y, d):     
+	def PotentialForce(self, coord_x, coord_y, d=None):     
 
 		# For 1D toy model
 		# Potential surface of the system: cosx + cos2x + cos3x
@@ -154,23 +154,21 @@ class ABF(object):
 			else:
 				return -(self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] / self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]) 
 
+	def histDistrRecord(self, coord_x, coord_y, d):
+
+		if self.ndims == 1:
+			self.colvars_count[getIndices(coord_x, self.bins)] += 1
+
+		if self.ndims == 2:
+			self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
+
 	def forceDistrRecord(self, coord_x, coord_y, updated_Fsys, d):
 
 		if self.ndims == 1:
-			if isinstance(updated_Fsys, float) or isinstance(updated_Fsys, int): # conventional ABF collection, which is a float
-				self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys 
-				self.colvars_count[getIndices(coord_x, self.bins)] += 1
-			else:                                       # refined force from NN, which is a np.ndarray
-				self.colvars_force += updated_Fsys
-				self.colvars_count += 1
+			self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys 
 
 		if self.ndims == 2:
-			if isinstance(updated_Fsys, float) or isinstance(updated_Fsys, int):
-				self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys 
-				self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
-			else: 
-				self.colvars_force += updated_Fsys
-				self.colvars_count += 1
+			self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys 
 
 	def learningProxy(self):
 		if self.nnCheckFlag == "yes":
@@ -200,12 +198,14 @@ class ABF(object):
 		# Regular MD
 		if self.abfCheckFlag == "no" and self.nnCheckFlag == "no":  
 			self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
+			self.histDistrRecord(coord_x, coord_y, d)
 			return Fu / self.mass 
 
 	  # Regular MD with ABF
 		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "no":
 			Fabf = self.appliedBiasForce(coord_x, coord_y, d)
 			self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
+			self.histDistrRecord(coord_x, coord_y, d)
 			return (Fu + Fabf) / self.mass
 
 		# Regular MD with ABF and ANN (I)
@@ -213,9 +213,11 @@ class ABF(object):
 			if self.frame < self.Frequency: 
 				Fabf = self.appliedBiasForce(coord_x, coord_y, d)
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
+				self.histDistrRecord(coord_x, coord_y, d)
 				return (Fu + Fabf) / self.mass
 			else: # NN takes over here
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
+				self.histDistrRecord(coord_x, coord_y, d)
 
 				tf.reset_default_graph()
 
@@ -263,6 +265,10 @@ class ABF(object):
 
 				self.current_coord[n][0]  = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
 				self.current_coord[n][0] -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
+				#Fu                        = self.PotentialForce(self.current_coord[n][0], 0) 
+
+				#self.forceDistrRecord(self.current_coord[n][0], 0, Fu) #record
+				#self.histDistrRecord(self.current_coord[n][0], 0) #record
 
 				updated_force_x           = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
@@ -295,6 +301,15 @@ class ABF(object):
 				self.current_coord[n][0] -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) 
 				self.current_coord[n][1]  = self.current_coord[n][1] + (self.time_step * self.current_vel[n][1]) + Ct_y
 				self.current_coord[n][1] -= (myRound(self.current_coord[n][1] / self.box[1]) * self.box[1]) 
+
+				#Fu_x                     = self.PotentialForce(self.current_coord[n][0], self.current_coord[n][1], 0) 
+				#Fu_y                     = self.PotentialForce(self.current_coord[n][0], self.current_coord[n][1], 0) 
+
+				#self.forceDistrRecord(self.current_coord[n][0], self.current_coord[n][1], Fu_x, 0) #record
+				#self.forceDistrRecord(self.current_coord[n][0], self.current_coord[n][1], Fu_y, 1) #record
+				#self.histDistrRecord(self.current_coord[n][0], self.current_coord[n][1], 0) #record
+				#self.histDistrRecord(self.current_coord[n][0], self.current_coord[n][1], 1) #record
+				
 
 				updated_force_x           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
 				updated_force_y           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 

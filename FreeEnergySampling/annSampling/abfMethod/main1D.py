@@ -5,8 +5,8 @@ from checkStatMechProp import checkStatMechProp
 import os 
 
 Ndims                 = 1
-mass                  = 1 
-temperature           = 0.1 
+mass                  = 0.1
+temperature           = 10
 
 frictCoeff            = 0.05 
 
@@ -14,7 +14,7 @@ learningRate          = 0.075
 epoch                 = 2500 
 regularCoeff          = 0.00025 
 
-switchSteps           = 8 
+switchSteps           = 10 
 trainingFreq          = 500 
 
 lateLearningRate      = 0.075
@@ -39,8 +39,10 @@ abf_switch  = ["yes"]
 NN_switch   = ["yes"]
 #abf_switch  = ["yes", "yes", "no"]
 #NN_switch   = ["yes", "no", "no"]
-#abf_switch  = ["yes", "no"]
+#abf_switch  = ["no", "yes"]
 #NN_switch   = ["no", "no"]
+#abf_switch  = ["yes"]
+#NN_switch   = ["no"]
 
 
 for time_length in tl:
