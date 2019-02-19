@@ -160,17 +160,15 @@ class ABP(object):
 		random_constant = np.random.normal(0, 1)
 		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (random_constant)
 
-	def forceDistrRecord(self, coord_x, coord_y, updated_Fsys, d): # TODO better strucuture
+	def forceDistrRecord(self, coord_x, coord_y, updated_Fsys, d=None): # TODO better strucuture
 
 		if self.ndims == 1:
 			self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys 
-			#self.colvars_count[getIndices(coord_x, self.bins)] += 1
 
 		if self.ndims == 2:
 			self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys 
-			#self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
 
-	def histDistrRecord(self, coord_x, coord_y, d): # TODO better strucuture
+	def histDistrRecord(self, coord_x, coord_y, d=None): # TODO better strucuture
 		if self.ndims == 1:
 			self.colvars_count[getIndices(coord_x, self.bins)] += 1
 
@@ -196,9 +194,10 @@ class ABP(object):
 
 	def reweightedHist(self): #TODO 2D
 		rwHist = np.zeros(len(self.bins), dtype=np.float64) 
+		maxValueOfBiasingPotential = np.amax(self.biasingPotentialFromNN)
 		if self.ndims == 1:
 			for i in range(len(self.colvars_count)):
-				rwHist[i] = self.colvars_count[i] * np.exp(self.appliedBiasPotential(self.bins[i], 0) / self.kb / self.temperature)
+				rwHist[i] = self.colvars_count[i] * np.exp(self.appliedBiasPotential(self.bins[i], 0) / self.kb / self.temperature) * np.exp(-maxValueOfBiasingPotential / self.kb / self.temperature)
 		if self.ndims == 2:
 			pass
 		return rwHist 
@@ -210,10 +209,12 @@ class ABP(object):
 		if self.ndims == 2:
 			return 0.0	
 
-	def getCurrentFreeEnergy(self):  #TODO issues 
+	def getCurrentFreeEnergy(self):  #TODO issues #TODO 2D
 		self.colvars_FreeE = -self.kb * self.temperature * np.log(self.reweightedHist() / self.GlobalPartitionFunc())
 		self.colvars_FreeE[np.isneginf(self.colvars_FreeE)] = 0.0  # deal with log(0) = -inf
 		self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0  # deal with inf
+		if self.ndims == 1:
+			self.colvars_FreeE[-1] = self.colvars_FreeE[0] # PBC
 
 	def learningProxy(self): 
 		if self.nnCheckFlag == "yes":
@@ -257,7 +258,7 @@ class ABP(object):
 				self.histDistrRecord(coord_x, coord_y, d)
 
 				if self.ndims == 1:
-					Fabf = -self.gradient[getIndices(coord_x, self.bins)]
+					Fabf = self.gradient[getIndices(coord_x, self.bins)]
 
 				if self.ndims == 2:
 					pass
@@ -266,13 +267,13 @@ class ABP(object):
 
 	def LangevinEngine(self):
 
+		sigma = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
+
 		if self.ndims == 1:
 			random_xi_x       = np.random.normal(0, 1)
 			random_theta_x    = np.random.normal(0, 1)
 
 			for n in range(self.particles):
-
-				sigma                     = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
 
 				current_force_x           = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
@@ -280,9 +281,13 @@ class ABP(object):
 																			sigma * (self.time_step**1.5) * (0.5 * random_xi_x + (np.sqrt(3)/6) * random_theta_x)
 
 				self.current_coord[n][0]  = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
-				self.current_coord[n][0] -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
+				self.current_coord[n][0] -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) 
+
+				#self.forceDistrRecord(self.current_coord[n][0], 0, current_force_x) #record
+				#self.histDistrRecord(self.current_coord[n][0], 0) #record
 
 				updated_force_x           = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
+
 
 				self.current_vel[n][0]    = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_x) - (self.frictCoeff * Ct_x)
@@ -295,8 +300,6 @@ class ABP(object):
 			random_theta_y    = np.random.normal(0, 1)
 
 			for n in range(self.particles):
-
-				sigma                     = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
 
 				current_force_x           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
 				current_force_y           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
@@ -341,7 +344,7 @@ class ABP(object):
 	
 				self.LangevinEngine()
 				self.conventionalDataOutput()		
-				self.printIt()
+				#self.printIt()
 
 		self.propertyOnColvarsOutput()
 		self.closeAllFiles()

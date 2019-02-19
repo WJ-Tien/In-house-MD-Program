@@ -93,8 +93,9 @@ class trainingANN(object):
 			self.Loss_train.close()	
 
 			gradient = np.array(sess.run(g, feed_dict=variables_to_feed))[0,:,0] #1 361 1 --> 361
+			print(np.amax(gradient))
 			# TODO better structure		
-			reshape_estTarget = sess.run(layerOutput, feed_dict=variables_to_feed) # remove the np.newaxis
+			reshape_estTarget = sess.run(layerOutput, feed_dict=variables_to_feed) 
 
 			if self.ndims == 1:
 				self.estTarget = reshape_estTarget.reshape(self.size)
