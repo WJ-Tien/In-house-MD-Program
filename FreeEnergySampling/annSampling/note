@@ -33,3 +33,4 @@
 
 
 
+* Fdrag and Frand are only used to perturbed the system, so when collecting Fsys, these two terms are not included, only Fu will be accounted for.
