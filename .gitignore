@@ -16,5 +16,8 @@ FreeEnergySampling/annSampling/abfMethod/2dValidation_LJ4
 FreeEnergySampling/annSampling/abfMethod/code_validation_and_numerical_error
 FreeEnergySampling/annSampling/histMethod/analysis
 FreeEnergySampling/annSampling/histMethod/latestversion
+FreeEnergySampling/annSampling/histMethod/unbias_test
+FreeEnergySampling/annSampling/histMethod/version_test
 FreeEnergySampling/annSampling/NN_Unit_Test
 FreeEnergySampling/annSampling/Reconstruct
+FreeEnergySampling/annSampling/various_gamma_convergence_test

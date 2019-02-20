@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
 
-from advSampling import ABP
+from advSampling import ABF
 from checkStatMechProp import checkStatMechProp 
 import os 
 
 Ndims                 = 1
-mass                  = 1 
-temperature           = 1 
+mass                  = 10
+temperature           = 0.001 
 
-frictCoeff            = 0.01 
-#frictCoeff            = 0.1 
+frictCoeff            = 0.05 
 
 learningRate          = 0.075 
 epoch                 = 2500 
 regularCoeff          = 0.00025 
 
 switchSteps           = 10 
-trainingFreq          = 50000 
+trainingFreq          = 500 
 
 lateLearningRate      = 0.075
-lateEpoch             = 7500
+lateEpoch             = 5000
 lateRegularCoeff      = 0.0
 
 
@@ -36,12 +35,14 @@ NNoutputFreq          = 100
 force_distr           = ["estimate"]
 tl                    = [7500]
 
-#abf_switch  = ["no", "yes"]
-#NN_switch   = ["no", "yes"]
-#abf_switch  = ["no"]
+#abf_switch  = ["yes"]
+#NN_switch   = ["yes"]
+#abf_switch  = ["yes", "yes", "no"]
+#NN_switch   = ["yes", "no", "no"]
+abf_switch  = ["no", "yes"]
+NN_switch   = ["no", "no"]
+#abf_switch  = ["yes"]
 #NN_switch   = ["no"]
-abf_switch  = ["yes"]
-NN_switch   = ["yes"]
 
 
 for time_length in tl:
@@ -56,7 +57,7 @@ for time_length in tl:
 		#ABF(Nparticles, Ndims, init_time, time_step, time_length, init_frame, mass, box, temperature, frictCoeff, abfCheckFlag,\
 		#	 nnCheckFlag, trainingFreq, mode, learningRate, regularCoeff, epoch, lateLearningRate, lateRegularCoeff, lateEpoch,\
     #   switchSteps, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force).mdrun()
-		ABP(Nparticles, Ndims, init_time, time_step, time_length, init_frame, mass, box, temperature, frictCoeff, abfCheckFlag,\
+		ABF(Nparticles, Ndims, init_time, time_step, time_length, init_frame, mass, box, temperature, frictCoeff, abfCheckFlag,\
 			 nnCheckFlag, trainingFreq, mode, learningRate, regularCoeff, epoch, lateLearningRate, lateRegularCoeff, lateEpoch,\
        switchSteps, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force).mdrun()
 

@@ -76,11 +76,10 @@ def forcey2D(a, b):
 
 if __name__ == "__main__":
 	pass
-	Temperature = 1
-	bins = np.linspace(-np.pi, np.pi, 361)
-	freeE = freeE1D(bins, Temperature)
-	with open("FreeE_1D_T" +  str(Temperature) +".dat", "w") as fout:
-		for b, f in zip(bins, freeE):
-			fout.write(str(b) + " " + str(f) + "\n")
+	#bins = np.linspace(-np.pi, np.pi, 361)
+	#freeE = freeE1D(bins, 5)
+	#with open("FreeE_1D_T5.dat", "w") as fout:
+	#	for b, f in zip(bins, freeE):
+	#		fout.write(str(b) + " " + str(f) + "\n")
 
 
