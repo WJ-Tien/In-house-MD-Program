@@ -1,5 +1,8 @@
-### One Dimensional MD - a Toy Model 
+### In-house MD program 
+
 * Regular Langevin MD
-* ABF method (O)
-* ABF method with Neural Network (O)
-* HistMethod with ANN (I)
+* ABF method 
+* ABF method with Neural Network 
+* HistMethod with Neural Network (I)
+
+Version: 2019/02/20
