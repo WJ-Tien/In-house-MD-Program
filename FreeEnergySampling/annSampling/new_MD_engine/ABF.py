@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-import numpy as np
-from mdlib.force import Force
 from mdlib.mdFileIO import mdFileIO
+from mdlib.force import Force
+from mdlib.mdEngine import mdEngine
+import numpy as np
 
 class ABF(object):
 
@@ -17,8 +18,8 @@ class ABF(object):
 		self.velDirection = 1 if np.random.randint(1, 1001) % 2 == 0 else -1 
 		self.current_vel = np.ones((p["nparticle"], p["ndims"]), dtype=np.float64) * \
                        self.velDirection * np.sqrt(p["kb"] * p["temperature"] / p["mass"])
-		filein
-		fileout
+		#filein
+		#fileout
 		if p["ndims"] == 1:
 			
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
@@ -29,6 +30,8 @@ class ABF(object):
 			self.colvars_force    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_force_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_count    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
+	def abf_getForce(self): #TODO decorator
+		pass
 
 	def forceDistrRecord(self):
 		pass

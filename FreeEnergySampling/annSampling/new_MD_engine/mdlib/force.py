@@ -38,7 +38,6 @@ class Force(object):
 							 (3*coord_y**2 + 2*coord_y + 3)*np.exp(-coord_x**2 - coord_y**2))
 
 	def _potentialForceLJ(self, r):
-		""" r = distance between atoms"""
 		return 4 * self.epsilon * self.sigma**6 * (self.sigma**6 * -12 * r**(-13) + 6 * self.sigma**(-7))
 
 	def _viscousForce(self, vel):
@@ -47,6 +46,9 @@ class Force(object):
 	def _randomForce(self): 
 		gaussian_random_value = np.random.normal(0, 1)
 		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (gaussian_random_value)
+
+	def _setAllForce(self):
+		return None
 	
 	def getForce(self, coord_x, d=None, vel=None, coord_y=None):
 

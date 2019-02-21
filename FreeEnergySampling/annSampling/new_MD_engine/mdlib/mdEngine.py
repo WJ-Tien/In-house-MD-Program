@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from customMathFunc import myRound
-from force import Force
+from mdlib.customMathFunc import myRound
+#from force import Force
 
 class mdEngine(object):
 
@@ -14,39 +14,39 @@ class mdEngine(object):
 		self.mass            = mass
 		self.thermoStatFlag  = thermoStatFlag 
 		self.frictCoeff      = frictCoeff
-		self.initializeForce = Force(self.kb, self.time_step, self.temperature, self.ndims, self.mass, self.thermoStatFlag, self.frictCoeff)
+		#self.initializeForce = Force(self.kb, self.time_step, self.temperature, self.ndims, self.mass, self.thermoStatFlag, self.frictCoeff)
 		self.box             = box 
 
-	def velocityVerletSimple(self, current_coord, current_vel):
+	def velocityVerletSimple(self, current_coord, current_vel, getforce):
 
 		if self.ndims == 1:
 			for n in range(nparticle):
-				current_force        = self.initiazeForce.getForce(current_coord[n][0], 0, current_vel[n][0])
+				current_force        = getForce(current_coord[n][0], 0, current_vel[n][0])
 
 				current_coord[n][0] += current_vel[n][0] * time_step + (0.5 / mass) * current_force * time_step ** 2 
 				cuurent_coord[n][0] -= (myRound(current_coord[n][0] / self.box[0]) * self.box[0])
 
-				next_force           = self.initiazeForce.getForce(current_coord[n][0], 0, current_vel[n][0]) 
+				next_force           = getForce(current_coord[n][0], 0, current_vel[n][0]) 
 
 				current_vel         += (0.5 / mass) * (current_force + next_force) * time_step
 
 		if self.ndims == 2:
 			for n in range(nparticle):
-				current_force_x      = self.initiazeForce.getForce(current_coord[n][0], 0, current_vel[n][0], current_coord[n][1])
-				current_force_y      = self.initiazeForce.getForce(current_coord[n][0], 1, current_vel[n][1], current_coord[n][1])
+				current_force_x      = getForce(current_coord[n][0], 0, current_vel[n][0], current_coord[n][1])
+				current_force_y      = getForce(current_coord[n][0], 1, current_vel[n][1], current_coord[n][1])
 
 				current_coord[n][0] += current_vel[n][0] * time_step + (0.5 / mass) * current_force_x * time_step ** 2 
 				current_coord[n][1] += current_vel[n][0] * time_step + (0.5 / mass) * current_force_y * time_step ** 2 
 				cuurent_coord[n][0] -= (myRound(current_coord[n][0] / self.box[0]) * self.box[0])
 				cuurent_coord[n][1] -= (myRound(current_coord[n][1] / self.box[1]) * self.box[1])
 
-				next_force_x         = self.initiazeForce.getForce(current_coord[n][0], 0, current_vel[n][0], current_coord[n][1]) 
-				next_force_y         = self.initiazeForce.getForce(current_coord[n][0], 1, current_vel[n][1], current_coord[n][1]) 
+				next_force_x         = getForce(current_coord[n][0], 0, current_vel[n][0], current_coord[n][1]) 
+				next_force_y         = getForce(current_coord[n][0], 1, current_vel[n][1], current_coord[n][1]) 
 
 				current_vel[n][0]   += (0.5 / mass) * (current_force_x + next_force_x) * time_step
 				current_vel[n][1]   += (0.5 / mass) * (current_force_y + next_force_y) * time_step
 
-	def velocityVerletLJ(self, current_coord, current_vel):
+	def velocityVerletLJ(self, current_coord, current_vel, getForce):
 		# for Lennard Jones potential
 		pass
 

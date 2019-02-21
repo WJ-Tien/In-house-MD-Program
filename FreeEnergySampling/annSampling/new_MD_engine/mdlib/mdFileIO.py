@@ -15,8 +15,8 @@ class mdFileIO(object):
 		with open(inputFile, "r") as fin:
 
 			for line in fin:
-				line = line.strip()
-				if line: # not empty
+
+				if len(line.strip()) != 0: # not empty
 					if line[0] != ";":
 						line = line.split()
 						if line[1] != "=":
