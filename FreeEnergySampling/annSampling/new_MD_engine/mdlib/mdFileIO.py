@@ -17,8 +17,13 @@ class mdFileIO(object):
 			for line in fin:
 
 				if len(line.strip()) != 0: # not empty
-					if line[0] != ";":
+
+					if line[0] == ";":
+						pass
+
+					else:
 						line = line.split()
+
 						if line[1] != "=":
 							print("check the format in .mdp -> the format must be param_names = value")
 							exit(1)
