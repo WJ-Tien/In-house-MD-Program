@@ -15,7 +15,7 @@ def getIndices(input_var, bins):
 	shiftValue = int(myRound(abs(bins[0]) / binw))
 	return int(np.floor(input_var/ binw)) + shiftValue
 
-def truncateFloat(f, n=6):
+def truncateFloat(f, n=7):
 		if f >= 0:
 			return np.floor(f * 10 ** n) / 10 ** n
 		else:

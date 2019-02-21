@@ -3,8 +3,9 @@ import numpy as np
 import time
 from ANN import trainingANN 
 from customMathFunc import myRound, getIndices, truncateFloat
+import tensorflow as tf
 
-class ABP(object):
+class ABF(object):
 	
 	def __init__(self, particles, ndims, current_time, time_step, time_length, frame, mass, box, temperature, frictCoeff, abfCheckFlag, nnCheckFlag, trainingFrequency, mode, learningRate, regularCoeff, epoch, lateLearningRate, lateRegularCoeff,lateEpoch,switchSteps, NNoutputFreq, half_boxboundary, binNum, filename_conventional, filename_force):
 		self.startTime        = time.time()
@@ -32,9 +33,6 @@ class ABP(object):
 		self.Frequency        = trainingFrequency
 		self.fileOut          = open(str(filename_conventional), "w") 
 		self.fileOutForce     = open(str(filename_force), "w") 
-		self.fileOutFreeE     = open("FreeE.dat", "w") 
-		self.fileOutFreeE_com = open("FreeEcom.dat", "w") 
-		self.fileOutFreeETemp = open("FreeETemp.dat", "w") 
 		self.learningRate     = learningRate 
 		self.regularCoeff     = regularCoeff 
 		self.epoch            = epoch 
@@ -46,16 +44,13 @@ class ABP(object):
 
 		if self.ndims == 1:
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
+			self.colvars_force_NN = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
-			self.colvars_FreeE    = np.zeros(len(self.bins), dtype=np.float64) 
-			self.colvars_FreeE_NN = np.zeros(len(self.bins), dtype=np.float64) 
-			self.biasingPotentialFromNN= np.zeros(len(self.bins), dtype=np.float64) 
 
 		if self.ndims == 2:
 			self.colvars_force    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
+			self.colvars_force_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_count    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
-			self.colvars_FreeE    = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64)
-			self.colvars_FreeE_NN = np.zeros((self.ndims, len(self.bins), len(self.bins)), dtype=np.float64) 
 
 	def printIt(self):
 		print("Frame %d with time %f" % (self.frame, time.time() - self.startTime)) 
@@ -66,7 +61,7 @@ class ABP(object):
 		self.fileOut.write("#" + " " + "Particles"    + " " + str(self.particles)    + "\n")
 		self.fileOut.write("#" + " " + "BinNumber"    + " " + str(self.binNum)       + "\n")
 		self.fileOut.write("#" + " " + "Temperature"  + " " + str(self.temperature)  + "\n") 
-		self.fileOut.write("#" + " " + "Mass"         + " " + str(self.mass)         + "\n") 
+		self.fileOut.write("#" + " " + "mass"         + " " + str(self.mass)         + "\n") 
 		self.fileOut.write("#" + " " + "FrictCoeff"   + " " + str(self.frictCoeff)   + "\n") 
 		self.fileOut.write("#" + " " + "Time_length"  + " " + str(self.time_length)  + "\n") 
 		self.fileOut.write("#" + " " + "Time_step"    + " " + str(self.time_step)    + "\n") 
@@ -81,15 +76,7 @@ class ABP(object):
 				self.fileOut.write(str(self.current_coord[n][d]) + " " + str(self.current_vel[n][d]) + " ") 
 			self.fileOut.write("\n")
 
-	def instantOutput(self): #TODO 2D
-		if self.nnCheckFlag == "yes" and self.abfCheckFlag == "yes":
-			if self.ndims == 1:
-				for i in range(len(self.bins)): 
-					self.fileOutFreeETemp.write(str(self.colvars_coord[i]) + " ")
-					self.fileOutFreeETemp.write(str(self.colvars_FreeE_NN[i]) + "\n")  
-				self.fileOutFreeETemp.write("\n")
-
-	def propertyOnColvarsOutput(self):  #issues TODO 2D
+	def forceOnColvarsOutput(self): 
 		
 		self.colvars_force = (self.colvars_force / self.colvars_count)
 		self.colvars_force[np.isnan(self.colvars_force)] = 0
@@ -98,18 +85,14 @@ class ABP(object):
 			if self.ndims == 1:
 				for i in range(len(self.bins)): 
 					self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
-					self.fileOutForce.write(str(self.colvars_force[i]) + " " + str(self.colvars_count[i]) + "\n")  
-					self.fileOutFreeE.write(str(self.colvars_coord[i]) + " ")
-					self.fileOutFreeE.write(str(self.colvars_FreeE_NN[i]) + "\n")  
-					self.fileOutFreeE_com.write(str(self.colvars_coord[i]) + " ")
-					self.fileOutFreeE_com.write(str(self.colvars_FreeE[i]) + "\n")  
+					self.fileOutForce.write(str(self.colvars_force_NN[i]) + " " + str(self.colvars_count[i]) + "\n")  
 
-			#if self.ndims == 2:
-			#	for i in range(len(self.bins)):
-			#		for j in range(len(self.bins)):
-					#	self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
-					#	self.fileOutForce.write(str(self.colvars_coord[j]) + " ")
-					#	self.fileOutForce.write(str(self.colvars_force_NN[0][i][j]) + " " + str(self.colvars_count[0][i][j]) + " " +str(self.colvars_force_NN[1][i][j]) + " " + str(self.colvars_count[1][i][j]) + "\n")  
+			if self.ndims == 2:
+				for i in range(len(self.bins)):
+					for j in range(len(self.bins)):
+						self.fileOutForce.write(str(self.colvars_coord[i]) + " ")
+						self.fileOutForce.write(str(self.colvars_coord[j]) + " ")
+						self.fileOutForce.write(str(self.colvars_force_NN[0][i][j]) + " " + str(self.colvars_count[0][i][j]) + " " +str(self.colvars_force_NN[1][i][j]) + " " + str(self.colvars_count[1][i][j]) + "\n")  
 		else:
 			if self.ndims == 1:
 				for i in range(len(self.bins)): 
@@ -126,11 +109,8 @@ class ABP(object):
 	def closeAllFiles(self):
 		self.fileOut.close()
 		self.fileOutForce.close()
-		self.fileOutFreeE.close()
-		self.fileOutFreeETemp.close()
-		self.fileOutFreeE_com.close()
 
-	def PotentialForce(self, coord_x, coord_y, d):     
+	def PotentialForce(self, coord_x, coord_y, d=None):     
 
 		# For 1D toy model
 		# Potential surface of the system: cosx + cos2x + cos3x
@@ -160,7 +140,29 @@ class ABP(object):
 		random_constant = np.random.normal(0, 1)
 		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (random_constant)
 
-	def forceDistrRecord(self, coord_x, coord_y, updated_Fsys, d=None): # TODO better strucuture
+	def appliedBiasForce(self, coord_x, coord_y, d):
+
+		if self.ndims == 1:
+			if self.colvars_count[getIndices(coord_x, self.bins)] == 0:
+				return 0
+			else:
+				return -(self.colvars_force[getIndices(coord_x, self.bins)] / self.colvars_count[getIndices(coord_x, self.bins)]) 
+
+		if self.ndims == 2:
+			if self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] == 0:
+				return 0
+			else:
+				return -(self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] / self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]) 
+
+	def histDistrRecord(self, coord_x, coord_y, d):
+
+		if self.ndims == 1:
+			self.colvars_count[getIndices(coord_x, self.bins)] += 1
+
+		if self.ndims == 2:
+			self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
+
+	def forceDistrRecord(self, coord_x, coord_y, updated_Fsys, d):
 
 		if self.ndims == 1:
 			self.colvars_force[getIndices(coord_x, self.bins)] += updated_Fsys 
@@ -168,74 +170,25 @@ class ABP(object):
 		if self.ndims == 2:
 			self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += updated_Fsys 
 
-	def histDistrRecord(self, coord_x, coord_y, d=None): # TODO better strucuture
-		if self.ndims == 1:
-			self.colvars_count[getIndices(coord_x, self.bins)] += 1
-
-		if self.ndims == 2:
-			self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] += 1
-
-	def appliedBiasPotential(self, coord_x, coord_y, d=None):  #TODO 2D
-		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": 
-			if self.ndims == 1:
-				if self.frame <= self.Frequency: # initial sweep
-					return 0 # np.sin(coord_x)
-				else:
-					return self.biasingPotentialFromNN[getIndices(coord_x, self.bins)]
-			if self.ndims == 2:
-				pass
-	
-	def appliedBiasForce(self, coord_x, coord_y, d=None):# propagate the biasing potential / only in the first sweep  #TODO 2D
-		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": 
-			if self.ndims == 1:
-				return 0 #-np.cos(coord_x) 
-			if self.ndims == 2:
-				return np.cos(coord_x) + np.cos(coord_y)	
-
-	def reweightedHist(self): #TODO 2D
-		rwHist = np.zeros(len(self.bins), dtype=np.float64) 
-		maxValueOfBiasingPotential = np.amax(self.biasingPotentialFromNN)
-
-		if self.ndims == 1:
-			for i in range(len(self.colvars_count)):
-				rwHist[i] = self.colvars_count[i] * np.exp(self.appliedBiasPotential(self.bins[i], 0) / self.kb / self.temperature) * np.exp(-maxValueOfBiasingPotential / self.kb / self.temperature)
-
-		if self.ndims == 2:
-			pass
-		return rwHist 
-	
-	def GlobalPartitionFunc(self): #TODO 2D 
-		if self.ndims == 1:
-			partitionFunc = np.sum(self.reweightedHist())
-			return partitionFunc 
-		if self.ndims == 2:
-			return 0.0	
-
-	def getCurrentFreeEnergy(self):  #TODO issues #TODO 2D
-		self.colvars_FreeE = -self.kb * self.temperature * np.log(self.reweightedHist() / self.GlobalPartitionFunc())
-		self.colvars_FreeE[np.isneginf(self.colvars_FreeE)] = 0.0  # deal with log(0) = -inf
-		self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0  # deal with inf
-		if self.ndims == 1:
-			self.colvars_FreeE[-1] = self.colvars_FreeE[0] # PBC
-
-	def learningProxy(self): 
+	def learningProxy(self):
 		if self.nnCheckFlag == "yes":
 			if self.frame % self.Frequency == 0 and self.frame != 0: 
 				output = trainingANN("loss.dat", "hyperparam.dat", self.ndims, len(self.bins)) 
+
+				self.colvars_force = (self.colvars_force / self.colvars_count)
+				self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
 
 				if self.frame > self.Frequency * self.switchSteps:
 					self.learningRate = self.lateLearningRate 
 					self.regularCoeff = self.lateRegularCoeff 
 					self.epoch        = self.lateEpoch 
 
-				self.colvars_FreeE_NN, self.gradient = \
-				output.training(self.colvars_coord, self.colvars_FreeE, self.learningRate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
-				self.instantOutput()
+				self.colvars_force_NN = \
+				output.training(self.colvars_coord, self.colvars_force, self.learningRate, self.regularCoeff, self.epoch, self.NNoutputFreq) 
+	
+				self.colvars_force = (self.colvars_force * self.colvars_count)
 
-	def updateBiasingPotential(self):
-		self.biasingPotentialFromNN = -self.colvars_FreeE_NN.copy() # phi(x) = -Fhat(x) 
-			
-	def getLocalForce(self, coord_x, coord_y, vel, d=None): #TODO 2D
+	def getLocalForce(self, coord_x, coord_y, vel, d=None):
 
 		coord_x = truncateFloat(coord_x)
 		coord_y = truncateFloat(coord_y)
@@ -248,6 +201,13 @@ class ABP(object):
 			self.histDistrRecord(coord_x, coord_y, d)
 			return Fu / self.mass 
 
+	  # Regular MD with ABF
+		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "no":
+			Fabf = self.appliedBiasForce(coord_x, coord_y, d)
+			self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
+			self.histDistrRecord(coord_x, coord_y, d)
+			return (Fu + Fabf) / self.mass
+
 		# Regular MD with ABF and ANN (I)
 		if self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes": 
 			if self.frame < self.Frequency: 
@@ -259,23 +219,44 @@ class ABP(object):
 				self.forceDistrRecord(coord_x, coord_y, Fsys, d) 
 				self.histDistrRecord(coord_x, coord_y, d)
 
-				if self.ndims == 1:
-					Fabf = self.gradient[getIndices(coord_x, self.bins)]
+				tf.reset_default_graph()
 
-				if self.ndims == 2:
-					pass
+				with tf.Session() as sess: # reload the previous training model
+					Saver = tf.train.import_meta_graph("net" + str(self.ndims) + "D" +"/netSaver.ckpt.meta")
+					Saver.restore(sess, tf.train.latest_checkpoint("net" + str(self.ndims) +"D/"))
+					graph = tf.get_default_graph()
+					#y_estimatedOP = graph.get_operation_by_name("criticalOP") 
+					layerOutput = graph.get_tensor_by_name("annOutput:0") 
+
+					if self.ndims == 1:
+						coord_x = np.array([coord_x])[:, np.newaxis]	
+						CV = graph.get_tensor_by_name("colvars:0") 
+						Fabf = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.ndims)[d]
+					if self.ndims == 2:
+						coord_x = np.array([coord_x])[:, np.newaxis]	
+						coord_y = np.array([coord_y])[:, np.newaxis]	
+						CV_x = graph.get_tensor_by_name("colvars_x:0") 
+						CV_y = graph.get_tensor_by_name("colvars_y:0") 
+						Fabf = sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.ndims)[d] 
+
+				tf.reset_default_graph()
 
 				return (Fu + Fabf) / self.mass
 
 	def LangevinEngine(self):
 
-		sigma = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
+		# molecular_dynamics_2015.pdf
+		# http://itf.fys.kuleuven.be/~enrico/Teaching/molecular_dynamics_2015.pdf
+		# https://pdfs.semanticscholar.org/f393/85336df44c2af1fd6f293540b18a701b1c56.pdf
 
 		if self.ndims == 1:
 			random_xi_x       = np.random.normal(0, 1)
 			random_theta_x    = np.random.normal(0, 1)
+			self.learningProxy()
 
 			for n in range(self.particles):
+
+				sigma                     = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
 
 				current_force_x           = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
@@ -283,25 +264,29 @@ class ABP(object):
 																			sigma * (self.time_step**1.5) * (0.5 * random_xi_x + (np.sqrt(3)/6) * random_theta_x)
 
 				self.current_coord[n][0]  = self.current_coord[n][0] + (self.time_step * self.current_vel[n][0]) + Ct_x
-				self.current_coord[n][0] -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) 
+				self.current_coord[n][0] -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) # PBC
+				#Fu                        = self.PotentialForce(self.current_coord[n][0], 0) 
 
-				#self.forceDistrRecord(self.current_coord[n][0], 0, current_force_x) #record
+				#self.forceDistrRecord(self.current_coord[n][0], 0, Fu) #record
 				#self.histDistrRecord(self.current_coord[n][0], 0) #record
 
 				updated_force_x           = self.getLocalForce(self.current_coord[n][0], 0, self.current_vel[n][0], 0) 
 
-
 				self.current_vel[n][0]    = self.current_vel[n][0] + (0.5 * self.time_step * (current_force_x + updated_force_x)) - (self.time_step * self.frictCoeff * self.current_vel[n][0]) + \
 																			(np.sqrt(self.time_step) * sigma * random_xi_x) - (self.frictCoeff * Ct_x)
 				
+
 		if self.ndims == 2:
 
 			random_xi_x       = np.random.normal(0, 1)
 			random_theta_x    = np.random.normal(0, 1)
 			random_xi_y       = np.random.normal(0, 1)
 			random_theta_y    = np.random.normal(0, 1)
+			self.learningProxy()
 
 			for n in range(self.particles):
+
+				sigma                     = np.sqrt(2 * self.kb * self.temperature * self.frictCoeff / self.mass)
 
 				current_force_x           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
 				current_force_y           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
@@ -316,6 +301,15 @@ class ABP(object):
 				self.current_coord[n][0] -= (myRound(self.current_coord[n][0] / self.box[0]) * self.box[0]) 
 				self.current_coord[n][1]  = self.current_coord[n][1] + (self.time_step * self.current_vel[n][1]) + Ct_y
 				self.current_coord[n][1] -= (myRound(self.current_coord[n][1] / self.box[1]) * self.box[1]) 
+
+				#Fu_x                     = self.PotentialForce(self.current_coord[n][0], self.current_coord[n][1], 0) 
+				#Fu_y                     = self.PotentialForce(self.current_coord[n][0], self.current_coord[n][1], 0) 
+
+				#self.forceDistrRecord(self.current_coord[n][0], self.current_coord[n][1], Fu_x, 0) #record
+				#self.forceDistrRecord(self.current_coord[n][0], self.current_coord[n][1], Fu_y, 1) #record
+				#self.histDistrRecord(self.current_coord[n][0], self.current_coord[n][1], 0) #record
+				#self.histDistrRecord(self.current_coord[n][0], self.current_coord[n][1], 1) #record
+				
 
 				updated_force_x           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][0], 0) 
 				updated_force_y           = self.getLocalForce(self.current_coord[n][0], self.current_coord[n][1], self.current_vel[n][1], 1) 
@@ -337,19 +331,14 @@ class ABP(object):
 
 		# the rest of the frames
 		while self.current_time < self.time_length:
-				
 			if self.mode == "LangevinEngine":
-				if self.frame % self.Frequency == 0 and self.frame != 0 and self.abfCheckFlag == "yes" and self.nnCheckFlag == "yes":
-					self.getCurrentFreeEnergy()
-					self.learningProxy()
-					self.updateBiasingPotential()
-	
 				self.LangevinEngine()
 				self.conventionalDataOutput()		
-				#self.printIt()
+				self.printIt()
 
-		self.propertyOnColvarsOutput()
+		self.forceOnColvarsOutput()
 		self.closeAllFiles()
 
 if __name__ == "__main__":
-	pass
+	pass	
+
