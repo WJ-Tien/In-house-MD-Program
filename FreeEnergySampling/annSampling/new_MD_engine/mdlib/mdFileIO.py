@@ -130,15 +130,54 @@ class mdFileIO(object):
 	def propertyOnColvarsOutput(self, outputFile):
 		pass
 
-	def pdbFormatColvarsOutput(self, coord):
-		
-			
-	
-	def certainFrequencyOutput(self, coord, specificProperty, outputFreq):
+	def _lammpsFileHeader(self, ndims, nparticle, half_boxboundary, frame, lammpstrj):
+
+			lammpstrj.write("ITEM: TIMESTEP" + "\n")	
+			lammpstrj.write(str(frame) + "\n")
+			lammpstrj.write("ITEM: NUMBER OF ATOMS" + "\n")
+			lammpstrj.write(str(nparticle) + "\n")
+			lammpstrj.write("ITEM: BOX BOUNDS pp pp pp" + "\n")
+
+			if ndims == 1:
+				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
+				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
+				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
+				#lammpstrj.write("%-.3f %.3f\n" % (0, 0))
+				lammpstrj.write("ITEM: ATOMS id type x y z" + "\n")	
+
+			if ndims == 2:
+				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
+				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
+				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
+				lammpstrj.write("ITEM: ATOMS id type x y z" + "\n")	
+
+	def lammpsFormatColvarsOutput(self, ndims, nparticle, half_boxboundary, frame, coord, lammpstrj):
+			#TODO id number of the atom
+			self._lammpsFileHeader(ndims, nparticle, half_boxboundary, frame, lammpstrj)
+
+			for i in range(nparticle):
+
+				if ndims == 1:
+					lammpstrj.write(str(nparticle) + " " + str(1) + " " + str(coord[i][0]) + " " + str(0)           + " " + str(0) + "\n") 
+
+				if ndims == 2:
+					lammpstrj.write(str(nparticle) + " " + str(1) + " " + str(coord[i][0]) + " " + str(coord[i][1]) + " " + str(0) + "\n") 
+
+	def _pdbFileHeader(self):
 		pass
+
+	def pdbFormatColvarsOutput(self, coord):
+		pass
+	
+	def certainFrequencyOutput(self, ndims, coord, specificProperty, frame, outputFreq):
+		if frame % specificProperty == 0 and frame != 0:
+			pass
 
 	def printCurrentStatus(self, frame, init_real_world_time):
 		print("Frame %d with Time %f" % (frame, time.time() - init_real_world_time))
+
+	def openAllFiles(self, *files):
+		pass	
 
 	def closeAllFiles(self, *files):
 		for f in files:
@@ -146,8 +185,13 @@ class mdFileIO(object):
 			
 if __name__ == "__main__":
 	a = mdFileIO()
-	b = a.readParamFile("in.mdp")
-	a.writeParams(b)
+	#b = a.readParamFile("in.mdp")
+	b = np.zeros((1, 1))
+	print(b)
+	f = open("test.lammpstrj", "w")
+	a.lammpsFormatColvarsOutput(1, 1, 3, 0, b, f) 
+	f.close()
+	#a.writeParams(b)
 	#print(len(a))
 	#print(a)
 	
