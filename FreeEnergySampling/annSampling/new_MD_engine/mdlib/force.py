@@ -14,7 +14,7 @@ class Force(object):
 		self.sigma          = sigma
 		self.epsilon        = epsilon
 
-	def _potentialForceSimple(self, coord_x, coord_y=None, d=None):			
+	def _potentialForceSimple(self, coord_x, coord_y, d):			
 
 		# For 1D toy model
 		# Potential surface of the system: cosx + cos2x + cos3x
@@ -47,17 +47,17 @@ class Force(object):
 		gaussian_random_value = np.random.normal(0, 1)
 		return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (gaussian_random_value)
 	
-	def getForce(self, coord_x, d=None, vel=None, coord_y=None):
+	def getForce(self, coord_x, d, vel, coord_y):
 
 		if self.thermoStatFlag == "newton":
 			if self.ndims == 1:
-				return self._potentialForceSimple(coord_x) 
+				return self._potentialForceSimple(coord_x, 0, 0) 
 			if self.ndims == 2:
 				return self._potentialForceSimple(coord_x, coord_y, d) 
 
 		if self.thermoStatFlag == "langevin":
 			if self.ndims == 1:
-				return self._potentialForceSimple(coord_x) + self._viscousForce(vel) + self._randomForce()
+				return self._potentialForceSimple(coord_x, 0, 0) + self._viscousForce(vel) + self._randomForce()
 			if self.ndims == 2:
 				return self._potentialForceSimple(coord_x, coord_y, d) + self._viscousForce(vel) + self._randomForce()
 		

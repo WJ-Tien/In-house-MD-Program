@@ -44,7 +44,7 @@ class mdFileIO(object):
 							self.params["frictCoeff"] = float(line[2])
 						
 						elif line[0] == "earlyLearningRate":
-							self.params["learningRate"] = float(line[2])
+							self.params["earlyLearningRate"] = float(line[2])
 						
 						elif line[0] == "earlyEpoch":
 							self.params["epoch"] = int(line[2])
@@ -94,8 +94,8 @@ class mdFileIO(object):
 						elif line[0] == "nnOutputFreq":
 							self.params["nnOutputFreq"] = int(line[2])
 
-						elif line[0] == "time_length":
-							self.params["time_length"] = float(line[2])
+						#elif line[0] == "time_length":
+						#	self.params["time_length"] = float(line[2])
 
 						elif line[0] == "abfCheckFlag":
 							self.params["abfCheckFlag"] = line[2]
@@ -122,7 +122,7 @@ class mdFileIO(object):
 			fout.write("#" + " " + "temperature"    + " " + str(params["temperature"])    + "\n") 
 			fout.write("#" + " " + "mass"           + " " + str(params["mass"])           + "\n") 
 			fout.write("#" + " " + "frictCoeff"     + " " + str(params["frictCoeff"])     + "\n") 
-			fout.write("#" + " " + "time_length"    + " " + str(params["time_length"])    + "\n") 
+			fout.write("#" + " " + "total_frame"    + " " + str(params["total_frame"])    + "\n") 
 			fout.write("#" + " " + "time_step"      + " " + str(params["time_step"])      + "\n") 
 			fout.write("#" + " " + "abfCheckFlag"   + " " + str(params["abfCheckFlag"])   + "\n")
 			fout.write("#" + " " + "nnCheckFlag"    + " " + str(params["nnCheckFlag"])    + "\n")
@@ -168,13 +168,26 @@ class mdFileIO(object):
 
 	def pdbFormatColvarsOutput(self, coord):
 		pass
+
+	def forceOnColvarsOutput(self, ndims, colvars_coord, colvars_force, colvars_count, fileOutForce): 
+		if ndims == 1:
+			for i in range(len(colvars_coord)): 
+				fileOutForce.write(str(colvars_coord[i]) + " ")
+				fileOutForce.write(str(colvars_force[i]) + " " + str(colvars_count[i]) + "\n")  
+
+		if ndims == 2:
+			for i in range(len(colvars_coord)):
+				for j in range(len(colvars_coord)):
+					fileOutForce.write(str(colvars_coord[i]) + " ")
+					fileOutForce.write(str(colvars_coord[j]) + " ")
+					fileOutForce.write(str(colvars_force[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_force[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
 	
 	def certainFrequencyOutput(self, ndims, coord, specificProperty, frame, outputFreq):
 		if frame % specificProperty == 0 and frame != 0:
 			pass
 
-	def printCurrentStatus(self, frame, init_real_world_time):
-		print("Frame %d with Time %f" % (frame, time.time() - init_real_world_time))
+	def printCurrentStatus(self, frame, current_time, init_real_world_time):
+		print("Frame %d with Time %f" % (frame,  current_time - init_real_world_time))
 
 	def openAllFiles(self, *files):
 		pass	
