@@ -131,10 +131,14 @@ class mdFileIO(object):
 		pass
 
 	def pdbFormatColvarsOutput(self, coord):
-		pass
+		
+			
 	
-	def certainFrequencyOutput(self, coord, specificProperty):
+	def certainFrequencyOutput(self, coord, specificProperty, outputFreq):
 		pass
+
+	def printCurrentStatus(self, frame, init_real_world_time):
+		print("Frame %d with Time %f" % (frame, time.time() - init_real_world_time))
 
 	def closeAllFiles(self, *files):
 		for f in files:

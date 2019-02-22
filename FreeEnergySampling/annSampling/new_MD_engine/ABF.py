@@ -6,24 +6,24 @@ from mdlib.customMathFunc import getIndices
 from annlib.ANN import trainingANN
 import numpy as np
 import tensorflow as tf
-
+import time
 
 class ABF(object):
 
 	def __init__(self, input_mdp_name):
+
 		self.name            = input_mdp_name
 		self.p               = mdFileIO().readParamFile(self.name) # p for md parameters
 		self.bins            = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"], dtype=np.float64)
 		self.colvars_coord   = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"], dtype=np.float64)
 		self.initializeForce = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
+
+		# TODO determine coord and vel in another module
 		self.current_coord   = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
 		self.velDirection    = 1 if np.random.randint(1, 1001) % 2 == 0 else -1 
 		self.current_vel     = np.ones((self.p["nparticle"], self.p["ndims"]), dtype=np.float64) * self.velDirection * np.sqrt(self.p["kb"] * self.p["temperature"] / self.p["mass"])
 		
-		# TODO determine coord in another module
-
 		if self.p["ndims"] == 1:
-			
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_force_NN = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
@@ -145,6 +145,7 @@ class ABF(object):
 
 	def mdrun(self):
 
+		init_real_world_time = time.time()
 		mdInitializer = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],\
                              self.p["time_step"], self.p["temperature"], self.p["ndims"],\
                              self.p["mass"], self.p["thermostatFlag"], self.p["frictCoeff"])
@@ -152,20 +153,16 @@ class ABF(object):
 		# the first frame
 		mdFileIO().writeParams(self.p)
 		self.conventionalDataOutput()
-		self.printIt()
+		mdFileIO().printCurrentStatus(p["init_frame"], time.time() - init_real_world_time)	
 		
 		# the rest of the frames
 		while self.p["init_frame"] < self.p["total_frame"]: 
-			if self.mode == "LangevinEngine":
-				self.LangevinEngine()
-				self.conventionalDataOutput()		
-				self.printIt()
+			mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel, getCurrentForce)	
+			self.conventionalDataOutput()		
+			mdFileIO().printCurrentStatus(p["init_frame"], time.time() - init_real_world_time)	
+			self.p["init_frame"] += 1
 
 		self.forceOnColvarsOutput()
-		self.closeAllFiles()
-		pass	
-
-
 
 if __name__ == "__main__":
 	ABF("in.mdp")
