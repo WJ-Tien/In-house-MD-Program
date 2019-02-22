@@ -85,8 +85,11 @@ class mdFileIO(object):
 						elif line[0] == "init_frame":
 							self.params["init_frame"] = int(line[2])
 
-						elif line[0] == "mode":
-							self.params["mode"] = line[2] 
+						elif line[0] == "total_frame":
+							self.params["total_frame"] = int(line[2])
+
+						elif line[0] == "thermoStatFlag":
+							self.params["thermoStatFlag"] = line[2] 
 
 						elif line[0] == "nnOutputFreq":
 							self.params["nnOutputFreq"] = int(line[2])
@@ -112,17 +115,17 @@ class mdFileIO(object):
 
 	def writeParams(self, params):
 		with open("simulation_params.dat", "w") as fout:
-			fout.write("#" + " " + "mode"         + " " + str(params["mode"])         + "\n")
-			fout.write("#" + " " + "ndim"         + " " + str(params["ndims"])        + "\n")
-			fout.write("#" + " " + "nparticle"    + " " + str(params["nparticle"])    + "\n")
-			fout.write("#" + " " + "binNumber"    + " " + str(params["binNum"])       + "\n")
-			fout.write("#" + " " + "temperature"  + " " + str(params["temperature"])  + "\n") 
-			fout.write("#" + " " + "mass"         + " " + str(params["mass"])         + "\n") 
-			fout.write("#" + " " + "frictCoeff"   + " " + str(params["frictCoeff"])   + "\n") 
-			fout.write("#" + " " + "time_length"  + " " + str(params["time_length"])  + "\n") 
-			fout.write("#" + " " + "time_step"    + " " + str(params["time_step"])    + "\n") 
-			fout.write("#" + " " + "abfCheckFlag" + " " + str(params["abfCheckFlag"]) + "\n")
-			fout.write("#" + " " + "nnCheckFlag"  + " " + str(params["nnCheckFlag"])  + "\n")
+			fout.write("#" + " " + "thermoStatFlag" + " " + str(params["thermoStatFlag"]) + "\n")
+			fout.write("#" + " " + "ndim"           + " " + str(params["ndims"])          + "\n")
+			fout.write("#" + " " + "nparticle"      + " " + str(params["nparticle"])      + "\n")
+			fout.write("#" + " " + "binNumber"      + " " + str(params["binNum"])         + "\n")
+			fout.write("#" + " " + "temperature"    + " " + str(params["temperature"])    + "\n") 
+			fout.write("#" + " " + "mass"           + " " + str(params["mass"])           + "\n") 
+			fout.write("#" + " " + "frictCoeff"     + " " + str(params["frictCoeff"])     + "\n") 
+			fout.write("#" + " " + "time_length"    + " " + str(params["time_length"])    + "\n") 
+			fout.write("#" + " " + "time_step"      + " " + str(params["time_step"])      + "\n") 
+			fout.write("#" + " " + "abfCheckFlag"   + " " + str(params["abfCheckFlag"])   + "\n")
+			fout.write("#" + " " + "nnCheckFlag"    + " " + str(params["nnCheckFlag"])    + "\n")
 
 	def propertyOnColvarsOutput(self, outputFile):
 		pass

@@ -1,5 +1,5 @@
 ; md
-mode              = "langevin"
+thermoStatFlag    = "langevin"
 ndims             = 1
 kb                = 1
 mass              = 0.1
@@ -10,8 +10,8 @@ half_boxboundary  = 3.141592653589793
 binNum            = 361 
 init_frame        = 0
 init_time         = 0.
+total_frame       = 250000 
 time_step         = 0.005
-time_length       = 750
 
 ; ann
 nnOutputFreq      = 100 

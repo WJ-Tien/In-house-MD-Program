@@ -8,7 +8,7 @@ class test(object):
 		self.checknum = checknum
 	
 	def a(self):
-		return 20
+		return self.checknum + 10
 
 
 

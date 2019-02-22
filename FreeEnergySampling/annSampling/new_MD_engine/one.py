@@ -9,12 +9,18 @@ from two import test
 #from three import three
 #print(three())
 
-b = test(10)
+b = test(30)
 
-def new():
-	return 100
-b.a = new 
-print(b.a())
+def decorator(func):
+	def _wrapper(num):
+		return func(num) + b.a()
+	return _wrapper
+
+@decorator
+def wrapped(num):
+	return num 
+
+print(wrapped(10))
 
 
 

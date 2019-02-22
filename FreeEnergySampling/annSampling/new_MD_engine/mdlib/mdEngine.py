@@ -5,17 +5,15 @@ from mdlib.customMathFunc import myRound
 class mdEngine(object):
 
 	def __init__(self, nparticle, box, kb, time_step, temperature, ndims, mass, thermostatFlag="Langevin", frictCoeff=None):
-		self.nparticle       = nparticle
-		self.box             = box
-		self.kb              = kb
-		self.time_step       = time_step
-		self.temperature     = temperature
-		self.ndims           = ndims
-		self.mass            = mass
-		self.thermoStatFlag  = thermoStatFlag 
-		self.frictCoeff      = frictCoeff
-		#self.initializeForce = Force(self.kb, self.time_step, self.temperature, self.ndims, self.mass, self.thermoStatFlag, self.frictCoeff)
-		self.box             = box 
+		self.nparticle      = nparticle
+		self.box            = box
+		self.kb             = kb
+		self.time_step      = time_step
+		self.temperature    = temperature
+		self.ndims          = ndims
+		self.mass           = mass
+		self.thermoStatFlag = thermoStatFlag 
+		self.frictCoeff     = frictCoeff
 
 	def velocityVerletSimple(self, current_coord, current_vel, getforce):
 
