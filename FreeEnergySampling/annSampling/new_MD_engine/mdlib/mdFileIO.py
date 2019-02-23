@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 import numpy as np
-
-#"%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f"
+import time
 
 class mdFileIO(object):
 
 	def __init__(self):
+
 		self.params = {}
 	
 	def readParamFile(self, inputFile):
 
-		""" read md parameters with format param names = value """
+		""" read .mdp files with format param_names = value """
 
 		with open(inputFile, "r") as fin:
 
 			for line in fin:
 
-				if len(line.strip()) != 0: # not empty
+				if len(line.strip()) != 0: # ignore empty lines
 
-					if line[0] == ";":
+					if line[0] == ";": # ignore comments
 						pass
 
 					else:
@@ -104,16 +104,17 @@ class mdFileIO(object):
 							self.params["nnCheckFlag"] = line[2]
 
 						else:
-							print("unknown arguments -> %s" % (line[0]))
+							print("unknown argument -> %s" % (line[0]))
 							exit(1)
-				else:
-					continue	
+				else: # do nothing with empty lines 
+					pass	
 					
 		self.params["box"] = np.ones(self.params["ndims"]) * self.params["half_boxboundary"] * 2
 			
 		return self.params
 
 	def writeParams(self, params):
+
 		with open("simulation_params.dat", "w") as fout:
 			fout.write("#" + " " + "thermoStatFlag" + " " + str(params["thermoStatFlag"]) + "\n")
 			fout.write("#" + " " + "ndim"           + " " + str(params["ndims"])          + "\n")
@@ -127,33 +128,21 @@ class mdFileIO(object):
 			fout.write("#" + " " + "abfCheckFlag"   + " " + str(params["abfCheckFlag"])   + "\n")
 			fout.write("#" + " " + "nnCheckFlag"    + " " + str(params["nnCheckFlag"])    + "\n")
 
-	def propertyOnColvarsOutput(self, outputFile):
-		pass
-
-	def _lammpsFileHeader(self, ndims, nparticle, half_boxboundary, frame, lammpstrj):
+	def _lammpsFileHeader(self, nparticle, half_boxboundary, frame, lammpstrj):
 
 			lammpstrj.write("ITEM: TIMESTEP" + "\n")	
 			lammpstrj.write(str(frame) + "\n")
 			lammpstrj.write("ITEM: NUMBER OF ATOMS" + "\n")
 			lammpstrj.write(str(nparticle) + "\n")
 			lammpstrj.write("ITEM: BOX BOUNDS pp pp pp" + "\n")
-
-			if ndims == 1:
-				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
-				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
-				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
-				#lammpstrj.write("%-.3f %.3f\n" % (0, 0))
-				lammpstrj.write("ITEM: ATOMS id type x y z" + "\n")	
-
-			if ndims == 2:
-				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
-				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
-				lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
-				lammpstrj.write("ITEM: ATOMS id type x y z" + "\n")	
+			lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
+			lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
+			lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
+			lammpstrj.write("ITEM: ATOMS id type x y z" + "\n")	
 
 	def lammpsFormatColvarsOutput(self, ndims, nparticle, half_boxboundary, frame, coord, lammpstrj):
 			#TODO id number of the atom
-			self._lammpsFileHeader(ndims, nparticle, half_boxboundary, frame, lammpstrj)
+			self._lammpsFileHeader(nparticle, half_boxboundary, frame, lammpstrj)
 
 			for i in range(nparticle):
 
@@ -167,35 +156,34 @@ class mdFileIO(object):
 		pass
 
 	def pdbFormatColvarsOutput(self, coord):
+		#"%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f"
 		pass
 
-	def forceOnColvarsOutput(self, ndims, colvars_coord, colvars_force, colvars_count, fileOutForce): 
+	def propertyOnColvarsOutput(self, ndims, colvars_coord, colvars_property, colvars_count, fileOutProperty): 
 		if ndims == 1:
 			for i in range(len(colvars_coord)): 
-				fileOutForce.write(str(colvars_coord[i]) + " ")
-				fileOutForce.write(str(colvars_force[i]) + " " + str(colvars_count[i]) + "\n")  
+				fileOutProperty.write(str(colvars_coord[i]) + " ")
+				fileOutProperty.write(str(colvars_property[i]) + " " + str(colvars_count[i]) + "\n")  
 
 		if ndims == 2:
 			for i in range(len(colvars_coord)):
 				for j in range(len(colvars_coord)):
-					fileOutForce.write(str(colvars_coord[i]) + " ")
-					fileOutForce.write(str(colvars_coord[j]) + " ")
-					fileOutForce.write(str(colvars_force[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_force[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
+					fileOutProperty.write(str(colvars_coord[i]) + " ")
+					fileOutProperty.write(str(colvars_coord[j]) + " ")
+					fileOutProperty.write(str(colvars_property[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_property[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
 	
 	def certainFrequencyOutput(self, ndims, coord, specificProperty, frame, outputFreq):
 		if frame % specificProperty == 0 and frame != 0:
 			pass
 
-	def printCurrentStatus(self, frame, current_time, init_real_world_time):
-		print("Frame %d with Time %f" % (frame,  current_time - init_real_world_time))
-
-	def openAllFiles(self, *files):
-		pass	
+	def printCurrentStatus(self, frame, init_real_world_time):
+		print("Frame %d with Time %f" % (frame, time.time() - init_real_world_time))
 
 	def closeAllFiles(self, *files):
 		for f in files:
 			f.close()
 			
+
 if __name__ == "__main__":
 	a = mdFileIO()
 	#b = a.readParamFile("in.mdp")

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from mdlib.customMathFunc import myRound
 from mdlib.force import Force
+import numpy as np
 
 class mdEngine(object):
 
@@ -15,7 +16,12 @@ class mdEngine(object):
 		self.thermoStatFlag = thermoStatFlag 
 		self.frictCoeff     = frictCoeff
 		self.getForce       = getForce
-		#self.initForce      = Force(self.kb, self.time_step, self.temperature, self.ndims, self.mass, self.thermoStatFlag, self.frictCoeff)
+
+	def genVelocity(self):	
+		""" generate velocity profile by Maxwell-Boltzmann distribution"""
+		velDirection = 1 if np.random.randint(1, 1001) % 2 == 0 else -1 
+		initVel = np.ones((self.nparticle, self.ndims), dtype=np.float64) * velDirection * np.sqrt(selfkb * self.temperature / self.mass)
+		return initVel
 
 	def velocityVerletSimple(self, current_coord, current_vel):
 

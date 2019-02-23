@@ -10,12 +10,11 @@ import time
 
 class ABF(object):
 
-	def __init__(self, input_mdp_name):
+	def __init__(self, input_mdp_file):
 
-		self.name            = input_mdp_name
-		self.p               = mdFileIO().readParamFile(self.name) # p for md parameters
-		self.bins            = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"], dtype=np.float64)
-		self.colvars_coord   = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"], dtype=np.float64)
+		self.p               = mdFileIO().readParamFile(input_mdp_file) # p for md parameters
+		self.bins            = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
+		self.colvars_coord   = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 
 		self.mdInitializer   = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],\
                                     self.p["time_step"], self.p["temperature"], self.p["ndims"],\
@@ -23,10 +22,9 @@ class ABF(object):
 
 		self.initializeForce = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
 
-		# TODO determine coord and vel in another module
+		# TODO initialize atom_coords in another module 
 		self.current_coord   = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
-		self.velDirection    = 1 if np.random.randint(1, 1001) % 2 == 0 else -1 
-		self.current_vel     = np.ones((self.p["nparticle"], self.p["ndims"]), dtype=np.float64) * self.velDirection * np.sqrt(self.p["kb"] * self.p["temperature"] / self.p["mass"])
+		self.current_vel     = self.mdInitializer.getVelocity() 
 		
 		if self.p["ndims"] == 1:
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
@@ -124,8 +122,8 @@ class ABF(object):
 				tf.reset_default_graph()
 
 		currentFsys = self.initializeForce.getForce(coord_x, d, vel, coord_y)
-		self._forceDistrRecord(coord_x, currentFsys, coord_y=None, d=None)
-		self._histDistrRecord(coord_x, coord_y=None, d=None)
+		self._forceDistrRecord(coord_x, currentFsys, coord_y, d)
+		self._histDistrRecord(coord_x, coord_y, d)
 
 		return Fabf
 
@@ -153,9 +151,12 @@ class ABF(object):
 
 		init_real_world_time = time.time()
 
+		# pre processing
 		lammpstrj  = open("m%.1f_T%.1f_gamma%.1f_len_%d.lammpstrj" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
 		forceOnCVs = open("Force_m%.1fT%.1f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
+		histogramOnCVs = open("Hist_m%.1fT%.1f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
 
+		# Start of the simulation
 		# the first frame
 		mdFileIO().writeParams(self.p)
 		mdFileIO().lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj) 
@@ -165,21 +166,25 @@ class ABF(object):
 		while self.p["init_frame"] < self.p["total_frame"]: 
 
 			self.p["init_frame"] += 1
-			mdFileIO().printCurrentStatus(self.p["init_frame"], time.time(), init_real_world_time)	
+			mdFileIO().printCurrentStatus(self.p["init_frame"], init_real_world_time)	
 
 			if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
 				self.learningProxy()
 
 			self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel)	
 			mdFileIO().lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj) 
+		# End of simulation
+
+		# post processing
+		mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins,  self.colvars_count / np.sum(self.colvars_count), self.colvars_count, self.p["nnCheckFlag"], self.p["abfCheckFlag"], histogramOnCVs)
 
 		if self.p["nnCheckFlag"] == "yes":
-			mdFileIO().forceOnColvarsOutput(self.p["ndims"], self.bins,  self.colvars_force_NN, self.colvars_count, self.p["nnCheckFlag"], self.p["abfCheckFlag"], forceOnCVs)
+			mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins,  self.colvars_force_NN, self.colvars_count, self.p["nnCheckFlag"], self.p["abfCheckFlag"], forceOnCVs)
 		else:
 			self.colvars_force = (self.colvars_force / self.colvars_count)
 			self.colvars_force[np.isnan(self.colvars_force)] = 0
 			self.colvars_force[-1] = self.colvars_force[0] # remain PBC
-			mdFileIO().forceOnColvarsOutput(self.p["ndims"], self.bins,  self.colvars_force, self.colvars_count, forceOnCVs)
+			mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins,  self.colvars_force, self.colvars_count, forceOnCVs)
 
 		mdFileIO().closeAllFiles(lammpstrj, forceOnCVs)
 
