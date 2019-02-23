@@ -3,7 +3,7 @@ import numpy as np
 
 class Force(object):
 
-	def __init__(self, kb, time_step, temperature, ndims, mass, thermoStatFlag="langevin", frictCoeff=None, sigma=None, epsilon=None):
+	def __init__(self, kb, time_step, temperature, ndims, mass, thermoStatFlag, frictCoeff, sigma=None, epsilon=None):
 		self.kb							= kb
 		self.time_step			= time_step
 		self.temperature		= temperature
