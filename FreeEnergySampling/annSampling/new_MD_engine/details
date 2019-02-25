@@ -3,4 +3,6 @@ Instead we use a python advanced concept called "decorator" to decorate the mdEn
 
 the value of the rightmost bin = the value of the leftmost bin so as to retain PBC
 
+ABF = adpative biasing "force"
+ABP = adpative biasing "potential"
 
