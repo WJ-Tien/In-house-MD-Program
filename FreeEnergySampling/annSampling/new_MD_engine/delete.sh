@@ -1,3 +1,3 @@
 #!/bin/bash
-rm *.dat
+rm *.dat 
 rm *.lammpstrj

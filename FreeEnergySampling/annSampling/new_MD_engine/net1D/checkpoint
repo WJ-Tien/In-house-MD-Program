@@ -1,0 +1,2 @@
+model_checkpoint_path: "netSaver.ckpt"
+all_model_checkpoint_paths: "netSaver.ckpt"
