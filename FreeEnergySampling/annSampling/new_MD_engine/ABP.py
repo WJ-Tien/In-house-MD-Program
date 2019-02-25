@@ -59,7 +59,7 @@ class ABP(object):
 	def _biasingPotential(self, coord_x, coord_y=None):
 		if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
 			if self.p["ndims"] == 1:
-				if self.p["init_frame"] <= self.p["traningFreq"]: # initial sweep
+				if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
 					return 0 
 				else:
 					return self.biasingPotentialFromNN[getIndices(coord_x, self.bins)]
@@ -71,6 +71,17 @@ class ABP(object):
 					return self.biasingPotentialFromNN[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]	
 		else:
 			return 0
+
+	def _inverseGradient(self):
+		""" cv == cartesian so return 1"""
+		return 1
+
+	def _Jacobian(self):
+		""" cv == cartesian -> ln|J| = 0 so return 0"""
+		return 0
+
+	def _entropicCorrection(self):
+		return self.p["kb"] * self.p["temperature"] * self._Jacobian()
 
 	def _calBiasingForce(self, coord_x, coord_y, d):
 
