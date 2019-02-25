@@ -156,10 +156,10 @@ class mdFileIO(object):
 					if ndims == 2:
 						lammpstrj.write(str(nparticle) + " " + str(1) + " " + str(coord[i][0]) + " " + str(coord[i][1]) + " " + str(0) + "\n") 
 
-	def _pdbFileHeader(self):
+	def _pdbFileHeader(self): #TODO
 		pass
 
-	def pdbFormatColvarsOutput(self, coord):
+	def pdbFormatColvarsOutput(self, coord): #TODO
 		#"%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f"
 		pass
 
@@ -176,7 +176,7 @@ class mdFileIO(object):
 					fileOutProperty.write(str(colvars_coord[j]) + " ")
 					fileOutProperty.write(str(colvars_property[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_property[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
 	
-	def certainFrequencyOutput(self, ndims, coord, specificProperty, frame, outputFreq):
+	def certainFrequencyOutput(self, ndims, coord, specificProperty, frame, outputFreq): #TODO
 		if frame % specificProperty == 0 and frame != 0:
 			pass
 

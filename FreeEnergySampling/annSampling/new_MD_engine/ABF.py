@@ -126,7 +126,7 @@ class ABF(object):
 
 		return Fabf
 
-	def learningProxy(self):
+	def _learningProxy(self):
 		if self.p["nnCheckFlag"] == "yes":
 			if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0: 
 				output = trainingANN("loss.dat", "hyperparam.dat", self.p["ndims"], len(self.bins)) 
@@ -168,7 +168,7 @@ class ABF(object):
 			self.mdInitializer.checkTargetTemperature(self.current_vel, self.p["init_frame"], self.p["total_frame"])
 
 			if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
-				self.learningProxy()
+				self._learningProxy()
 			
 			self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel)	
 
@@ -176,7 +176,7 @@ class ABF(object):
 		# End of simulation
 
 		# post processing
-		probability = self.colvars_count / np.sum(self.colvars_count)	 # each term should actually divided by two but this would be cacncelled
+		probability = self.colvars_count / np.sum(self.colvars_count)	 # both numerator and denominator should actually be divided by two but this would be cacncelled
 		probability = paddingRighMostBins(self.p["ndims"], probability) 
 		mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_count, histogramOnCVs)
 
