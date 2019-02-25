@@ -1,17 +1,19 @@
 ; md
+
 thermoStatFlag    = langevin
 ndims             = 1
 kb                = 1
 mass              = 1
 nparticle         = 1
 temperature       = 4 
-frictCoeff        = 0.05 
+frictCoeff        = 0.5 
 half_boxboundary  = 3.141592653589793 
-binNum            = 361 
+binNum            = 360 
 init_frame        = 0
 init_time         = 0.
-total_frame       = 100000 
+total_frame       = 2500000
 time_step         = 0.005
+writeFreq         = 1000
 
 ; ann
 nnOutputFreq      = 100 

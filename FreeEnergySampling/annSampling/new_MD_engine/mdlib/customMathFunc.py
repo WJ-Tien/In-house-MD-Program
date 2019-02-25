@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import numpy as np
-from sympy import *
 
 # TODO FreeE2D
 
@@ -20,7 +19,7 @@ def paddingRighMostBins(ndims, input_numpy_array):
 			When accumulating the counts on the colvars, we neglect the counts of the rightmost bins since it usually causes some floating point precision issues. 
       This simply originated from the implementation I used, i.e., accumulate the histogram by using left close method e.g. value between 0~1 belongs to 0.
 			Hence, I pad the rightmost bin = leftmost bin since we apply PBC condition to the calculation
-			And for the sake of numerical stability (prevent zero division erros), the count of the rightmostbin is set to the unity. """
+	"""
 	if ndims == 1:
 		input_numpy_array[-1] = input_numpy_array[0] 
 

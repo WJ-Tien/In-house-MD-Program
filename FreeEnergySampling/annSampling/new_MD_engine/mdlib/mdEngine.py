@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from mdlib.customMathFunc import myRound
-from mdlib.force import Force
 import numpy as np
 
 class mdEngine(object):

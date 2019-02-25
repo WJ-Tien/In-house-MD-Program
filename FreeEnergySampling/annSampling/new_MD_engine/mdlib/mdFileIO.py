@@ -42,15 +42,18 @@ class mdFileIO(object):
 							
 						elif line[0] == "frictCoeff":
 							self.params["frictCoeff"] = float(line[2])
+
+						elif line[0] == "writeFreq":
+							self.params["writeFreq"] = int(line[2])
 						
 						elif line[0] == "earlyLearningRate":
 							self.params["earlyLearningRate"] = float(line[2])
 						
 						elif line[0] == "earlyEpoch":
-							self.params["epoch"] = int(line[2])
+							self.params["earlyEpoch"] = int(line[2])
 
 						elif line[0] == "earlyRegularCoeff":
-							self.params["regularCoeff"] = float(line[2])
+							self.params["earlyRegularCoeff"] = float(line[2])
 		
 						elif line[0] == "switchSteps":
 							self.params["switchSteps"] = int(line[2])
@@ -140,17 +143,18 @@ class mdFileIO(object):
 			lammpstrj.write("%-.3f %.3f\n" % (-half_boxboundary, half_boxboundary))
 			lammpstrj.write("ITEM: ATOMS id type x y z" + "\n")	
 
-	def lammpsFormatColvarsOutput(self, ndims, nparticle, half_boxboundary, frame, coord, lammpstrj):
+	def lammpsFormatColvarsOutput(self, ndims, nparticle, half_boxboundary, frame, coord, lammpstrj, outputfreq):
 			#TODO id number of the atom
-			self._lammpsFileHeader(nparticle, half_boxboundary, frame, lammpstrj)
+			if frame % outputfreq == 0:
+				self._lammpsFileHeader(nparticle, half_boxboundary, frame, lammpstrj)
 
-			for i in range(nparticle):
+				for i in range(nparticle):
 
-				if ndims == 1:
-					lammpstrj.write(str(nparticle) + " " + str(1) + " " + str(coord[i][0]) + " " + str(0)           + " " + str(0) + "\n") 
+					if ndims == 1:
+						lammpstrj.write(str(nparticle) + " " + str(1) + " " + str(coord[i][0]) + " " + str(0)           + " " + str(0) + "\n") 
 
-				if ndims == 2:
-					lammpstrj.write(str(nparticle) + " " + str(1) + " " + str(coord[i][0]) + " " + str(coord[i][1]) + " " + str(0) + "\n") 
+					if ndims == 2:
+						lammpstrj.write(str(nparticle) + " " + str(1) + " " + str(coord[i][0]) + " " + str(coord[i][1]) + " " + str(0) + "\n") 
 
 	def _pdbFileHeader(self):
 		pass
@@ -182,7 +186,6 @@ class mdFileIO(object):
 	def closeAllFiles(self, *files):
 		for f in files:
 			f.close()
-			
 
 if __name__ == "__main__":
 	a = mdFileIO()

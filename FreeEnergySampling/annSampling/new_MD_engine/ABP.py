@@ -3,12 +3,12 @@ from mdlib.mdEngine import mdEngine
 from mdlib.mdFileIO import mdFileIO
 from mdlib.force import Force
 from mdlib.customMathFunc import getIndices, paddingRighMostBins
-from annlib.abfANN import trainingANN
+from annlib.abpANN import trainingANN
 import numpy as np
 import tensorflow as tf
 import time
 
-class ABF(object):
+class ABP(object):
 
 	def __init__(self, input_mdp_file):
 
@@ -192,7 +192,7 @@ class ABF(object):
 		mdFileIO().closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs)
 
 if __name__ == "__main__":
-	ABF("in.mdp").mdrun()
+	ABP("in.mdp").mdrun()
 
 	
 
