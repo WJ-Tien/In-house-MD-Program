@@ -15,10 +15,7 @@ for i in range(n):
 print("average --> %f" %(acc/n))
 print("sq_average --> %f" %(sq/n))
 """
-for i in range(1,98):
-	print(i)
-	
-for i in range(4):
-	print(i)
 
+a = np.ones((2,10,10))
+print(np.sum(a))
 

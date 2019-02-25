@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+e!/usr/bin/env python3
 
 from render import rendering
 from customMathFunc import getIndices, forcex2D, forcey2D, truncateFloat

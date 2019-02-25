@@ -6,12 +6,12 @@ kb                = 1
 mass              = 1
 nparticle         = 1
 temperature       = 4 
-frictCoeff        = 0.05 
+frictCoeff        = 2 
 half_boxboundary  = 3.141592653589793 
 binNum            = 360 
 init_frame        = 0
 init_time         = 0.
-total_frame       = 750000 
+total_frame       = 1000000 
 time_step         = 0.005
 writeFreq         = 100
 

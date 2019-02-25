@@ -3,6 +3,7 @@ from mdlib.mdEngine import mdEngine
 from mdlib.mdFileIO import mdFileIO
 from mdlib.force import Force
 from mdlib.customMathFunc import getIndices, paddingRighMostBins
+from mdlib.render import rendering
 from annlib.abfANN import trainingANN
 import numpy as np
 import tensorflow as tf
@@ -148,7 +149,7 @@ class ABF(object):
 
 		init_real_world_time = time.time()
 
-		# pre processing
+		# pre-processing
 		lammpstrj      = open("m%.1f_T%.3f_gamma%.4f_len_%d_%s_%s.lammpstrj" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
 		forceOnCVs     = open("Force_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
 		histogramOnCVs = open("Hist_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
@@ -175,8 +176,8 @@ class ABF(object):
 			mdFileIO().lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
 		# End of simulation
 
-		# post processing
-		probability = self.colvars_count / np.sum(self.colvars_count)	 # both numerator and denominator should actually be divided by two but this would be cacncelled
+		# post-processing
+		probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"]) # both numerator and denominator should actually be divided by two but this would be cacncelled
 		probability = paddingRighMostBins(self.p["ndims"], probability) 
 		mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_count, histogramOnCVs)
 
@@ -188,6 +189,13 @@ class ABF(object):
 			self.colvars_force[np.isnan(self.colvars_force)] = 0
 			self.colvars_force = paddingRighMostBins(self.p["ndims"], self.colvars_force)	
 			mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
+
+		# ndims >= 2 -> plot using matplotlib
+		if self.p["ndims"] == 2: 
+			s = rendering(self.p["ndims"], self.p["half_boxboundary"], self.p["binNum"], self.p["temperature"])
+			s.render(probability[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "boltzDist" +str(self.p["ndims"])+"D"))
+			s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
+			s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
 
 		mdFileIO().closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs)
 

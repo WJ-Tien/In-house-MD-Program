@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-from customMathFunc import forcex2D, forcey2D, Usurface2D, boltz2D, Usurface1D, forcex1D, boltz1D, freeE1D
+from mdlib.customMathFunc import forcex2D, forcey2D, Usurface2D, boltz2D, Usurface1D, forcex1D, boltz1D, freeE1D
 
 # This code aims at rendering 1d x-y plots and 2d contour plots for Langevin toy model
 
@@ -17,8 +17,8 @@ class rendering(object):
 
 		if self.ndims == 1:
 
-			x_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum)
-			x_axis = np.delete(x_axis, -1 , 0) # prevent boundary error
+			x_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum+1)
+			#x_axis = np.delete(x_axis, -1 , 0) # prevent boundary error
 
 			if hasattr(renderObj, '__call__'): # is function
 				if renderObj.__name__ == "boltz1D" or renderObj.__name__ == "freeE1D":
@@ -35,10 +35,10 @@ class rendering(object):
 
 		if self.ndims == 2: 
 
-			x_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum)
-			y_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum)
-			x_axis = np.delete(x_axis, -1 , 0) # prevent boundary error
-			y_axis = np.delete(y_axis, -1 , 0) # prevent boundary error
+			x_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum+1)
+			y_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum+1)
+			#x_axis = np.delete(x_axis, -1 , 0) # prevent boundary error
+			#y_axis = np.delete(y_axis, -1 , 0) # prevent boundary error
 
 			A, B = np.meshgrid(x_axis, y_axis, indexing="ij")
 
@@ -57,8 +57,8 @@ class rendering(object):
 			plt.clabel(R, inline=True, fontsize=8)
 			plt.xlim(x_axis[0],x_axis[-1])
 			plt.ylim(y_axis[0],y_axis[-1])
-			plt.xticks(np.linspace(-self.half_boxboundary, self.half_boxboundary-2*self.half_boxboundary/(self.binNum-1), 6))
-			plt.yticks(np.linspace(-self.half_boxboundary, self.half_boxboundary-2*self.half_boxboundary/(self.binNum-1), 6))
+			plt.xticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 6))
+			plt.yticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 6))
 			plt.colorbar(cs)
 			plt.savefig(name + ".png")
 			plt.gcf().clear()
