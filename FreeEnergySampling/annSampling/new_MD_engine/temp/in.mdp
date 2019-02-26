@@ -3,17 +3,15 @@
 thermoStatFlag    = langevin
 ndims             = 2
 kb                = 1
-mass              = 1
+mass              = 10
 nparticle         = 1
-temperature       = 3 
-frictCoeff        = 0.05 
-;half_boxboundary  = 3.141592653589793 
-;binNum            = 360 
-half_boxboundary  = 2 
-binNum            = 40 
+temperature       = 1 
+frictCoeff        = 0.001 
+half_boxboundary  = 3.141592653589793 
+binNum            = 360 
 init_frame        = 0
 init_time         = 0.
-total_frame       = 2000000 
+total_frame       = 1000000 
 time_step         = 0.005
 writeFreq         = 100
 

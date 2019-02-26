@@ -80,10 +80,11 @@ class ABF(object):
 
 	def _abfDecorator(func):
 		def _wrapper(self, coord_x, d, vel, coord_y):
+			Fabf = func(self, coord_x, d, vel, coord_y)
 			currentFsys = self.initializeForce.getForce(coord_x, d, vel, coord_y)
 			self._forceDistrRecord(coord_x, currentFsys, coord_y, d)
 			self._histDistrRecord(coord_x, coord_y, d)
-			return func(self, coord_x, d, vel, coord_y) + currentFsys # Fabf + currentFsys
+			return Fabf + currentFsys # Fabf + currentFsys
 		return _wrapper
 
 	@_abfDecorator
@@ -179,8 +180,9 @@ class ABF(object):
 		# post-processing
 		probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"]) # both numerator and denominator should actually be divided by two but this would be cacncelled
 		probability = paddingRighMostBins(self.p["ndims"], probability) 
-		mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_count, histogramOnCVs)
+		mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_count/2, histogramOnCVs)
 
+		# original data output
 		if self.p["nnCheckFlag"] == "yes":
 			mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
 
@@ -194,8 +196,12 @@ class ABF(object):
 		if self.p["ndims"] == 2: 
 			s = rendering(self.p["ndims"], self.p["half_boxboundary"], self.p["binNum"], self.p["temperature"])
 			s.render(probability[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "boltzDist" +str(self.p["ndims"])+"D"))
-			s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
-			s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
+			if self.p["nnCheckFlag"] == "yes":
+				s.render(self.colvars_force_NN[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
+				s.render(self.colvars_force_NN[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
+			else:
+				s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
+				s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
 
 		mdFileIO().closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs)
 

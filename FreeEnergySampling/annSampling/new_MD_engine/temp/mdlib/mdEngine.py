@@ -32,8 +32,8 @@ class mdEngine(object):
 
 		if current_frame == total_frame:	
 			targetTemperature = (self.mass * self._velSQ / self.kb / self.ndims / self._count)
-			with open("checkTargetTemperaturem%.3fT%.3fgamma%.3f.dat" % (self.mass, self.temperature, self.frictCoeff), "w") as fout:
-				fout.write("# Average Target Temperature: " + str(targetTemperature)) 
+			with open("checkTargetTemperature.dat", "w") as fout:
+				fout.write("# checkTargetTemperature: " + str(targetTemperature)) 
 
 	def velocityVerletSimple(self, current_coord, current_vel):
 
@@ -50,7 +50,6 @@ class mdEngine(object):
 
 		if self.ndims == 2:
 			for n in range(self.nparticle):
-
 				current_force_x      = self.getForce(current_coord[n][0], 0, current_vel[n][0], current_coord[n][1])
 				current_force_y      = self.getForce(current_coord[n][0], 1, current_vel[n][1], current_coord[n][1])
 
