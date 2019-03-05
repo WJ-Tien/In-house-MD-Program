@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from mdlib.mdEngine import mdEngine
-from mdlib.mdFileIO import mdFileIO
+from mdlib.mdFileIO import mdFileIO 
 from mdlib.force import Force
 from mdlib.customMathFunc import getIndices, paddingRighMostBins
 from mdlib.render import rendering
@@ -13,7 +13,8 @@ class ABF(object):
 
 	def __init__(self, input_mdp_file):
 
-		self.p							  = mdFileIO().readParamFile(input_mdp_file) # p for md parameters
+		self.IO               = mdFileIO() 
+		self.p							  = self.IO.readParamFile(input_mdp_file) # p for md parameters
 		self.bins						  = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 		self.colvars_coord	  = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 
@@ -157,15 +158,15 @@ class ABF(object):
 
 		# Start of the simulation
 		# the first frame
-		mdFileIO().writeParams(self.p)
-		mdFileIO().lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
-		mdFileIO().printCurrentStatus(self.p["init_frame"], init_real_world_time)	
+		self.IO.writeParams(self.p)
+		self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
+		self.IO.printCurrentStatus(self.p["init_frame"], init_real_world_time)	
 		
 		# the rest of the frames
 		while self.p["init_frame"] < self.p["total_frame"]: 
 
 			self.p["init_frame"] += 1
-			mdFileIO().printCurrentStatus(self.p["init_frame"], init_real_world_time)	
+			self.IO.printCurrentStatus(self.p["init_frame"], init_real_world_time)	
 
 			self.mdInitializer.checkTargetTemperature(self.current_vel, self.p["init_frame"], self.p["total_frame"])
 
@@ -174,25 +175,25 @@ class ABF(object):
 			
 			self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel)	
 
-			mdFileIO().lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
+			self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
 		# End of simulation
 
 		# post-processing
 		probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"]) # both numerator and denominator should actually be divided by two but this would be cacncelled
 		probability = paddingRighMostBins(self.p["ndims"], probability) 
-		mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_count/2, histogramOnCVs)
+		self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_count/2, histogramOnCVs)
 
 		# original data output
 		if self.p["nnCheckFlag"] == "yes":
-			mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
+			self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
 
 		else:
 			self.colvars_force = (self.colvars_force / self.colvars_count)
 			self.colvars_force[np.isnan(self.colvars_force)] = 0
 			self.colvars_force = paddingRighMostBins(self.p["ndims"], self.colvars_force)	
-			mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
+			self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
 
-		# ndims >= 2 -> plot using matplotlib
+		# ndims >= 2 -> plot using matplotlib #TODO put it in the self.IO 
 		if self.p["ndims"] == 2: 
 			s = rendering(self.p["ndims"], self.p["half_boxboundary"], self.p["binNum"], self.p["temperature"])
 			s.render(probability[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "boltzDist" +str(self.p["ndims"])+"D"))
@@ -203,7 +204,7 @@ class ABF(object):
 				s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
 				s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
 
-		mdFileIO().closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs)
+		self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs)
 
 if __name__ == "__main__":
 	ABF("in.mdp").mdrun()

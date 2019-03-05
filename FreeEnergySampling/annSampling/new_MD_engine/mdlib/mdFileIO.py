@@ -151,10 +151,10 @@ class mdFileIO(object):
 				for i in range(nparticle):
 
 					if ndims == 1:
-						lammpstrj.write(str(nparticle) + " " + str(1) + " " + str(coord[i][0]) + " " + str(0)           + " " + str(0) + "\n") 
+						lammpstrj.write(str(i) + " " + str(1) + " " + str(coord[i][0]) + " " + str(0)           + " " + str(0) + "\n") 
 
 					if ndims == 2:
-						lammpstrj.write(str(nparticle) + " " + str(1) + " " + str(coord[i][0]) + " " + str(coord[i][1]) + " " + str(0) + "\n") 
+						lammpstrj.write(str(i) + " " + str(1) + " " + str(coord[i][0]) + " " + str(coord[i][1]) + " " + str(0) + "\n") 
 
 	def _pdbFileHeader(self): #TODO
 		pass

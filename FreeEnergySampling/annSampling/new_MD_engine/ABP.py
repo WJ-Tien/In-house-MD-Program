@@ -12,15 +12,16 @@ class ABP(object):
 
 	def __init__(self, input_mdp_file):
 
-		self.p							  = mdFileIO().readParamFile(input_mdp_file) # p for md parameters
-		self.bins						  = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
-		self.colvars_coord	  = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
+		self.IO               = mdFileIO()
+		self.p								= self.IO.readParamFile(input_mdp_file) # p for md parameters
+		self.bins							= np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
+		self.colvars_coord		= np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 
-		self.mdInitializer	  = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],\
+		self.mdInitializer		= mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],\
 																		 self.p["time_step"], self.p["temperature"], self.p["ndims"],\
 																		 self.p["mass"], self.p["thermoStatFlag"], self.getCurrentForce, self.p["frictCoeff"])
 
-		self.initializeForce  = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
+		self.initializeForce	= Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
 
 		# TODO initialize atom_coords in another module 
 		self.current_coord	 = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
@@ -28,14 +29,15 @@ class ABP(object):
 		
 		if self.p["ndims"] == 1:
 			self.colvars_force		= np.zeros(len(self.bins), dtype=np.float64) 
-			self.colvars_FreeE    = np.zeros(len(self.bins), dtype=np.float64) 
+			self.colvars_FreeE		= np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_FreeE_NN = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_count		= np.zeros(len(self.bins), dtype=np.float64) 
+			self.colvars_hist			= np.zeros(len(self.bins), dtype=np.float64) 
 			self.biasingPotentialFromNN = np.zeros(len(self.bins), dtype=np.float64)
 
 		if self.p["ndims"] == 2:
 			self.colvars_force		= np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
-			self.colvars_FreeE    = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+			self.colvars_FreeE		= np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_FreeE_NN = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_count		= np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.biasingPotentialFromNN = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64)
@@ -101,9 +103,10 @@ class ABP(object):
 	def _abfDecorator(func):
 		def _wrapper(self, coord_x, d, vel, coord_y):
 			currentFsys = self.initializeForce.getForce(coord_x, d, vel, coord_y)
+			Fabf = func(self, coord_x, d, vel, coord_y)
 			self._forceDistrRecord(coord_x, currentFsys, coord_y, d)
 			self._histDistrRecord(coord_x, coord_y, d)
-			return func(self, coord_x, d, vel, coord_y) + currentFsys # Fabf + currentFsys(unbiased)
+			return Fabf + currentFsys # Fabf + currentFsys(unbiased)
 		return _wrapper
 
 	@_abfDecorator
@@ -129,7 +132,7 @@ class ABP(object):
 
 	def _probability(self): 
 		""" 1. unbias the historgram
-				2. calculate the paritition function
+				2. calculate the partition function
 				3. calculate the probability and return it """
 
 		rwHist = np.zeros(len(self.bins), dtype=np.float64) 
@@ -137,9 +140,14 @@ class ABP(object):
 
 		if self.p["ndims"] == 1:
 
+			"""
 			for i in range(len(self.colvars_count)):
-				rwHist[i] = self.colvars_count[i] * np.exp(self._biasingPotential(self.bins[i]) / self.p["kb"] / self.p["temperature"]) *\
-                    np.exp(-maxValueOfBiasingPotential / self.p["kb"] / self.p["temperature"])
+				rwHist[i] = (self.colvars_count[i]/2) * np.exp(self._biasingPotential(self.bins[i]) / self.p["kb"] / self.p["temperature"]) *\
+										np.exp(-maxValueOfBiasingPotential / self.p["kb"] / self.p["temperature"])
+			"""
+			for i in range(len(self.colvars_hist)):
+				rwHist[i] = self.colvars_hist[i] * np.exp(self._biasingPotential(self.bins[i]) / self.p["kb"] / self.p["temperature"]) *\
+										np.exp(-maxValueOfBiasingPotential / self.p["kb"] / self.p["temperature"])
 			partitionFunc = np.sum(rwHist)
 			probabilityDistr = rwHist / partitionFunc
 
@@ -151,7 +159,7 @@ class ABP(object):
 	def getCurrentFreeEnergy(self):  
 		self.colvars_FreeE = -self.p["kb"] * self.p["temperature"] * np.log(self._probability())
 		self.colvars_FreeE[np.isneginf(self.colvars_FreeE)] = 0.0  # deal with log(0) = -inf
-		self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0  # deal with inf
+		self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0	# deal with inf
 		self.colvars_FreeE = paddingRighMostBins(self.p["ndims"], self.colvars_FreeE) # for the sake of PBC
 
 	def _updateBiasingPotential(self):
@@ -176,22 +184,22 @@ class ABP(object):
 		init_real_world_time = time.time()
 
 		# pre-processing
-		lammpstrj      = open("m%.1f_T%.5f_gamma%.1f_len_%d.lammpstrj" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
-		forceOnCVs     = open("Force_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
-		freeEOnCVs     = open("FreeE_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
+		lammpstrj			 = open("m%.1f_T%.5f_gamma%.1f_len_%d.lammpstrj" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
+		forceOnCVs		 = open("Force_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
+		freeEOnCVs		 = open("FreeE_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
 		histogramOnCVs = open("Hist_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
 
 		# Start of the simulation
 		# the first frame
-		mdFileIO().writeParams(self.p)
-		mdFileIO().lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
-		mdFileIO().printCurrentStatus(self.p["init_frame"], init_real_world_time)	
+		self.IO.writeParams(self.p)
+		self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
+		self.IO.printCurrentStatus(self.p["init_frame"], init_real_world_time)	
 		
 		# the rest of the frames
 		while self.p["init_frame"] < self.p["total_frame"]: 
 
 			self.p["init_frame"] += 1
-			mdFileIO().printCurrentStatus(self.p["init_frame"], init_real_world_time)	
+			self.IO.printCurrentStatus(self.p["init_frame"], init_real_world_time)	
 
 			self.mdInitializer.checkTargetTemperature(self.current_vel, self.p["init_frame"], self.p["total_frame"])
 
@@ -205,26 +213,35 @@ class ABP(object):
 			
 			self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel)	
 
-			mdFileIO().lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
+			for n in range(self.p["nparticle"]):
+				if self.p["ndims"] == 1:
+					self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)] += 1
+				elif self.p["ndims"] == 2:
+					pass
+
+			self.colvars_hist = paddingRighMostBins(self.p["ndims"], self.colvars_hist)
+
+			self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
 		# End of simulation
 
 		# post-processing
-		probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"])	 # both numerator and denominator should actually divided by two but these would be cacncelled
-		probability = paddingRighMostBins(self.p["ndims"], probability) 
-		mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_count, histogramOnCVs)
+		#probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"])	 # both numerator and denominator should actually divided by two but these would be cacncelled
+		#probability = paddingRighMostBins(self.p["ndims"], probability) 
+		probability = (self.colvars_hist / np.sum(self.colvars_hist))
+		self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_count, histogramOnCVs)
 
 		self.colvars_force = (self.colvars_force / self.colvars_count)
 		self.colvars_force[np.isnan(self.colvars_force)] = 0
 		self.colvars_force = paddingRighMostBins(self.p["ndims"], self.colvars_force)	
-		mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
+		self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
 
 		if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":	
-			mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_FreeE_NN, self.colvars_count, freeEOnCVs)
+			self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_FreeE_NN, self.colvars_count, freeEOnCVs)
 
 		else:
-			mdFileIO().propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_FreeE, self.colvars_count, freeEOnCVs)
+			self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_FreeE, self.colvars_count, freeEOnCVs)
 				
-		mdFileIO().closeAllFiles(lammpstrj, forceOnCVs, freeEOnCVs, histogramOnCVs)
+		self.IO.closeAllFiles(lammpstrj, forceOnCVs, freeEOnCVs, histogramOnCVs)
 
 if __name__ == "__main__":
 	ABP("in.mdp").mdrun()

@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 import numpy as np
 
-"""
-acc = 0
-n = 1000000
+lin = 0
 sq = 0
+n = 100000
 for i in range(n):
-	a = np.random.uniform(-np.sqrt(3), np.sqrt(3))
-	acc += a 
-	sq += a**2
+	r = np.random.uniform(-np.sqrt(3), np.sqrt(3))
+	lin += r 
+	sq += r**2
+		
 
+print(lin/n)
+print(sq/n - (lin/n)**2)
+#print(np.sqrt(sq/n - (lin/n)**2))
+#print(sq/n)
 
-#print((b-a)**2/ 12)
-print("average --> %f" %(acc/n))
-print("sq_average --> %f" %(sq/n))
-"""
-
-a = np.ones((2,10,10))
-print(np.sum(a))
 

@@ -18,7 +18,6 @@ class rendering(object):
 		if self.ndims == 1:
 
 			x_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum+1)
-			#x_axis = np.delete(x_axis, -1 , 0) # prevent boundary error
 
 			if hasattr(renderObj, '__call__'): # is function
 				if renderObj.__name__ == "boltz1D" or renderObj.__name__ == "freeE1D":
@@ -37,8 +36,6 @@ class rendering(object):
 
 			x_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum+1)
 			y_axis = np.linspace(-self.half_boxboundary, self.half_boxboundary, self.binNum+1)
-			#x_axis = np.delete(x_axis, -1 , 0) # prevent boundary error
-			#y_axis = np.delete(y_axis, -1 , 0) # prevent boundary error
 
 			A, B = np.meshgrid(x_axis, y_axis, indexing="ij")
 

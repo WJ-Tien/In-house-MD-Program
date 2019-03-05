@@ -3,7 +3,6 @@ import numpy as np
 
 # TODO FreeE2D
 
-
 def randMars():
   # https://github.com/lammps/lammps/blob/master/src/random_mars.cpp
 	seed = np.random.randint(0, 900000000) 
@@ -141,23 +140,24 @@ def forcey2D(a, b):
 
 if __name__ == "__main__":
 	pass
-	#bins = np.linspace(-np.pi, np.pi, 361)
-	"""
-	freeE = freeE1D(bins, 4)
-	with open("FreeE_1D_T4.dat", "w") as fout:
+	bins = np.linspace(-np.pi, np.pi, 361)
+	
+	T = 0.75
+	freeE = freeE1D(bins, 0.75)
+	with open("FreeE_1D_T%f.dat" %(T), "w") as fout:
 		for b, f in zip(bins, freeE):
 			fout.write(str(b) + " " + str(f) + "\n")
-	"""
+
 	#boltz = boltz1D(bins, 0.05)
 	#with open("boltz_1D_T0.05.dat", "w") as fout:
 	#	for b, f in zip(bins, boltz):
 	#		fout.write(str(b) + " " + str(f) + "\n")
-	acc = 0
-	sq = 0
-	n = 100000
-	for i in range(n):
-		s = randMars() -0.5
-		acc += s
-		sq += s**2
-	print(acc/n)
-	print(sq/n)
+	#acc = 0
+	#sq = 0
+	#n = 100000
+	#for i in range(n):
+	#	s = randMars() -0.5
+	#	acc += s
+	#	sq += s**2
+	#print(acc/n)
+	#print(sq/n)
