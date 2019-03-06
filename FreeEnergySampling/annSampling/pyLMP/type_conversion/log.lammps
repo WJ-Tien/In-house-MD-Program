@@ -1,0 +1,84 @@
+LAMMPS (16 Mar 2018)
+# 3d Lennard-Jones melt
+
+units		lj
+atom_style	atomic
+
+lattice		fcc 0.8442
+Lattice spacing in x,y,z = 1.6796 1.6796 1.6796
+region		box block 0 4 0 4 0 4
+create_box	1 box
+Created orthogonal box = (0 0 0) to (6.71838 6.71838 6.71838)
+  1 by 1 by 1 MPI processor grid
+create_atoms	1 box
+Created 256 atoms
+  Time spent = 0.000159979 secs
+mass		1 1.0
+
+velocity	all create 10.0 87287
+
+pair_style	lj/cut 2.5
+pair_coeff	1 1 1.0 1.0 2.5
+
+neighbor	0.3 bin
+neigh_modify	every 20 delay 0 check no
+
+python post_force_callback file pylmp.py
+
+fix		1 all nve
+fix		2 all python/invoke 50 post_force post_force_callback
+
+dump		id all atom 50 dumpT10.0.lammpstrj
+#dump		id all xyz 10 dump.xyz
+
+#dump		2 all image 25 image.*.jpg type type #		axes yes 0.8 0.02 view 60 -30
+#dump_modify	2 pad 3
+
+#dump		3 all movie 25 movie.mpg type type #		axes yes 0.8 0.02 view 60 -30
+#dump_modify	3 pad 3
+
+thermo		50
+run		10000
+Neighbor list info ...
+  update every 20 steps, delay 0 steps, check no
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 2.8
+  ghost atom cutoff = 2.8
+  binsize = 1.4, bins = 5 5 5
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair lj/cut, perpetual
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d/newton
+      bin: standard
+Per MPI rank memory allocation (min/avg/max) = 3.628 | 3.628 | 3.628 Mbytes
+Step Temp E_pair E_mol TotEng Press 
+       0           10   -6.7733681            0    8.1680382    2.1737062 
+      50    7.1102572   -1.6903094            0    8.9334147    23.575764 
+     100    11.188978   -1.5756219            0    15.142285     27.31848 
+     150    19.291999   -1.1996097            0    27.625349    35.818541 
+     200    32.259889   -1.8602829            0    46.340527     44.32579 
+     250     48.71988   -1.4496457            0    71.344707    59.557491 
+     300    69.798765    -1.720479            0    102.56869    76.293123 
+     350    95.114605   -2.0430444            0    140.07155    96.083297 
+     400    123.98086   -1.4317177            0    183.81312    123.02585 
+     450    157.66823   -1.7578847            0    233.82062    149.92644 
+     500    195.43496   -1.9393329            0    290.06798     180.9756 
+     550    237.09624   -1.6846386            0    352.57048    217.01486 
+     600    282.89856   -1.4526242            0    421.23761    256.34373 
+     650    332.87449   -1.2285396            0    496.13276    299.26186 
+     700    387.86238   -2.1721231            0    577.34881    341.62821 
+     750    446.21662   -1.8457585            0    664.86462    391.89191 
+     800    508.63902   -1.3537843            0    758.62444    446.75234 
+     850      575.558   -1.2943472            0    858.67024    503.22759 
+     900    646.73597   -1.4105074            0    964.90398    562.54565 
+     950    722.00584   -1.3901673            0    1077.3881     626.0681 
+    1000    801.64288   -1.5823695            0    1196.1848    692.04997 
+    1050    885.45985    -1.758575            0     1321.243    761.65267 
+    1100    973.24992   -1.7023688            0    1452.4699     835.8583 
+    1150    1065.2485   -1.5661685            0    1590.0649    913.82406 
+    1200     1161.744   -1.8982035            0    1733.9108    993.68305 
+    1250    1262.0011    -1.723265            0    1883.8839    1078.4053 
+    1300    1366.5474   -1.7658376            0    2040.0481    1166.5459 
+ERROR: Lost atoms: original 256 current 255 (../thermo.cpp:442)
+Last command: run		10000
