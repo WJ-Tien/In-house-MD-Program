@@ -8,7 +8,7 @@ def post_force_callback(lammps_ptr, vflag):
 	df = 50                      # add deviation  
 	natoms = lmp.get_natoms()
 	for i in range(natoms):
-		f[i][0] += df              # f[aid][3]; 0 for x, 1 for y, 2 for z, respectively
+		f[i][0] += df              # f[aid][3]; 0 for x, 1 for y, 2 for z
 	
 	
 
