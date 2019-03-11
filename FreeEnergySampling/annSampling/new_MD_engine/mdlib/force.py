@@ -5,13 +5,13 @@ from mdlib.customMathFunc import randMars
 class Force(object):
 
 	def __init__(self, kb, time_step, temperature, ndims, mass, thermoStatFlag, frictCoeff, sigma=None, epsilon=None):
-		self.kb							= kb
-		self.time_step			= time_step
-		self.temperature		= temperature
-		self.ndims					= ndims
-		self.mass						= mass
+		self.kb             = kb
+		self.time_step      = time_step
+		self.temperature    = temperature
+		self.ndims          = ndims
+		self.mass           = mass
 		self.thermoStatFlag = thermoStatFlag 
-		self.frictCoeff			= frictCoeff
+		self.frictCoeff     = frictCoeff
 		self.sigma          = sigma
 		self.epsilon        = epsilon
 
