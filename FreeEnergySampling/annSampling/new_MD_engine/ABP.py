@@ -245,10 +245,3 @@ class ABP(object):
 
 if __name__ == "__main__":
 	ABP("in.mdp").mdrun()
-
-	
-
-	
-
-
-

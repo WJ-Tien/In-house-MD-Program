@@ -13,30 +13,30 @@ class ABF(object):
 
 	def __init__(self, input_mdp_file):
 
-		self.IO               = mdFileIO() 
-		self.p							  = self.IO.readParamFile(input_mdp_file) # p for md parameters
-		self.bins						  = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
-		self.colvars_coord	  = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
+		self.IO              = mdFileIO() 
+		self.p               = self.IO.readParamFile(input_mdp_file) # p for md parameters
+		self.bins            = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
+		self.colvars_coord   = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 
-		self.mdInitializer	  = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],\
+		self.mdInitializer   = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],\
 																		 self.p["time_step"], self.p["temperature"], self.p["ndims"],\
 																		 self.p["mass"], self.p["thermoStatFlag"], self.getCurrentForce, self.p["frictCoeff"])
 
-		self.initializeForce  = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
+		self.initializeForce = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
 
 		# TODO initialize atom_coords in another module 
 		self.current_coord	 = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
 		self.current_vel		 = self.mdInitializer.genVelocity() 
 		
 		if self.p["ndims"] == 1:
-			self.colvars_force		= np.zeros(len(self.bins), dtype=np.float64) 
+			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
 			self.colvars_force_NN = np.zeros(len(self.bins), dtype=np.float64) 
-			self.colvars_count		= np.zeros(len(self.bins), dtype=np.float64) 
+			self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
 
 		if self.p["ndims"] == 2:
-			self.colvars_force		= np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+			self.colvars_force    = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
 			self.colvars_force_NN = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
-			self.colvars_count		= np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+			self.colvars_count    = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
 
 	def _histDistrRecord(self, coord_x, coord_y, d):
 
@@ -208,11 +208,3 @@ class ABF(object):
 
 if __name__ == "__main__":
 	ABF("in.mdp").mdrun()
-
-
-	
-
-	
-
-
-
