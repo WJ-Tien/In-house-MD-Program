@@ -1,5 +1,6 @@
 ### In-house MD Program 
-#### Version: 2019/02/25
+#### Version: 2019/03/11
+#### The latest version of the In-house MD code is located in new_MD_engine
 
 * Regular Langevin MD
 * ABF method 
