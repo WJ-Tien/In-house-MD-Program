@@ -25,8 +25,8 @@ class ABF(object):
 		self.initializeForce = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
 
 		# TODO initialize atom_coords in another module 
-		self.current_coord	 = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
-		self.current_vel		 = self.mdInitializer.genVelocity() 
+		self.current_coord   = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
+		self.current_vel     = self.mdInitializer.genVelocity() 
 		
 		if self.p["ndims"] == 1:
 			self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
