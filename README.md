@@ -4,9 +4,9 @@
 
 #### What's inside 
 * Regular Newtonian / Langevin MD
-* ABF method 
-* ABF method with artificial neural network 
-* ABP method 
-* ABP method with artificial neural network (under construction)
+* Adaptive biasing force method 
+* Adaptive biasing force method with artificial neural network 
+* Adaptive biasing potential method 
+* Adaptive biasing potential method method with artificial neural network (under construction)
 * Couple with LAMMPS (under construction)
 
