@@ -1,8 +1,7 @@
-### In-house MD Program 
-#### Version: 2019/03/11
-#### The latest version of the In-house MD code is located in FreeEnergySampling/annSampling/new_MD_engine
+### In-house MD Program v_2019/03/11
+* The latest version of the In-house MD code is located in FreeEnergySampling/annSampling/new_MD_engine
 
-#### What's inside 
+### What's inside 
 ##### Regular MD Routine
 * Regular Newtonian / Langevin MD
 ##### Advanced Free Energy Sampling Calculation
