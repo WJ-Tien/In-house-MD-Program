@@ -5,5 +5,5 @@
 * In-house MD code coupled with lammps 
 
 
-* The other two "old versions" will be discarded in the future
+### The other two "old versions" will be discarded in the future
 
