@@ -9,5 +9,5 @@
 * Adaptive biasing force method with artificial neural network 
 * Adaptive biasing potential method 
 * Adaptive biasing potential method method with artificial neural network
-* Advanced free energy sampling methods coupled with LAMMPS (under construction)
+* Self-written advanced free energy sampling methods coupled with LAMMPS (currently available: STWL)
 
