@@ -1,5 +1,5 @@
 ### mdlib 
-* It contains required modules to run classic newtonian/langevin md and/or advanced sampling method
+* It contains required modules to run classic newtonian/langevin md and advanced sampling methods
 ### annlib
 * It contains required modules of conducting artificial neural network training
 ### ABF.py & ABP.py
