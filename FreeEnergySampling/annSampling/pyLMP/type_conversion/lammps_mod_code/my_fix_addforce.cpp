@@ -51,9 +51,9 @@ FixAddForce::FixAddForce(LAMMPS *lmp, int narg, char **arg) :
   respa_level_support = 1;
   ilevel_respa = 0;
   virial_flag = 1;
-  local_flag =1;
+  local_flag =1; //mod
   
-  vector_local = fext;
+  vector_local = fext;//mod
 
   xstr = ystr = zstr = NULL;
 
@@ -63,7 +63,7 @@ FixAddForce::FixAddForce(LAMMPS *lmp, int narg, char **arg) :
     strcpy(xstr,&arg[3][2]);
   } else {
     xvalue = force->numeric(FLERR,arg[3]);
-    fext[0] = xvalue;
+    fext[0] = xvalue;//mod
     xstyle = CONSTANT;
   }
   if (strstr(arg[4],"v_") == arg[4]) {
@@ -72,7 +72,7 @@ FixAddForce::FixAddForce(LAMMPS *lmp, int narg, char **arg) :
     strcpy(ystr,&arg[4][2]);
   } else {
     yvalue = force->numeric(FLERR,arg[4]);
-    fext[1] = yvalue;
+    fext[1] = yvalue;//mod
     ystyle = CONSTANT;
   }
   if (strstr(arg[5],"v_") == arg[5]) {
@@ -81,7 +81,7 @@ FixAddForce::FixAddForce(LAMMPS *lmp, int narg, char **arg) :
     strcpy(zstr,&arg[5][2]);
   } else {
     zvalue = force->numeric(FLERR,arg[5]);
-    fext[2] = zvalue;
+    fext[2] = zvalue;//mod
     zstyle = CONSTANT;
   }
 
@@ -271,7 +271,7 @@ void FixAddForce::post_force(int vflag)
     maxatom = atom->nmax;
     memory->destroy(sforce);
     memory->create(sforce,maxatom,4,"addforce:sforce");
-    vector_local = fext;
+    vector_local = fext; //mod
   }
 
   // foriginal[0] = "potential energy" for added force
@@ -294,7 +294,7 @@ void FixAddForce::post_force(int vflag)
         foriginal[2] += f[i][1];
         foriginal[3] += f[i][2];
         //f[i][0] += xvalue;
-        f[i][0] += fext[0];
+        f[i][0] += fext[0]; //mod
         f[i][1] += yvalue;
         f[i][2] += zvalue;
         if (evflag) {
