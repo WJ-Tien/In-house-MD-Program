@@ -1,0 +1,15 @@
+#fix             ST all WLMD 1.00025 -4.82 -6.18 1.8 0.625 1.8 2.0 -4.852727 -5.98 5000 HistTest 20000
+
+f		1.00025 
+Ehi		-4.9
+Elo		-6.2
+Thi		1.8
+Tlo		0.1
+T0		1.8
+Tinit		1.8
+Binsize		2.0
+wFreq		10000
+FlatFreq	10000
+#CheckMax	-7.303750
+#CheckMin	-8.226250
+Est		linear
