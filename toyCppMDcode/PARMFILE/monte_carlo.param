@@ -1,8 +1,0 @@
-mode                    = monte_carlo
-intial_displacement     = 0.0
-initial_time            = 0.0
-time_interval           = 0.005
-time_length             = 10.0
-box_length              = 6.28319
-temperature             = 4.0
-artificial_displacement = 0.25 
