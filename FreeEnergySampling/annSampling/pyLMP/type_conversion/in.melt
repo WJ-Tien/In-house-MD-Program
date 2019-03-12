@@ -17,12 +17,28 @@ pair_coeff	1 1 1.0 1.0 2.5
 neighbor	0.3 bin
 neigh_modify	every 20 delay 0 check no
 
-python post_force_callback file pylmp.py 
+python post_force_callback file pylmp.py
 
 fix		1 all nve
-fix		2 all python/invoke 50 post_force post_force_callback
+fix   2 all addforce 0.0 0.0 0.0 
+fix		3 all python/invoke 50 post_force post_force_callback
 
 dump		id all atom 50 dumpT10.0.lammpstrj
+
+#variable  n	equal step
+#variable  fE	equal f_2
+#variable  fF  equal f_2[1]
+
+#fix		out all print 50 "${n} ${fE} ${fF}" title "#step fixE fixF" screen no file outputFixE01.dat
+
+thermo_style multi
+thermo		50
+run		5000
+
+
+
+
+
 #dump		id all xyz 10 dump.xyz
 
 #dump		2 all image 25 image.*.jpg type type &
@@ -32,6 +48,3 @@ dump		id all atom 50 dumpT10.0.lammpstrj
 #dump		3 all movie 25 movie.mpg type type &
 #		axes yes 0.8 0.02 view 60 -30
 #dump_modify	3 pad 3
-
-thermo		50
-run		10000
