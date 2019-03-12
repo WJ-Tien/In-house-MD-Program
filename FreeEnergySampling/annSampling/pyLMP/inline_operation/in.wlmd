@@ -1,0 +1,93 @@
+# 428 Water
+
+units           lj
+dimension       3
+
+# atom style will depend on if you have bonds, angles, impropers, electrostatics
+atom_style      atomic
+
+#variable t world 0.65 0.7 0.75 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6
+#variable tid world 0 1 2 3 4 5 6 7 8 9 10 11
+
+# Use read_restart to start from a restart file..if you use this you have to
+# get rid of read_data below
+#read_restart    wlmd_01.rest
+
+# This is basically for starting from an init config
+read_data       DATA.FILE
+
+# you need this all the time...this has the params in it
+include         PARM.FILE
+
+# obviously neighbor list stuff...take a look at the online manual
+neighbor        0.3 bin
+neigh_modify    delay 0
+
+minimize        1.0e-6  1.0e-5 500 1000
+#unfix freeze
+reset_timestep  0
+
+variable Tseed equal step+1
+
+timestep        0.005
+#run_style       respa 2 2 bond 1 angle 1 dihedral 1 improper 1 pair 2 kspace 2 
+
+velocity        all create 1.8 1298371 mom yes rot yes dist gaussian
+#fix             1 all npt temp 298.0 298.0 100.0 iso 1.0 1.0 1000.0
+#fix 		1 all nvt temp 298.0 298.0 50.0
+#fix             meta all plumed plumedfile plumed.rmsd outfile metaout.dat 
+#fix_modify	meta energy yes
+fix            ST all WLMD STMD.input Ehist WLMD00.log 
+#Ehist_restart
+
+
+fix             T all langevin 1.8 1.8 1.0 65535
+fix 		1 all nve
+fix	        P all momentum 1 linear 1 1 1 
+
+# This is to dump the coords...100 means every 100 steps and run.xtc is the file name
+# you can pass values in using the -var command line arg..this is helpful for
+# custom filename output...
+variable        time equal step
+variable        potE equal pe
+variable        Etot equal etotal
+variable        Temper equal temp
+variable	ST equal f_ST
+fix             outenergy all print 500 "${time} ${Temper} ${potE} ${Etot} ${ST}" file wlmd_potE01.dat screen no
+
+#dump            2 all dcd 5000 remd01_${tid}.dcd
+dump            2 all dcd 50000 wlmd_01.dcd
+#dump_modify     2 unwrap yes
+
+# thermo_style aetermines what is dumped to the log file
+# multi is a generic setting 
+
+thermo_style    multi 
+#thermo_style custom etotal ke temp pe ebond eangle edihed eimp evdwl ecoul elong press f_3
+
+# thermo is how often to dump the log file
+thermo          50000
+
+
+#minimize        1.0e-6  1.0e-5 1000 1000
+
+# this is how often to dump a restart file
+# it toggles between cg.a.rest and cg.b.rest in case
+# it crashed while dumping a rest file it wont leave
+# empty handed
+
+restart         50000   wlmd.rest wlmd.rest
+
+# run tells how many steps to run
+run             1000000000
+#temper 500000000 5000 $t T 0 58382
+#run		0
+#unfix T 
+#fix             T all langevin 1.0 1.0 0.1 48279
+#run             900000
+# this is another way to dump a restart file
+# this way will only dump one at the end so if
+# you jobs dies before completion you are left
+# with no restart file
+write_restart         wlmd_01.rest
+#write_restart         test_nohb_wt01.rest
