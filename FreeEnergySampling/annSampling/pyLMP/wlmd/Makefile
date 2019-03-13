@@ -1,8 +1,9 @@
 clean:
-	rm *.log
 	rm *.dat
 	rm *.dcd
-	rm *.rest
 	rm *.lammps
 	rm Ehist*
-	
+	rm *.log
+	rm *.rest
+	rm -r net1D/
+	rm -r net2D/
