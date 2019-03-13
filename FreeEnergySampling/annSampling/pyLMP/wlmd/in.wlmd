@@ -40,7 +40,7 @@ velocity        all create 1.8 1298371 mom yes rot yes dist gaussian
 #fix_modify	meta energy yes
 python post_force_callback file annProxy.py
 fix   ST all WLMD STMD.input Ehist WLMD00.log 
-fix   tf all python/invoke 1000000 post_force post_force_callback # gonna use tensorflow
+fix   tf all python/invoke 2500000 post_force post_force_callback # gonna use tensorflow
 #Ehist_restart
 
 

@@ -48,11 +48,12 @@ class trainingANN(object):
 			target                = tf.placeholder(tf.float32, [None, 1], name="targets") # real data; training set; label	
 			array_target_to_learn = array_target_to_learn[:, np.newaxis]
 
-			layer1, w1, b1        = self.addDenseLayer(1, 20, tf.nn.sigmoid, None, CV)
-			layer2, w2, b2        = self.addDenseLayer(20, 16, tf.nn.sigmoid, None, layer1)
-			layerOutput, w3, b3   = self.addDenseLayer(16, 1, None, "annOutput", layer2)
+			layer1, w1, b1        = self.addDenseLayer(1, 96, tf.nn.sigmoid, None, CV)
+			layer2, w2, b2        = self.addDenseLayer(96, 72, tf.nn.sigmoid, None, layer1)
+			layer3, w3, b3        = self.addDenseLayer(72, 36, tf.nn.sigmoid, None, layer2)
+			layerOutput, w4, b4   = self.addDenseLayer(36, 1, None, "annOutput", layer3)
 			variables_to_feed     = {CV: array_colvar_to_train, target: array_target_to_learn}
-			loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
+			loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3) + tf.nn.l2_loss(w4))*2) 
 
 		if self.ndims == 2: 
 			# 1(2)-30-24-2
