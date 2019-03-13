@@ -12,6 +12,8 @@ def post_force_callback(lammps_ptr, vflag):
 
 	lmp = lammps(ptr=lammps_ptr)
 
+	annST       = open("annST.dat", "a")
+
 	step        = lmp.extract_global("ntimestep", 0)
 	natoms      = lmp.get_natoms()
 	Ehigh       = -4.9
@@ -20,13 +22,18 @@ def post_force_callback(lammps_ptr, vflag):
 	nbin        = int(np.ceil((Ehigh-Elow) * natoms / binsize)) + 1 # binNum + 1
 	energyRange = np.linspace(-6.2, -4.9, nbin) 
 
-	T           = lmp.extract_fix("ST", 2, 1) 
+	T           = lmp.extract_fix("ST", 2, 1) # extract T(U) 
 	T           = np.ctypeslib.as_array(T, shape=(nbin,)) 
 	T[-1]       = T[0] #padding the rightMostBin 
 
-	# training ~~
+	# training
 	output = trainingANN("loss.dat", "hyperparam.dat", 1, nbin) 
 	if step < 10000000:
-		T = output.training(energyRange, T, 0.075, 0.00025, 2500, 100)
+		T = output.training(energyRange, T, 0.075, 0.00025, 2500, 100) # feature, label, learning_rate, epoch, loss-output freq
+
 	else:
 		T = output.training(energyRange, T, 0.075, 0.00000, 7500, 100)
+
+	for i, j in zip(energyRange, T) :
+		annST.write(str(i) + " " + str(j) + "\n")
+	annST.write("\n")
