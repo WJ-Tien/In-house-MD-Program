@@ -116,14 +116,14 @@ class ABF(object):
 					if self.p["ndims"] == 1:
 						coord_x = np.array([coord_x])[:, np.newaxis]	
 						CV      = graph.get_tensor_by_name("colvars:0") 
-						Fabf		= sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.p["ndims"])[d]
+						Fabf    = sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.p["ndims"])[d]
 
 					if self.p["ndims"] == 2:
 						coord_x = np.array([coord_x])[:, np.newaxis]	
 						coord_y = np.array([coord_y])[:, np.newaxis]	
 						CV_x		= graph.get_tensor_by_name("colvars_x:0") 
 						CV_y		= graph.get_tensor_by_name("colvars_y:0") 
-						Fabf		= sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.p["ndims"])[d] 
+						Fabf    = sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.p["ndims"])[d] 
 
 				tf.reset_default_graph()
 
