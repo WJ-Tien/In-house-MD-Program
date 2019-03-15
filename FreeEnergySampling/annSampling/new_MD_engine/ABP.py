@@ -17,8 +17,8 @@ class ABP(object):
 		self.bins            = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 		self.colvars_coord   = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 
-		self.mdInitializer   = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],
-                                    self.p["time_step"], self.p["temperature"], self.p["ndims"],
+		self.mdInitializer   = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],\
+                                    self.p["time_step"], self.p["temperature"], self.p["ndims"],\
                                     self.p["mass"], self.p["thermoStatFlag"], self.getCurrentForce, self.p["frictCoeff"])
 
 		self.initializeForce = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
