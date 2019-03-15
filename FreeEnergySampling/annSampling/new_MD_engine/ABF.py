@@ -18,9 +18,9 @@ class ABF(object):
 		self.bins            = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 		self.colvars_coord   = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 
-		self.mdInitializer   = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],\
-																		 self.p["time_step"], self.p["temperature"], self.p["ndims"],\
-																		 self.p["mass"], self.p["thermoStatFlag"], self.getCurrentForce, self.p["frictCoeff"])
+		self.mdInitializer   = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],
+                                    self.p["time_step"], self.p["temperature"], self.p["ndims"],
+                                    self.p["mass"], self.p["thermoStatFlag"], self.getCurrentForce, self.p["frictCoeff"])
 
 		self.initializeForce = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
 
@@ -115,7 +115,7 @@ class ABF(object):
 
 					if self.p["ndims"] == 1:
 						coord_x = np.array([coord_x])[:, np.newaxis]	
-						CV			= graph.get_tensor_by_name("colvars:0") 
+						CV      = graph.get_tensor_by_name("colvars:0") 
 						Fabf		= sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.p["ndims"])[d]
 
 					if self.p["ndims"] == 2:

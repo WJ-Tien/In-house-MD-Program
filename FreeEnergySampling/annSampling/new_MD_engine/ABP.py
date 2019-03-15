@@ -17,9 +17,9 @@ class ABP(object):
 		self.bins            = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 		self.colvars_coord   = np.linspace(-self.p["half_boxboundary"], self.p["half_boxboundary"], self.p["binNum"] + 1, dtype=np.float64)
 
-		self.mdInitializer   = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],\
-																		 self.p["time_step"], self.p["temperature"], self.p["ndims"],\
-																		 self.p["mass"], self.p["thermoStatFlag"], self.getCurrentForce, self.p["frictCoeff"])
+		self.mdInitializer   = mdEngine(self.p["nparticle"], self.p["box"], self.p["kb"],
+                                    self.p["time_step"], self.p["temperature"], self.p["ndims"],
+                                    self.p["mass"], self.p["thermoStatFlag"], self.getCurrentForce, self.p["frictCoeff"])
 
 		self.initializeForce = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
 
@@ -102,8 +102,8 @@ class ABP(object):
 
 	def _abfDecorator(func):
 		def _wrapper(self, coord_x, d, vel, coord_y):
-			currentFsys = self.initializeForce.getForce(coord_x, d, vel, coord_y)
 			Fabf = func(self, coord_x, d, vel, coord_y)
+			currentFsys = self.initializeForce.getForce(coord_x, d, vel, coord_y)
 			self._forceDistrRecord(coord_x, currentFsys, coord_y, d)
 			self._histDistrRecord(coord_x, coord_y, d)
 			return Fabf + currentFsys # Fabf + currentFsys(unbiased)

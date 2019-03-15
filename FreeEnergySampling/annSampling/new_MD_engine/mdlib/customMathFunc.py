@@ -58,7 +58,7 @@ def myRound(a):
 		return np.ceil(a)
 
 def getIndices(input_var, bins):
-	binw			 = (bins[-1] - bins[0])/ (bins.shape[0] - 1)
+	binw       = (bins[-1] - bins[0])/ (bins.shape[0] - 1)
 	shiftValue = int(myRound(abs(bins[0]) / binw))
 	return int(np.floor(input_var/ binw)) + shiftValue
 
