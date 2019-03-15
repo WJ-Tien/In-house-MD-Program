@@ -19,7 +19,7 @@ writeFreq         = 100
 ; ann
 nnOutputFreq      = 100 
 abfCheckFlag      = yes 
-nnCheckFlag       = no 
+nnCheckFlag       = yes 
 
 earlyLearningRate = 0.075 
 earlyEpoch        = 2500 
