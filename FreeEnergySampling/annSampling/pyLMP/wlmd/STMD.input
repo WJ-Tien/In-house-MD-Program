@@ -10,6 +10,9 @@ Tinit		1.8
 Binsize		2.0
 wFreq		10000
 FlatFreq	10000
+annFreq 2500000 
 #CheckMax	-7.303750
 #CheckMin	-8.226250
 Est		linear
+
+

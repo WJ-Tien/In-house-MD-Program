@@ -24,15 +24,22 @@ def post_force_callback(lammps_ptr, vflag):
 
   T           = lmp.extract_fix("ST", 2, 1) # extract T(U) 
   T           = np.ctypeslib.as_array(T, shape=(nbin,)) 
+  doANN       = lmp.extract_fix("ST", 2, 2) # extract ANN Flag 
 
   # training
-  output = trainingANN("loss.dat", "hyperparam.dat", 1, nbin) 
-  if step < 5000000:
-    T = output.training(energyRange, T, 0.0058, 0.00005, 20000, 100) # feature, label, learning_rate, epoch, loss-output freq
+  output = trainingANN("loss.dat", "hyperparam.dat", 1, nbin) # 1 for 1D array 
 
-  else:
-    T = output.training(energyRange, T, 0.0058, 0.00000, 20000, 100)
+  if (doANN[0][0]): # doANN[0[0] = 1 when step % (annFreq = 5000000) == 0; 
 
-  for i, j in zip(energyRange, T) :
-    annST.write(str(i) + " " + str(j) + "\n")
-  annST.write("\n")
+    if step < 5000000:
+      T = output.training(energyRange, T, 0.0058, 0.00005, 20000, 100) # feature, label, learning_rate, epoch, loss-output-freq
+
+    else:
+      T = output.training(energyRange, T, 0.0058, 0.00000, 20000, 100)
+
+    for i, j in zip(energyRange, T) :
+      annST.write(str(i) + " " + str(j) + "\n")
+    annST.write("\n")
+
+
+
