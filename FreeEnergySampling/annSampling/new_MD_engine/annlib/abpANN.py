@@ -37,7 +37,7 @@ class trainingANN(object):
 
     self.hp_train.write("Regularization factor" + " " + str(regularFactor) + "\n")
     self.hp_train.write("Learning_rate"         + " " + str(learningRate)  + "\n")
-    self.hp_train.write("epochs"                + " " + str(epoch)         + "\n")
+    self.hp_train.write("epochs"                + " " + str(epochs)        + "\n")
     self.hp_train.write("outputFreq"            + " " + str(outputFreq)    + "\n")
     self.hp_train.write("\n")
     self.hp_train.close()
