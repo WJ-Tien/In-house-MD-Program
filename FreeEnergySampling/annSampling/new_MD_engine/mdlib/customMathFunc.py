@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
+from sympy import *
 
 # TODO FreeE2D
 
@@ -62,7 +63,7 @@ def getIndices(input_var, bins):
   shiftValue = int(myRound(abs(bins[0]) / binw))
   return int(np.floor(input_var/ binw)) + shiftValue
 
-def paddingRighMostBins(ndims, input_numpy_array):
+def paddingRighMostBins(ndims, input_numpy_array, reduceDim=None):
   """ Detail with the rightmost bin.
       When accumulating the counts on the colvars, we neglect the counts of the rightmost bins since it usually causes some floating point precision issues. 
       This simply originated from the implementation I used, i.e., accumulate the histogram by using left close method e.g. value between 0~1 belongs to 0.
@@ -71,7 +72,11 @@ def paddingRighMostBins(ndims, input_numpy_array):
   if ndims == 1:
     input_numpy_array[-1] = input_numpy_array[0] 
 
-  if ndims == 2:
+  elif ndims == 2 and reduceDim == True:
+    input_numpy_array[-1, :] = input_numpy_array[0, :]
+    input_numpy_array[:, -1] = input_numpy_array[:, 0]
+
+  elif ndims == 2:
     input_numpy_array[0, -1, :] = input_numpy_array[0, 0, :]
     input_numpy_array[0, :, -1] = input_numpy_array[0, :, 0]
     input_numpy_array[1, -1, :] = input_numpy_array[1, 0, :]
@@ -139,14 +144,36 @@ def forcey2D(a, b):
   return -fy(a, b) 
 
 if __name__ == "__main__":
-  pass
+  """
   bins = np.linspace(-np.pi, np.pi, 361)
   
-  T = 0.75
-  freeE = freeE1D(bins, 0.75)
+  T = 2 
+  freeE = freeE1D(bins, T)
   with open("FreeE_1D_T%f.dat" %(T), "w") as fout:
     for b, f in zip(bins, freeE):
       fout.write(str(b) + " " + str(f) + "\n")
+  """
+  import matplotlib.pyplot as plt
+
+  binx = np.linspace(-2, 2, 41)
+  biny = np.linspace(-2, 2, 41)
+  binX, binY = np.meshgrid(binx, biny , indexing="ij")
+
+  fx = forcex2D(binX, binY)
+  fy = forcey2D(binX, binY)
+
+  with open("estimate2D", "w") as fileOutProperty:
+    for i in range(len(binx)):
+      for j in range(len(biny)):
+        fileOutProperty.write(str(binx[i]) + " ")
+        fileOutProperty.write(str(biny[j]) + " ")
+        fileOutProperty.write(str(fx[i][j]) + " " + str(fy[i][j]) + "\n")  
+
+  print(fx)
+
+  cs = plt.contourf(binX, binY, forcex2D(binX, binY), 8, cmap=plt.cm.plasma)
+  R  = plt.contour(binX, binY, forcex2D(binX, binY), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
+  plt.show()
 
   #boltz = boltz1D(bins, 0.05)
   #with open("boltz_1D_T0.05.dat", "w") as fout:

@@ -65,17 +65,19 @@ class trainingANN(object):
       CV_X                  = CV_X.reshape(CV_X.size)[:, np.newaxis]                                   # 2D (41*41) --> 2D (1681*1)
       CV_Y                  = CV_Y.reshape(CV_Y.size)[:, np.newaxis]
 
-      target                = tf.placeholder(tf.float32, [None, 1], name="target")  
-      #array_target_x_to_learn = array_target_to_learn[0].reshape(array_target_to_learn[0].shape[0] * array_target_to_learn[0].shape[1])[:, np.newaxis] # 1681 * 1
-      array_target_to_learn = array_target_to_learn.reshape(self.size * self.size)[:, np.newaxis]
+      target_x              = tf.placeholder(tf.float32, [None, 1], name="target_x")  
+      target_y              = tf.placeholder(tf.float32, [None, 1], name="target_y")  
+      array_target_x_to_learn = array_target_to_learn[0].reshape(array_target_to_learn[0].shape[0] * array_target_to_learn[0].shape[1])[:, np.newaxis] # 1681 * 1
+      array_target_y_to_learn = array_target_to_learn[1].reshape(array_target_to_learn[1].shape[0] * array_target_to_learn[1].shape[1])[:, np.newaxis] # 1681 * 1
+
 
       layer1, w1, b1        = self.addDenseLayer(1, 30, tf.nn.sigmoid, None, CV_x, CV_y)
       layer2, w2, b2        = self.addDenseLayer(30, 24, tf.nn.sigmoid, None, layer1)
-      layerOutput, w3, b3   = self.addDenseLayer(24, 1, None, "annOutput", layer2) #1681*1
-      variables_to_feed     = {CV_x: CV_X, CV_y: CV_Y, target: array_target_to_learn}
-      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
-      gx                    = tf.gradients(layerOutput, CV_x) # df/dx
-      gy                    = tf.gradients(layerOutput, CV_y) # df/dy
+      layerOutput, w3, b3   = self.addDenseLayer(24, 2, None, "annOutput", layer2) #1681*2
+      layerOutput_x         = layerOutput[:, 0][:, np.newaxis] # 1681 * 1
+      layerOutput_y         = layerOutput[:, 1][:, np.newaxis] # 1681 * 1
+      variables_to_feed     = {CV_x: CV_X, CV_y: CV_Y, target_x: array_target_x_to_learn, target_y: array_target_y_to_learn}
+      loss                  = tf.reduce_mean(tf.square(layerOutput_x - target_x) + tf.square(layerOutput_y - target_y) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
 
     # https://stackoverflow.com/questions/49953379/tensorflow-multiple-loss-functions-vs-multiple-training-ops
     optimizer = tf.train.AdamOptimizer(learning_rate=learningRate) 
@@ -92,25 +94,21 @@ class trainingANN(object):
       self.Loss_train.write("\n")
       self.Loss_train.close() 
 
-
+      gradient = np.array(sess.run(g, feed_dict=variables_to_feed))[0,:,0] #1 361 1 --> 361
+      print(np.amax(gradient))
       # TODO better structure   
       reshape_estTarget = sess.run(layerOutput, feed_dict=variables_to_feed) 
 
       if self.ndims == 1:
-        gradient = np.array(sess.run(g, feed_dict=variables_to_feed))[0,:,0] #1 361 1 --> 361
         self.estTarget = reshape_estTarget.reshape(self.size)
 
       if self.ndims == 2:
-        gX = np.array(sess.run(gx, feed_dict=variables_to_feed))[0,:,0] #1 1681 1 --> 1681 
-        gY = np.array(sess.run(gy, feed_dict=variables_to_feed))[0,:,0] #1 1681 1 --> 1681 
-        gX = gX.reshape(self.size, self.size)
-        gY = gY.reshape(self.size, self.size)
-        gradient = np.zeros((self.ndims, self.size, self.size)) 
-        gradient[0] = gX 
-        gradient[1] = gY 
-        self.estTarget = reshape_estTarget[:, 0].reshape(self.size, self.size)
+        estTargetX = reshape_estTarget[:, 0].reshape(self.size, self.size)
+        estTargetY = reshape_estTarget[:, 1].reshape(self.size, self.size)
+        self.estTarget[0] = estTargetX
+        self.estTarget[1] = estTargetY
 
-      #tf.train.Saver().save(sess, "net" + str(self.ndims) + "D" + "/netSaver.ckpt")
+      tf.train.Saver().save(sess, "net" + str(self.ndims) + "D" + "/netSaver.ckpt")
 
     tf.reset_default_graph()
 

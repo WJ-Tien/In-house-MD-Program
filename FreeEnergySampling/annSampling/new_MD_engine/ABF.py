@@ -5,7 +5,6 @@ from mdlib.force import Force
 from mdlib.customMathFunc import getIndices, paddingRighMostBins
 from mdlib.render import rendering
 from annlib.abfANN import trainingANN
-from subprocess import Popen
 import numpy as np
 import tensorflow as tf
 import time

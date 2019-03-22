@@ -165,20 +165,28 @@ class mdFileIO(object):
     #"%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f"
     pass
 
-  def propertyOnColvarsOutput(self, ndims, colvars_coord, colvars_property, colvars_count, fileOutProperty): 
+  def propertyOnColvarsOutput(self, ndims, colvars_coord, colvars_property, colvars_count, fileOutProperty, reduceDim=None): 
+    """ reduceDim is dirty and should be replaced in the future """
     if ndims == 1:
       for i in range(len(colvars_coord)): 
         fileOutProperty.write(str(colvars_coord[i]) + " ")
         fileOutProperty.write(str(colvars_property[i]) + " " + str(colvars_count[i]) + "\n")  
 
-    if ndims == 2:
+    elif ndims == 2 and reduceDim == True :
+      for i in range(len(colvars_coord)):
+        for j in range(len(colvars_coord)):
+          fileOutProperty.write(str(colvars_coord[i]) + " ")
+          fileOutProperty.write(str(colvars_coord[j]) + " ")
+          fileOutProperty.write(str(colvars_property[i][j]) + " " + str(colvars_count[i][j]) + "\n")  
+
+    elif ndims == 2:
       for i in range(len(colvars_coord)):
         for j in range(len(colvars_coord)):
           fileOutProperty.write(str(colvars_coord[i]) + " ")
           fileOutProperty.write(str(colvars_coord[j]) + " ")
           fileOutProperty.write(str(colvars_property[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_property[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
   
-  def certainFrequencyOutput(self, ndims, colvars_coord, colvars_property, colvars_count, frame, outputFreq, fileOutProperty): #TODO
+  def certainFrequencyOutput(self, ndims, colvars_coord, colvars_property, colvars_count, frame, outputFreq, fileOutProperty, reduceDim=None): #TODO
 
     if frame % outputFreq == 0:
       fileOutProperty.write("# " + str(frame) + "\n")
@@ -189,7 +197,14 @@ class mdFileIO(object):
           fileOutProperty.write(str(colvars_property[i]) + " " + str(colvars_count[i]) + "\n")  
         fileOutProperty.write("\n")
 
-      if ndims == 2:
+      elif ndims == 2 and reduceDim == True :
+        for i in range(len(colvars_coord)):
+          for j in range(len(colvars_coord)):
+            fileOutProperty.write(str(colvars_coord[i]) + " ")
+            fileOutProperty.write(str(colvars_coord[j]) + " ")
+            fileOutProperty.write(str(colvars_property[i][j]) + " " + str(colvars_count[i][j]) + "\n")  
+
+      elif ndims == 2:
         for i in range(len(colvars_coord)):
           for j in range(len(colvars_coord)):
             fileOutProperty.write(str(colvars_coord[i]) + " ")
