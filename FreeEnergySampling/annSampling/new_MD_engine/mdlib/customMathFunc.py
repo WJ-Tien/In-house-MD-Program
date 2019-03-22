@@ -63,20 +63,22 @@ def getIndices(input_var, bins):
   shiftValue = int(myRound(abs(bins[0]) / binw))
   return int(np.floor(input_var/ binw)) + shiftValue
 
-def paddingRighMostBins(ndims, input_numpy_array, reduceDim=None):
+def paddingRighMostBins(input_numpy_array):
   """ Detail with the rightmost bin.
       When accumulating the counts on the colvars, we neglect the counts of the rightmost bins since it usually causes some floating point precision issues. 
       This simply originated from the implementation I used, i.e., accumulate the histogram by using left close method e.g. value between 0~1 belongs to 0.
       Hence, I pad the rightmost bin = leftmost bin since we apply PBC condition to the calculation
   """
-  if ndims == 1:
+  input_numpy_array = np.array(input_numpy_array)
+
+  if len(input_numpy_array.shape) == 1:
     input_numpy_array[-1] = input_numpy_array[0] 
 
-  elif ndims == 2 and reduceDim == True:
+  elif len(input_numpy_array.shape) == 2:
     input_numpy_array[-1, :] = input_numpy_array[0, :]
     input_numpy_array[:, -1] = input_numpy_array[:, 0]
 
-  elif ndims == 2:
+  elif len(input_numpy_array.shape) == 3:
     input_numpy_array[0, -1, :] = input_numpy_array[0, 0, :]
     input_numpy_array[0, :, -1] = input_numpy_array[0, :, 0]
     input_numpy_array[1, -1, :] = input_numpy_array[1, 0, :]

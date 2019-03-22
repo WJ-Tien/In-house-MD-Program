@@ -136,7 +136,7 @@ class ABF(object):
 
         self.colvars_force = (self.colvars_force / self.colvars_count)
         self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
-        self.colvars_force = paddingRighMostBins(self.p["ndims"], self.colvars_force)
+        self.colvars_force = paddingRighMostBins(self.colvars_force)
 
         if self.p["init_frame"] < self.p["trainingFreq"] * self.p["switchSteps"]:
           self.colvars_force_NN = \
@@ -176,8 +176,8 @@ class ABF(object):
         self._learningProxy()
         self.colvars_force = (self.colvars_force / self.colvars_count)
         self.colvars_force[np.isnan(self.colvars_force)] = 0
-        self.IO.certainFrequencyOutput(self.p["ndims"], self.colvars_coord, self.colvars_force_NN, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], withABF)
-        self.IO.certainFrequencyOutput(self.p["ndims"], self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woABF)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force_NN, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], withABF)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woABF)
         self.colvars_force = (self.colvars_force * self.colvars_count)
       
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
@@ -189,18 +189,18 @@ class ABF(object):
 
     # post-processing
     probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"]) # both numerator and denominator should actually be divided by two but this would be cacncelled
-    probability = paddingRighMostBins(self.p["ndims"], probability) 
-    self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_count/2, histogramOnCVs)
+    probability = paddingRighMostBins(probability) 
+    self.IO.propertyOnColvarsOutput(self.bins, probability, self.colvars_count/2, histogramOnCVs)
 
     # original data output
     if self.p["nnCheckFlag"] == "yes":
-      self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
+      self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
 
     else:
       self.colvars_force = (self.colvars_force / self.colvars_count)
       self.colvars_force[np.isnan(self.colvars_force)] = 0
-      self.colvars_force = paddingRighMostBins(self.p["ndims"], self.colvars_force) 
-      self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
+      self.colvars_force = paddingRighMostBins(self.colvars_force) 
+      self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
 
     # ndims >= 2 -> plot using matplotlib #TODO put it in the self.IO 
     if self.p["ndims"] == 2: 

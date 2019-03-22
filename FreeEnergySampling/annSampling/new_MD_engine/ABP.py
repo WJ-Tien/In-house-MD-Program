@@ -169,7 +169,7 @@ class ABP(object):
     self.colvars_FreeE = -self.p["kb"] * self.p["temperature"] * np.log(self._probability())
     self.colvars_FreeE[np.isneginf(self.colvars_FreeE)] = 0.0  # deal with log(0) = -inf
     self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0  # deal with inf
-    self.colvars_FreeE = paddingRighMostBins(self.p["ndims"], self.colvars_FreeE, True) #  TODO 
+    self.colvars_FreeE = paddingRighMostBins(self.colvars_FreeE) #  TODO 
 
   def _updateBiasingPotential(self):
     self.biasingPotentialFromNN = -copy.deepcopy(self.colvars_FreeE_NN) # phi(x) = -Fhat(x) 
@@ -218,8 +218,8 @@ class ABP(object):
         self.getCurrentFreeEnergy()
         self._learningProxy()
         self._updateBiasingPotential()
-        self.IO.certainFrequencyOutput(self.p["ndims"], self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], withABP, True)
-        self.IO.certainFrequencyOutput(self.p["ndims"], self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], woABP, True)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], withABP)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], woABP)
 
       elif self.p["init_frame"] == self.p["total_frame"] and self.p["abfCheckFlag"] == "no" and self.p["abfCheckFlag"] == "no":
         self.getCurrentFreeEnergy()
@@ -232,7 +232,7 @@ class ABP(object):
         elif self.p["ndims"] == 2:
           self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)][getIndices(self.current_coord[n][1], self.bins)] += 1
 
-      self.colvars_hist = paddingRighMostBins(self.p["ndims"], self.colvars_hist, True)
+      #self.colvars_hist = paddingRighMostBins(self.colvars_hist)
 
       self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
     # End of simulation
@@ -241,22 +241,25 @@ class ABP(object):
     #probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"])   # both numerator and denominator should actually divided by two but these would be cacncelled
     #probability = paddingRighMostBins(self.p["ndims"], probability) 
     probability = (self.colvars_hist / np.sum(self.colvars_hist))
-    self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, probability, self.colvars_hist, histogramOnCVs, True)
+    self.colvars_hist = paddingRighMostBins(self.colvars_hist)
+    self.IO.propertyOnColvarsOutput(self.bins, probability, self.colvars_hist, histogramOnCVs)
 
     self.colvars_force = (self.colvars_force / self.colvars_count)
     self.colvars_force[np.isnan(self.colvars_force)] = 0
-    self.colvars_force = paddingRighMostBins(self.p["ndims"], self.colvars_force) 
-    self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
+    self.colvars_force = paddingRighMostBins(self.colvars_force) 
+    self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
 
     if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":  
-      self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_FreeE_NN, self.colvars_hist, freeEOnCVs, True)
+      self.IO.propertyOnColvarsOutput(self.bins, self.colvars_FreeE_NN, self.colvars_hist, freeEOnCVs)
 
     else:
-      self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_FreeE, self.colvars_hist, freeEOnCVs, True)
+      self.IO.propertyOnColvarsOutput(self.bins, self.colvars_FreeE, self.colvars_hist, freeEOnCVs)
         
     if self.p["ndims"] == 2: 
       s = rendering(self.p["ndims"], self.p["half_boxboundary"], self.p["binNum"], self.p["temperature"])
       s.render(self.colvars_FreeE, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "Usurface_Original" +str(self.p["ndims"])+"D"))
+      s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forceX_UnderABP" +str(self.p["ndims"])+"D"))
+      s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forceY_UnderABP" +str(self.p["ndims"])+"D"))
       if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":  
         s.render(self.colvars_FreeE_NN, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "Usurface_NN" + str(self.p["ndims"])+"D"))
 

@@ -74,8 +74,6 @@ class trainingANN(object):
       layerOutput, w3, b3   = self.addDenseLayer(24, 1, None, "annOutput", layer2) #1681*1
       variables_to_feed     = {CV_x: CV_X, CV_y: CV_Y, target: array_target_to_learn}
       loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
-      gx                    = tf.gradients(layerOutput, CV_x) # df/dx
-      gy                    = tf.gradients(layerOutput, CV_y) # df/dy
 
     # https://stackoverflow.com/questions/49953379/tensorflow-multiple-loss-functions-vs-multiple-training-ops
     optimizer = tf.train.AdamOptimizer(learning_rate=learningRate) 
@@ -101,10 +99,13 @@ class trainingANN(object):
         self.estTarget = reshape_estTarget.reshape(self.size)
 
       if self.ndims == 2:
-        gX = np.array(sess.run(gx, feed_dict=variables_to_feed))[0,:,0] #1 1681 1 --> 1681 
-        gY = np.array(sess.run(gy, feed_dict=variables_to_feed))[0,:,0] #1 1681 1 --> 1681 
-        gX = gX.reshape(self.size, self.size)
-        gY = gY.reshape(self.size, self.size)
+        freeE = np.array(sess.run(layerOutput, feed_dict=variables_to_feed))[:,0] #1 1681 1 --> 1681 
+        gX = freeE.reshape(self.size, self.size)
+        gY = freeE.reshape(self.size, self.size)
+        gX = np.gradient(gX, axis=0)
+        gY = np.gradient(gY, axis=1)
+        gX = gX[np.newaxis, :, :]
+        gY = gY[np.newaxis, :, :]
         gradient = np.zeros((self.ndims, self.size, self.size)) 
         gradient[0] = gX 
         gradient[1] = gY 

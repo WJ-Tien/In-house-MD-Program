@@ -69,7 +69,7 @@ if __name__ == "__main__":
   #s = rendering(ndims=2, half_boxboundary=2.5, binNum=33)
   #s.render(forcex2D  ,name="forcex2D")
   #s.render(forcey2D  ,name="forcey2D")
-  #s = rendering(ndims=2, half_boxboundary=2.0, binNum=41)
+  #s = rendering(ndims=2, half_boxboundary=2.0, binNum=40)
   #s.render(forcex2D  ,name="forcex2D")
   #s.render(forcey2D  ,name="forcey2D")
   #s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361, temperature=0.75)
@@ -77,6 +77,6 @@ if __name__ == "__main__":
   #s.render(boltz1D, name="boltz1D")
   #s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361)
   #s.render(forcex1D  ,name="forcex1D")
-  #s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361, temperature=0.01)
-  #s.render(Usurface1D, name="Usurface1D")
+  #s = rendering(ndims=2, half_boxboundary=2, binNum=40, temperature=2)
+  #s.render(Usurface2D, name="Usurface2D")
 

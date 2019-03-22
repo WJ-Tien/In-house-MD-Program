@@ -165,46 +165,56 @@ class mdFileIO(object):
     #"%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f"
     pass
 
-  def propertyOnColvarsOutput(self, ndims, colvars_coord, colvars_property, colvars_count, fileOutProperty, reduceDim=None): 
+  def propertyOnColvarsOutput(self, colvars_coord, colvars_property, colvars_count, fileOutProperty): 
     """ reduceDim is dirty and should be replaced in the future """
-    if ndims == 1:
+
+    colvars_coord = np.array(colvars_coord)
+    colvars_property = np.array(colvars_property)
+    colvars_count = np.array(colvars_count)
+
+    if len(colvars_property.shape) == 1: # 1D
       for i in range(len(colvars_coord)): 
         fileOutProperty.write(str(colvars_coord[i]) + " ")
         fileOutProperty.write(str(colvars_property[i]) + " " + str(colvars_count[i]) + "\n")  
 
-    elif ndims == 2 and reduceDim == True :
+    elif len(colvars_property.shape) == 2: # 1D
       for i in range(len(colvars_coord)):
         for j in range(len(colvars_coord)):
           fileOutProperty.write(str(colvars_coord[i]) + " ")
           fileOutProperty.write(str(colvars_coord[j]) + " ")
           fileOutProperty.write(str(colvars_property[i][j]) + " " + str(colvars_count[i][j]) + "\n")  
 
-    elif ndims == 2:
+    elif len(colvars_property.shape) == 3: # 1D
       for i in range(len(colvars_coord)):
         for j in range(len(colvars_coord)):
           fileOutProperty.write(str(colvars_coord[i]) + " ")
           fileOutProperty.write(str(colvars_coord[j]) + " ")
           fileOutProperty.write(str(colvars_property[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_property[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
   
-  def certainFrequencyOutput(self, ndims, colvars_coord, colvars_property, colvars_count, frame, outputFreq, fileOutProperty, reduceDim=None): #TODO
+  def certainFrequencyOutput(self, colvars_coord, colvars_property, colvars_count, frame, outputFreq, fileOutProperty): #TODO
+
+    colvars_coord = np.array(colvars_coord)
+    colvars_property = np.array(colvars_property)
+    colvars_count = np.array(colvars_count)
 
     if frame % outputFreq == 0:
       fileOutProperty.write("# " + str(frame) + "\n")
 
-      if ndims == 1: 
+      if len(colvars_property.shape) == 1: # 1D
         for i in range(len(colvars_coord)): 
           fileOutProperty.write(str(colvars_coord[i]) + " ")
           fileOutProperty.write(str(colvars_property[i]) + " " + str(colvars_count[i]) + "\n")  
         fileOutProperty.write("\n")
 
-      elif ndims == 2 and reduceDim == True :
+
+      elif len(colvars_property.shape) == 2: # 2D
         for i in range(len(colvars_coord)):
           for j in range(len(colvars_coord)):
             fileOutProperty.write(str(colvars_coord[i]) + " ")
             fileOutProperty.write(str(colvars_coord[j]) + " ")
             fileOutProperty.write(str(colvars_property[i][j]) + " " + str(colvars_count[i][j]) + "\n")  
 
-      elif ndims == 2:
+      elif len(colvars_property.shape) == 3:  # 3D
         for i in range(len(colvars_coord)):
           for j in range(len(colvars_coord)):
             fileOutProperty.write(str(colvars_coord[i]) + " ")
