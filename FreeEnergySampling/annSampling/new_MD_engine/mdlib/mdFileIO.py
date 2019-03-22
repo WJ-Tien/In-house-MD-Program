@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from subprocess import Popen
 import numpy as np
 import time
 
@@ -61,6 +62,9 @@ class mdFileIO(object):
             elif line[0] == "trainingFreq":
               self.params["trainingFreq"] = int(line[2])
 
+            elif line[0] == "certainOutFreq":
+              self.params["certainOutFreq"] = int(line[2])
+
             elif line[0] == "lateLearningRate":
               self.params["lateLearningRate"] = float(line[2])
 
@@ -97,9 +101,6 @@ class mdFileIO(object):
             elif line[0] == "nnOutputFreq":
               self.params["nnOutputFreq"] = int(line[2])
 
-            #elif line[0] == "time_length":
-            # self.params["time_length"] = float(line[2])
-
             elif line[0] == "abfCheckFlag":
               self.params["abfCheckFlag"] = line[2]
 
@@ -130,6 +131,7 @@ class mdFileIO(object):
       fout.write("#" + " " + "time_step"      + " " + str(params["time_step"])      + "\n") 
       fout.write("#" + " " + "abfCheckFlag"   + " " + str(params["abfCheckFlag"])   + "\n")
       fout.write("#" + " " + "nnCheckFlag"    + " " + str(params["nnCheckFlag"])    + "\n")
+      fout.write("#" + " " + "certainOutFreq" + " " + str(params["certainOutFreq"]) + "\n")
 
   def _lammpsFileHeader(self, nparticle, half_boxboundary, frame, lammpstrj):
 
@@ -176,9 +178,35 @@ class mdFileIO(object):
           fileOutProperty.write(str(colvars_coord[j]) + " ")
           fileOutProperty.write(str(colvars_property[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_property[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
   
-  def certainFrequencyOutput(self, ndims, coord, specificProperty, frame, outputFreq): #TODO
-    if frame % specificProperty == 0 and frame != 0:
-      pass
+  def certainFrequencyOutput(self, ndims, colvars_coord, colvars_property, colvars_count, frame, outputFreq, fileOutProperty): #TODO
+
+    if frame % outputFreq == 0:
+      fileOutProperty.write("# " + str(frame) + "\n")
+
+      if ndims == 1: 
+        for i in range(len(colvars_coord)): 
+          fileOutProperty.write(str(colvars_coord[i]) + " ")
+          fileOutProperty.write(str(colvars_property[i]) + " " + str(colvars_count[i]) + "\n")  
+        fileOutProperty.write("\n")
+
+      if ndims == 2:
+        for i in range(len(colvars_coord)):
+          for j in range(len(colvars_coord)):
+            fileOutProperty.write(str(colvars_coord[i]) + " ")
+            fileOutProperty.write(str(colvars_coord[j]) + " ")
+            fileOutProperty.write(str(colvars_property[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_property[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
+        fileOutProperty.write("\n")
+  
+  def makeDirAndMoveFiles(self, ndims, mass, temperature, frictCoeff, total_frame, abfCheckFlag, nnCheckFlag, moduleName):
+
+    dirName = "%dD_m%.2f_T%.3f_g%.4f_len%d_%s_%s_%s" % (ndims, mass, temperature, frictCoeff, total_frame, abfCheckFlag, nnCheckFlag, moduleName)
+    makeDirString = "mkdir" + " " + dirName 
+    makeDir = Popen(makeDirString, shell=True)
+    makeDir.wait()
+    mvFileString = "mv" + " " + "*.dat *.lammpstrj *.png" + " " + dirName + " "  
+    mvFile = Popen(mvFileString, shell=True) 
+    mvFile.wait()
+        
 
   def printCurrentStatus(self, frame, init_real_world_time):
     print("Frame %d with Time %f" % (frame, time.time() - init_real_world_time))

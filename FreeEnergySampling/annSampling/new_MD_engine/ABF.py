@@ -5,6 +5,7 @@ from mdlib.force import Force
 from mdlib.customMathFunc import getIndices, paddingRighMostBins
 from mdlib.render import rendering
 from annlib.abfANN import trainingANN
+from subprocess import Popen
 import numpy as np
 import tensorflow as tf
 import time
@@ -156,6 +157,8 @@ class ABF(object):
     forceOnCVs     = open("Force_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
     histogramOnCVs = open("Hist_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
 
+    withABF        = open("instantForceWABF_1D.dat", "a")
+    woABF          = open("instantForceWOABF_1D.dat", "a")
     # Start of the simulation
     # the first frame
     self.IO.writeParams(self.p)
@@ -172,10 +175,17 @@ class ABF(object):
 
       if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
         self._learningProxy()
+        self.colvars_force = (self.colvars_force / self.colvars_count)
+        self.colvars_force[np.isnan(self.colvars_force)] = 0
+        self.IO.certainFrequencyOutput(self.p["ndims"], self.colvars_coord, self.colvars_force_NN, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], withABF)
+        self.IO.certainFrequencyOutput(self.p["ndims"], self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woABF)
+        self.colvars_force = (self.colvars_force * self.colvars_count)
       
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
 
       self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
+
+
     # End of simulation
 
     # post-processing
@@ -204,7 +214,11 @@ class ABF(object):
         s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
         s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
 
-    self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs)
+    self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs, withABF, woABF)
+
+
+    self.IO.makeDirAndMoveFiles(self.p["ndims"], self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"],\
+                                self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
 if __name__ == "__main__":
-  ABF("in.mdp").mdrun()
+  ABF("in.ABF").mdrun()

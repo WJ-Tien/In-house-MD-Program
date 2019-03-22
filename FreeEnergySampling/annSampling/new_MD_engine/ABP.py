@@ -4,9 +4,11 @@ from mdlib.mdFileIO import mdFileIO
 from mdlib.force import Force
 from mdlib.customMathFunc import getIndices, paddingRighMostBins
 from annlib.abpANN import trainingANN
+from subprocess import Popen
 import numpy as np
 import tensorflow as tf
 import time
+import copy 
 
 class ABP(object):
 
@@ -163,7 +165,7 @@ class ABP(object):
     self.colvars_FreeE = paddingRighMostBins(self.p["ndims"], self.colvars_FreeE) # for the sake of PBC
 
   def _updateBiasingPotential(self):
-    self.biasingPotentialFromNN = -self.colvars_FreeE_NN.copy() # phi(x) = -Fhat(x) 
+    self.biasingPotentialFromNN = -copy.deepcopy(self.colvars_FreeE_NN) # phi(x) = -Fhat(x) 
 
   def _learningProxy(self):
     if self.p["nnCheckFlag"] == "yes":
@@ -188,6 +190,8 @@ class ABP(object):
     forceOnCVs     = open("Force_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
     freeEOnCVs     = open("FreeE_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
     histogramOnCVs = open("Hist_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
+    withABP        = open("instantForceWABP_1D.dat", "a")
+    woABP          = open("instantForceWOABP_1D.dat", "a")
 
     # Start of the simulation
     # the first frame
@@ -207,6 +211,8 @@ class ABP(object):
         self.getCurrentFreeEnergy()
         self._learningProxy()
         self._updateBiasingPotential()
+        self.IO.certainFrequencyOutput(self.p["ndims"], self.colvars_coord, self.colvars_FreeE_NN, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], withABP)
+        self.IO.certainFrequencyOutput(self.p["ndims"], self.colvars_coord, self.colvars_FreeE, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woABP)
 
       elif self.p["init_frame"] == self.p["total_frame"] and self.p["abfCheckFlag"] == "no" and self.p["abfCheckFlag"] == "no":
         self.getCurrentFreeEnergy()
@@ -241,7 +247,12 @@ class ABP(object):
     else:
       self.IO.propertyOnColvarsOutput(self.p["ndims"], self.bins, self.colvars_FreeE, self.colvars_count, freeEOnCVs)
         
-    self.IO.closeAllFiles(lammpstrj, forceOnCVs, freeEOnCVs, histogramOnCVs)
+    self.IO.closeAllFiles(lammpstrj, forceOnCVs, freeEOnCVs, histogramOnCVs, withABP, woABP)
+    self.IO.makeDirAndMoveFiles(self.p["ndims"], self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"],\
+                                self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
+
+
+
 
 if __name__ == "__main__":
-  ABP("in.mdp").mdrun()
+  ABP("in.ABP").mdrun()

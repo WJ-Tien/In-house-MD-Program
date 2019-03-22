@@ -36,7 +36,9 @@ class trainingANN(object):
   def training(self, array_colvar_to_train, array_target_to_learn, learningRate, regularFactor, epochs, outputFreq):
 
     self.hp_train.write("Regularization factor" + " " + str(regularFactor) + "\n")
-    self.hp_train.write("Learning_rate"         + " " + str(learningRate) + "\n")
+    self.hp_train.write("Learning_rate"         + " " + str(learningRate)  + "\n")
+    self.hp_train.write("epochs"                + " " + str(epoch)         + "\n")
+    self.hp_train.write("outputFreq"            + " " + str(outputFreq)    + "\n")
     self.hp_train.write("\n")
     self.hp_train.close()
 
