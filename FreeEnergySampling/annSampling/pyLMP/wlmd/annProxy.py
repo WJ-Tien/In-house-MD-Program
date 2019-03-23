@@ -32,14 +32,15 @@ def post_force_callback(lammps_ptr, vflag):
   if (doANN[0][0]): # doANN[0[0] = 1 when step % (annFreq = 5000000) == 0; 
 
     if step < 5000000:
-      T = output.training(energyRange, T, 0.0058, 0.00005, 20000, 100) # feature, label, learning_rate, epoch, loss-output-freq
+      result = output.training(energyRange, T, 0.0058, 0.00005, 20000, 100) # feature, label, learning_rate, epoch, loss-output-freq
 
     else:
-      T = output.training(energyRange, T, 0.0058, 0.00000, 20000, 100)
+      result = output.training(energyRange, T, 0.0058, 0.00000, 20000, 100)
 
-    for i, j in zip(energyRange, T) :
+    annST.write("# STEP %d" % (step) + "\n") 
+    for i, j in zip(energyRange, result) :
       annST.write(str(i) + " " + str(j) + "\n")
     annST.write("\n")
-
+  annST.close()
 
 
