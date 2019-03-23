@@ -7,6 +7,7 @@ ABF = adpative biasing "force"
 ABP = adpative biasing "potential"
 
 
-m1T3g0.05 2D abf
-factor = 4 for random force?
-
+* Issues
+1. factor = 2 or 4 for random force?
+2. freeE result for histANN-2D seems weird since the curve monotonically increasing as the increment of the time step. 
+3. the freeE result histANN-1D seems normal but not that accurate
