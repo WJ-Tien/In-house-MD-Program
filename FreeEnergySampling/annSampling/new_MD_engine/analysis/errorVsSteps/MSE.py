@@ -8,7 +8,7 @@ if len(argv) < 4:
   print("typeCol 3: x y fx")
   print("typeCol 4: x y fx fy")
   print("1D force: type 2")
-  print("1D freeE: type 3")
+  print("1D freeE: type 2")
   print("2D freeE: type 3")
   print("2D force: type 4")
   exit(1)
@@ -54,13 +54,6 @@ with open(argv[2], "r") as fin:
       standard_2DX.append(float(line[2])) # x y fx fy
       standard_2DY.append(float(line[3]))
 
-  try:
-    standard_1DX = np.array(standard_1DX)
-    standard_2DX = np.array(standard_2DX)
-    standard_2DY = np.array(standard_2DY)
-  except NameError:
-    pass
-
 # read target(trained/untrained)
 with open(argv[3], "r") as fin: 
 
@@ -72,6 +65,7 @@ with open(argv[3], "r") as fin:
     if len(line.strip()) == 0: # calculate MSE
 
       if typeCol == 2:
+        standard_1DX = np.array(standard_1DX)
         record_1DX = np.array(record_1DX)
         record_1DX = (record_1DX - standard_1DX)**2
 
@@ -82,6 +76,7 @@ with open(argv[3], "r") as fin:
         record_1DX = []
 
       if typeCol == 3:
+        standard_2DX = np.array(standard_2DX)
         record_2DX = np.array(record_2DX)
         record_2DX = (record_2DX - standard_2DX)**2
 
@@ -92,6 +87,8 @@ with open(argv[3], "r") as fin:
         record_2DX = []
 
       if typeCol == 4:
+        standard_2DX = np.array(standard_2DX)
+        standard_2DY = np.array(standard_2DY)
         record_2DX = np.array(record_2DX) 
         record_2DY = np.array(record_2DY) 
         record_2DX = (record_2DX - standard_2DX) ** 2
