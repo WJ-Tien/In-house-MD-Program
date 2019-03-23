@@ -167,7 +167,6 @@ class mdFileIO(object):
     pass
 
   def propertyOnColvarsOutput(self, colvars_coord, colvars_property, colvars_count, fileOutProperty): 
-    """ reduceDim is dirty and should be replaced in the future """
 
     colvars_coord = np.array(colvars_coord)
     colvars_property = np.array(colvars_property)
@@ -178,14 +177,14 @@ class mdFileIO(object):
         fileOutProperty.write(str(colvars_coord[i]) + " ")
         fileOutProperty.write(str(colvars_property[i]) + " " + str(colvars_count[i]) + "\n")  
 
-    elif len(colvars_property.shape) == 2: # 1D
+    elif len(colvars_property.shape) == 2: # 2D
       for i in range(len(colvars_coord)):
         for j in range(len(colvars_coord)):
           fileOutProperty.write(str(colvars_coord[i]) + " ")
           fileOutProperty.write(str(colvars_coord[j]) + " ")
           fileOutProperty.write(str(colvars_property[i][j]) + " " + str(colvars_count[i][j]) + "\n")  
 
-    elif len(colvars_property.shape) == 3: # 1D
+    elif len(colvars_property.shape) == 3: # 3D
       for i in range(len(colvars_coord)):
         for j in range(len(colvars_coord)):
           fileOutProperty.write(str(colvars_coord[i]) + " ")
