@@ -179,6 +179,12 @@ class ABF(object):
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force_NN, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], withABF)
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woABF)
         self.colvars_force = (self.colvars_force * self.colvars_count)
+
+      if self.p["init_frame"] % self.p["certainOutFreq"] == 0 and self.p["init_frame"] != 0 and self.p["nnCheckFlag"] == "no":
+        self.colvars_force = (self.colvars_force / self.colvars_count)
+        self.colvars_force[np.isnan(self.colvars_force)] = 0
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woABF)
+        self.colvars_force = (self.colvars_force * self.colvars_count)
       
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
 

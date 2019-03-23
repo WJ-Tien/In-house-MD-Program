@@ -132,6 +132,7 @@ class mdFileIO(object):
       fout.write("#" + " " + "abfCheckFlag"   + " " + str(params["abfCheckFlag"])   + "\n")
       fout.write("#" + " " + "nnCheckFlag"    + " " + str(params["nnCheckFlag"])    + "\n")
       fout.write("#" + " " + "certainOutFreq" + " " + str(params["certainOutFreq"]) + "\n")
+      fout.write("#" + " " + "trainingFreq"   + " " + str(params["trainingFreq"])   + "\n")
 
   def _lammpsFileHeader(self, nparticle, half_boxboundary, frame, lammpstrj):
 
@@ -213,6 +214,7 @@ class mdFileIO(object):
             fileOutProperty.write(str(colvars_coord[i]) + " ")
             fileOutProperty.write(str(colvars_coord[j]) + " ")
             fileOutProperty.write(str(colvars_property[i][j]) + " " + str(colvars_count[i][j]) + "\n")  
+        fileOutProperty.write("\n")
 
       elif len(colvars_property.shape) == 3:  # 3D
         for i in range(len(colvars_coord)):

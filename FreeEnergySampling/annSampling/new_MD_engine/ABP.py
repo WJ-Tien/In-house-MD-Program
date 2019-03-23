@@ -221,8 +221,13 @@ class ABP(object):
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], withABP)
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], woABP)
 
-      elif self.p["init_frame"] == self.p["total_frame"] and self.p["abfCheckFlag"] == "no" and self.p["abfCheckFlag"] == "no":
+      if self.p["init_frame"] == self.p["total_frame"] and self.p["abfCheckFlag"] == "no" and self.p["abfCheckFlag"] == "no":
         self.getCurrentFreeEnergy()
+
+      #self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], withABP)
+      if self.p["init_frame"] % self.p["certainOutFreq"] == 0 and self.p["abfCheckFlag"] == "no" and self.p["abfCheckFlag"] == "no":
+        self.getCurrentFreeEnergy()
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], woABP)
       
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
 

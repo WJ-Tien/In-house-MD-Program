@@ -146,6 +146,7 @@ def forcey2D(a, b):
   return -fy(a, b) 
 
 if __name__ == "__main__":
+  pass
   """
   bins = np.linspace(-np.pi, np.pi, 361)
   
@@ -154,6 +155,7 @@ if __name__ == "__main__":
   with open("FreeE_1D_T%f.dat" %(T), "w") as fout:
     for b, f in zip(bins, freeE):
       fout.write(str(b) + " " + str(f) + "\n")
+  """
   """
   import matplotlib.pyplot as plt
 
@@ -175,6 +177,27 @@ if __name__ == "__main__":
 
   cs = plt.contourf(binX, binY, forcex2D(binX, binY), 8, cmap=plt.cm.plasma)
   R  = plt.contour(binX, binY, forcex2D(binX, binY), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
+  plt.show()
+  """
+  
+  import matplotlib.pyplot as plt
+
+  binx = np.linspace(-2, 2, 41)
+  biny = np.linspace(-2, 2, 41)
+  binX, binY = np.meshgrid(binx, biny , indexing="ij")
+  
+  U = Usurface2D(binX, binY)
+
+  with open("Usurface2D", "w") as fileOutProperty:
+    for i in range(len(binx)):
+      for j in range(len(biny)):
+        fileOutProperty.write(str(binx[i]) + " ")
+        fileOutProperty.write(str(biny[j]) + " ")
+        fileOutProperty.write(str(U[i][j]) + "\n")  
+
+
+  cs = plt.contourf(binX, binY, Usurface2D(binX, binY), 8, cmap=plt.cm.plasma)
+  R  = plt.contour(binX, binY, Usurface2D(binX, binY), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
   plt.show()
 
   #boltz = boltz1D(bins, 0.05)
