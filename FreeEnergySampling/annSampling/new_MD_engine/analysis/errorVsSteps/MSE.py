@@ -7,10 +7,10 @@ if len(argv) < 4:
   print("typeCol 2: x fx")
   print("typeCol 3: x y fx")
   print("typeCol 4: x y fx fy")
-  print("1D force: type 2")
-  print("1D freeE: type 2")
-  print("2D freeE: type 3")
-  print("2D force: type 4")
+  print("1D force: typeCol 2")
+  print("1D freeE: typeCol 2")
+  print("2D freeE: typeCol 3")
+  print("2D force: typeCol 4")
   exit(1)
 
 step         = []
