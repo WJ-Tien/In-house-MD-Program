@@ -3,7 +3,7 @@ from sys import argv
 import numpy as np
 
 if len(argv) < 4:
-  print("typeCol <2 or 3 or 4> <ideal_estimate_file> <target_file>")
+  print("<typeCol: 2 or 3 or 4> <ideal_estimate_file> <target_file>")
   print("typeCol 2: x fx")
   print("typeCol 3: x y fx")
   print("typeCol 4: x y fx fy")
