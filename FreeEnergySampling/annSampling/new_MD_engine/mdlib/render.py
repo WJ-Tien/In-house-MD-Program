@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
-#from mdlib.customMathFunc import forcex2D, forcey2D, Usurface2D, boltz2D, Usurface1D, forcex1D, boltz1D, freeE1D
-from customMathFunc import forcex2D, forcey2D, Usurface2D, boltz2D, Usurface1D, forcex1D, boltz1D, freeE1D, freeE2D
+from mdlib.customMathFunc import forcex2D, forcey2D, Usurface2D, boltz2D, Usurface1D, forcex1D, boltz1D, freeE1D, freeE2D
 
 # This code aims at rendering 1d x-y plots and 2d contour plots for Langevin toy model
 
@@ -26,7 +25,7 @@ class rendering(object):
         else:
           plt.plot(x_axis, renderObj(x_axis))
 
-      else: # is array
+      else:                              # is array
           plt(x_axis, renderObj)
 
       plt.xticks(np.linspace(-self.half_boxboundary, self.half_boxboundary, 8))
@@ -41,7 +40,7 @@ class rendering(object):
       A, B = np.meshgrid(x_axis, y_axis, indexing="ij")
 
       if hasattr(renderObj, '__call__'):
-        if renderObj.__name__ == "boltz2D" or renderObj.__name__ == "freeE2D": #TODO freeE2D
+        if renderObj.__name__ == "boltz2D" or renderObj.__name__ == "freeE2D": 
           cs = plt.contourf(A, B, renderObj(A, B, self.temperature), 8, cmap=plt.cm.plasma)
           R  = plt.contour(A, B, renderObj(A, B, self.temperature), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
         else:
@@ -78,6 +77,6 @@ if __name__ == "__main__":
   #s.render(boltz1D, name="boltz1D")
   #s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361)
   #s.render(forcex1D  ,name="forcex1D")
-  s = rendering(ndims=2, half_boxboundary=2, binNum=40, temperature=2)
-  s.render(freeE2D, name="freeE2D")
+  #s = rendering(ndims=2, half_boxboundary=2, binNum=40, temperature=2)
+  #s.render(freeE2D, name="freeE2D")
 

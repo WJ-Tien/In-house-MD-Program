@@ -32,11 +32,11 @@ class Force(object):
     if self.ndims == 2:
       if d == 0:        # force along x 
         return -(-2*coord_x*(coord_x**4 + 2*coord_x**3 + 1.579*coord_x + coord_y**3 + coord_y**2 + 3*coord_y + 0.0011)*np.exp(-coord_x**2 - coord_y**2) +\
-               (4*coord_x**3 + 6*coord_x**2 + 1.579)*np.exp(-coord_x**2 - coord_y**2))
+                (4*coord_x**3 + 6*coord_x**2 + 1.579)*np.exp(-coord_x**2 - coord_y**2))
 
       if d == 1:        # force along y 
         return -(-2*coord_y*(coord_x**4 + 2*coord_x**3 + 1.579*coord_x + coord_y**3 + coord_y**2 + 3*coord_y + 0.0011)*np.exp(-coord_x**2 - coord_y**2) +\
-               (3*coord_y**2 + 2*coord_y + 3)*np.exp(-coord_x**2 - coord_y**2))
+                (3*coord_y**2 + 2*coord_y + 3)*np.exp(-coord_x**2 - coord_y**2))
 
   def _potentialForceLJ(self, r):
     return 4 * self.epsilon * self.sigma**6 * (self.sigma**6 * -12 * r**(-13) + 6 * self.sigma**(-7))

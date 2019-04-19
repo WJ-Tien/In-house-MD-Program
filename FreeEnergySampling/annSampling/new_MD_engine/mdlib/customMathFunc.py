@@ -2,7 +2,10 @@
 import numpy as np
 from sympy import *
 
-# TODO FreeE2D
+
+# TODO 2019/4
+def integrator():
+  pass
 
 def randMars():
   # https://github.com/lammps/lammps/blob/master/src/random_mars.cpp
@@ -59,6 +62,7 @@ def myRound(a):
     return np.ceil(a)
 
 def getIndices(input_var, bins):
+  bins = np.array(bins)
   binw       = (bins[-1] - bins[0])/ (bins.shape[0] - 1)
   shiftValue = int(myRound(abs(bins[0]) / binw))
   return int(np.floor(input_var/ binw)) + shiftValue
@@ -93,53 +97,74 @@ def truncateFloat(f, n=7):
       return -np.floor(abs(f) * 10 ** n) / 10 ** n
 
 def partitionFunc1D(a, temperature):    # canonical partition function: exp(-U/kbT) / sigma(exp(-U/kbT))
+  a = np.array(a)
   return np.exp(-(np.cos(a) + np.cos(2*a) + np.cos(3*a))/temperature) 
 
 def partitionFunc2D(a, b, temperature): # canonical partition function: exp(-U/kbT) / sigma(exp(-U/kbT))
+  a = np.array(a)
+  b = np.array(b)
   x, y = symbols("x y") 
   Q = sympify(exp(-((0.0011- x*0.421 + x**4 + 2*x**3 + 3*y + y**3 + y**2 + x*2) * exp(-x**2 - y**2)) / temperature))  
   Q = lambdify([x, y], Q, "numpy")
   return Q(a, b) 
 
 def boltz1D(a, temperature): # return probability
+  a = np.array(a)
   q  = partitionFunc1D(a, temperature)
-  q  = q.sum(axis=0)
+  q  = np.sum(q, axis=0)
   print(q)
   return np.exp(-(np.cos(a) + np.cos(2*a) + np.cos(3*a))/temperature)/q
 
 def freeE1D(a, temperature):
+  a = np.array(a)
   p = boltz1D(a, temperature) 
   return -1*temperature*np.log(p)
 
 def boltz2D(a, b, temperature): # exp(-(K+U)/kbT) ~= exp(-K/kbT)exp(-U/kbT) ~= exp(-2/2) * exp(-U/kbT)
+  a = np.array(a)
+  b = np.array(b)
   q  = partitionFunc2D(a, b, temperature)
-  q  = q.sum(axis=1)
-  q  = q.sum(axis=0)
+  q  = np.sum(q, axis=1)
+  q  = np.sum(q, axis=0)
   print(q)
   x, y = symbols("x y") 
   fb = sympify(exp(-((0.0011- x*0.421 + x**4 + 2*x**3 + 3*y + y**3 + y**2 + x*2) * exp(-x**2 - y**2)) / temperature))  
   fb = lambdify([x, y], fb, "numpy")
   return fb(a, b) / q
 
+def freeE2D(a, b, temperature):
+  a = np.array(a)
+  b = np.array(b)
+  p = boltz2D(a, b, temperature) 
+  return -1*temperature*np.log(p)
+
 def Usurface1D(a):
+  a = np.array(a)
   return np.cos(a) + np.cos(2*a) + np.cos(3*a) 
   
 def Usurface2D(a, b):
+  a = np.array(a)
+  b = np.array(b)
   x, y = symbols("x y") 
   fU = sympify((0.0011- x*0.421 + x**4 + 2*x**3 + 3*y + y**3 + y**2 + x*2) * exp(-x**2 - y**2))  
   fU = lambdify([x, y], fU, "numpy")
   return fU(a, b) 
 
 def forcex1D(a):
+  a = np.array(a)
   return np.sin(a) + 2*np.sin(2*a) + 3*np.sin(3*a) 
 
 def forcex2D(a, b):
+  a = np.array(a)
+  b = np.array(b)
   x, y = symbols("x y") 
   fx = sympify(diff((0.0011- x*0.421 + x**4 + 2*x**3 + 3*y + y**3 + y**2 + x*2) * exp(-x**2 - y**2), x)) 
   fx = lambdify([x,y], fx, "numpy")
   return -fx(a, b) 
 
 def forcey2D(a, b):
+  a = np.array(a)
+  b = np.array(b)
   x, y = symbols("x y") 
   fy = sympify(diff((0.0011- x*0.421 + x**4 + 2*x**3 + 3*y + y**3 + y**2 + x*2) * exp(-x**2 - y**2), y)) 
   fy = lambdify([x,y], fy, "numpy")
@@ -147,7 +172,7 @@ def forcey2D(a, b):
 
 if __name__ == "__main__":
   pass
-  """
+
   bins = np.linspace(-np.pi, np.pi, 361)
   
   T = 2 
@@ -155,7 +180,7 @@ if __name__ == "__main__":
   with open("FreeE_1D_T%f.dat" %(T), "w") as fout:
     for b, f in zip(bins, freeE):
       fout.write(str(b) + " " + str(f) + "\n")
-  """
+
   """
   import matplotlib.pyplot as plt
 
@@ -180,15 +205,17 @@ if __name__ == "__main__":
   plt.show()
   """
   
+  """
   import matplotlib.pyplot as plt
 
   binx = np.linspace(-2, 2, 41)
   biny = np.linspace(-2, 2, 41)
   binX, binY = np.meshgrid(binx, biny , indexing="ij")
   
-  U = Usurface2D(binX, binY)
+  temperature = 2
+  U = freeE2D(binX, binY, temperature)
 
-  with open("Usurface2D", "w") as fileOutProperty:
+  with open("freeE2D", "w") as fileOutProperty:
     for i in range(len(binx)):
       for j in range(len(biny)):
         fileOutProperty.write(str(binx[i]) + " ")
@@ -196,8 +223,8 @@ if __name__ == "__main__":
         fileOutProperty.write(str(U[i][j]) + "\n")  
 
 
-  cs = plt.contourf(binX, binY, Usurface2D(binX, binY), 8, cmap=plt.cm.plasma)
-  R  = plt.contour(binX, binY, Usurface2D(binX, binY), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
+  cs = plt.contourf(binX, binY, freeE2D(binX, binY, temperature), 8, cmap=plt.cm.plasma)
+  R  = plt.contour(binX, binY, freeE2D(binX, binY, temperature), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
   plt.show()
 
   #boltz = boltz1D(bins, 0.05)
@@ -213,3 +240,4 @@ if __name__ == "__main__":
   # sq += s**2
   #print(acc/n)
   #print(sq/n)
+  """
