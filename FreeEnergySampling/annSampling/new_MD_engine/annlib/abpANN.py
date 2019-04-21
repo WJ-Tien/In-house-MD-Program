@@ -2,15 +2,17 @@
 
 import tensorflow as tf 
 import numpy as np
+import copy
 
 class trainingANN(object):
   
-  def __init__(self, fileLoss, filehyperparam, ndims, size):
+  def __init__(self, fileLoss, filehyperparam, ndims, size, binw):
 
     self.Loss_train = open(str(fileLoss), "a")
     self.hp_train   = open(str(filehyperparam), "a")
     self.ndims      = ndims
     self.size       = size
+    self.binw       = binw
     self.estTarget  = np.zeros((self.size)) if self.ndims == 1 else np.zeros((self.ndims, self.size, self.size))  
 
   def addDenseLayer(self, input_neuron_size, output_neuron_size, activationFunc=None, nameFlag=None, *input_colvars):
@@ -49,13 +51,12 @@ class trainingANN(object):
 
       target                = tf.placeholder(tf.float32, [None, 1], name="targets") # real data; training set; label  
       array_target_to_learn = array_target_to_learn[:, np.newaxis]
-
-      layer1, w1, b1        = self.addDenseLayer(1, 20, tf.nn.sigmoid, None, CV)
-      layer2, w2, b2        = self.addDenseLayer(20, 16, tf.nn.sigmoid, None, layer1)
-      layerOutput, w3, b3   = self.addDenseLayer(16, 1, None, "annOutput", layer2)
+      layer1, w1, b1        = self.addDenseLayer(1, 96, tf.nn.sigmoid, None, CV)
+      layer2, w2, b2        = self.addDenseLayer(96, 72, tf.nn.sigmoid, None, layer1)
+      layer3, w3, b3        = self.addDenseLayer(72, 36, None, "annOutput", layer2)
+      layerOutput, w4, b4   = self.addDenseLayer(36, 1, None, "annOutput", layer3)
       variables_to_feed     = {CV: array_colvar_to_train, target: array_target_to_learn}
-      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
-      g                     = tf.gradients(layerOutput, CV)
+      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3)+  tf.nn.l2_loss(w4))*2) 
 
     if self.ndims == 2: 
       # 1(2)-30-24-2
@@ -95,13 +96,32 @@ class trainingANN(object):
       reshape_estTarget = sess.run(layerOutput, feed_dict=variables_to_feed) 
 
       if self.ndims == 1:
-        gradient = np.array(sess.run(g, feed_dict=variables_to_feed))[0,:,0] #1 361 1 --> 361
         self.estTarget = reshape_estTarget.reshape(self.size)
+        bsForce        = copy.deepcopy(self.estTarget)
+        bsForce        = np.diff(bsForce)
+        bsForce        = np.append(bsForce, bsForce[-1]) # padding to the right legnth
+        bsForce        = (bsForce / self.binw)
 
       if self.ndims == 2:
-        freeE = np.array(sess.run(layerOutput, feed_dict=variables_to_feed))[:,0] #1 1681 1 --> 1681 
-        gX = freeE.reshape(self.size, self.size)
-        gY = freeE.reshape(self.size, self.size)
+        freeE = np.array(sess.run(layerOutput, feed_dict=variables_to_feed))[:,0] # 1681 1 --> 1681 
+
+        gX = copy.deepcopy(freeE.reshape(self.size, self.size))
+        gX = np.diff(gX, axis=0)
+        gX = np.append(gX, [gX[-1, :]], axis=0)
+        gX =  (gX / self.binw)
+
+        gY = copy.deepcopy(freeE.reshape(self.size, self.size))
+        gY = np.diff(gY, axis=1)
+        gY = np.append(gY, gY[:, -1][:, np.newaxis], axis=1)
+        gY =  (gY / self.binw)
+
+        gX = gX[np.newaxis, :, :]
+        gY = gY[np.newaxis, :, :]
+        bsForce[0] = gX
+        bsForce[1] = gY
+        self.estTarget = reshape_estTarget[:, 0].reshape(self.size, self.size)
+        
+        """
         gX = np.gradient(gX, axis=0)
         gY = np.gradient(gY, axis=1)
         gX = gX[np.newaxis, :, :]
@@ -109,13 +129,13 @@ class trainingANN(object):
         gradient = np.zeros((self.ndims, self.size, self.size)) 
         gradient[0] = gX 
         gradient[1] = gY 
-        self.estTarget = reshape_estTarget[:, 0].reshape(self.size, self.size)
+        """
 
-      #tf.train.Saver().save(sess, "net" + str(self.ndims) + "D" + "/netSaver.ckpt")
+
 
     tf.reset_default_graph()
 
-    return self.estTarget, gradient 
+    return self.estTarget, bsForce 
 
 if __name__ == "__main__":
   pass

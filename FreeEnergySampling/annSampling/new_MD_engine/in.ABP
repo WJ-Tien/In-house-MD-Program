@@ -1,0 +1,35 @@
+; md
+
+thermoStatFlag    = langevin
+ndims             = 1
+kb                = 1
+mass              = 1
+nparticle         = 1 
+temperature       = 2.0 
+frictCoeff        = 0.05 
+half_boxboundary  = 3.141592653589793 
+binNum            = 360 
+;half_boxboundary  = 2 
+;binNum            = 40 
+init_frame        = 0
+init_time         = 0.
+total_frame       = 10000000 
+time_step         = 0.005
+writeFreq         = 500
+certainOutFreq    = 2000000 
+
+; ann
+nnOutputFreq      = 100 
+abfCheckFlag      = yes 
+nnCheckFlag       = yes 
+
+earlyLearningRate = 0.025 
+earlyEpoch        = 3500 
+earlyRegularCoeff = 0.00025 
+
+switchSteps       = 0 
+
+trainingFreq      = 2000000
+lateLearningRate  = 0.025
+lateEpoch         = 10000
+lateRegularCoeff  = 0.0
