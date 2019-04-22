@@ -117,6 +117,7 @@ class trainingANN(object):
 
         gX = gX[np.newaxis, :, :]
         gY = gY[np.newaxis, :, :]
+        bsForce = np.zeros((self.ndims, self.size, self.size)) 
         bsForce[0] = gX
         bsForce[1] = gY
         self.estTarget = reshape_estTarget[:, 0].reshape(self.size, self.size)

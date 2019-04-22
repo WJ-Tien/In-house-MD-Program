@@ -82,16 +82,18 @@ class ABP(object):
 
     elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no":
 
+      if self.p["ndims"] == 1:
         if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
           return 0 
         else:
           return self.biasingPotentialFrom[getIndices(coord_x, self.bins)]
 
-        if self.p["ndims"]== 2: 
-          if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
-            return 0 
-          else:
-            return self.biasingPotentialFrom[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]  
+      if self.p["ndims"]== 2: 
+        if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
+          return 0 
+        else:
+          return self.biasingPotentialFrom[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]  
+
     else:
       return 0
 
@@ -117,6 +119,7 @@ class ABP(object):
           bsForce = np.diff(bsForce, axis=1) #axis=0 for x; axis=1 for y
           bsForce = np.append(bsForce, bsForce[:, -1][:, np.newaxis], axis=1) # padding to the right length
           bsForce = (bsForce / self.binw)
+
         return bsForce[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
 
     else:
@@ -168,7 +171,6 @@ class ABP(object):
 
     else:
       maxValueOfBiasingPotential = 0
-
   
     if self.p["ndims"] == 1:
       rwHist = np.zeros(len(self.bins), dtype=np.float64) 
@@ -312,6 +314,7 @@ class ABP(object):
       s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forceY_UnderABP" +str(self.p["ndims"])+"D"))
       if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":  
         s.render(self.colvars_FreeE_NN, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "Usurface_NN" + str(self.p["ndims"])+"D"))
+        s.render(probability, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "boltzDistr_NN" + str(self.p["ndims"])+"D"))
 
     # close files, mdkir and mv files
     self.IO.closeAllFiles(lammpstrj, forceOnCVs, freeEOnCVs, histogramOnCVs, annABP, convABP, tempHist, tempBsp)
