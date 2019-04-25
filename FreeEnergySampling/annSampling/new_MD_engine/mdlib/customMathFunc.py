@@ -137,7 +137,7 @@ def freeE2D(a, b, temperature):
   b = np.array(b)
   p = boltz2D(a, b, temperature) 
   return -1*temperature*np.log(p)
-
+  
 def Usurface1D(a):
   a = np.array(a)
   return np.cos(a) + np.cos(2*a) + np.cos(3*a) 
@@ -173,13 +173,13 @@ def forcey2D(a, b):
 if __name__ == "__main__":
   pass
 
-  bins = np.linspace(-np.pi, np.pi, 361)
+  #bins = np.linspace(-np.pi, np.pi, 361)
   
-  T = 2 
-  freeE = freeE1D(bins, T)
-  with open("FreeE_1D_T%f.dat" %(T), "w") as fout:
-    for b, f in zip(bins, freeE):
-      fout.write(str(b) + " " + str(f) + "\n")
+  #T = 2 
+  #freeE = freeE1D(bins, T)
+  #with open("FreeE_1D_T%f.dat" %(T), "w") as fout:
+  #  for b, f in zip(bins, freeE):
+  #    fout.write(str(b) + " " + str(f) + "\n")
 
   """
   import matplotlib.pyplot as plt
@@ -205,7 +205,7 @@ if __name__ == "__main__":
   plt.show()
   """
   
-  """
+  """  
   import matplotlib.pyplot as plt
 
   binx = np.linspace(-2, 2, 41)
@@ -214,6 +214,7 @@ if __name__ == "__main__":
   
   temperature = 2
   U = freeE2D(binX, binY, temperature)
+
 
   with open("freeE2D", "w") as fileOutProperty:
     for i in range(len(binx)):
@@ -226,6 +227,7 @@ if __name__ == "__main__":
   cs = plt.contourf(binX, binY, freeE2D(binX, binY, temperature), 8, cmap=plt.cm.plasma)
   R  = plt.contour(binX, binY, freeE2D(binX, binY, temperature), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
   plt.show()
+  """
 
   #boltz = boltz1D(bins, 0.05)
   #with open("boltz_1D_T0.05.dat", "w") as fout:
@@ -240,4 +242,4 @@ if __name__ == "__main__":
   # sq += s**2
   #print(acc/n)
   #print(sq/n)
-  """
+
