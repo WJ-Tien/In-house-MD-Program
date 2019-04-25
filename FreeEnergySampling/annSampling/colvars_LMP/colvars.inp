@@ -1,0 +1,25 @@
+colvarsTrajFrequency 1000
+colvarsRestartFrequency 10000
+
+colvar {
+	name AtomDistance
+	width 0.1
+	lowerboundary -4.2 
+	upperboundary  4.2 
+	lowerwallconstant 10.0
+	upperwallconstant 10.0
+	distance {
+		group1 	{
+			atomnumbers { 1 }
+		}
+		group2 {
+			atomnumbers { 500 }
+		}
+	}
+}
+
+abf {
+	colvars AtomDistance
+	fullSamples 500
+	hideJacobian no
+}
