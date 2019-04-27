@@ -77,6 +77,6 @@ if __name__ == "__main__":
   #s.render(boltz1D, name="boltz1D")
   #s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361)
   #s.render(forcex1D  ,name="forcex1D")
-  s = rendering(ndims=2, half_boxboundary=2, binNum=40, temperature=2)
+  s = rendering(ndims=2, half_boxboundary=2, binNum=40, temperature=4)
   s.render(freeE2D, name="freeE2D")
 

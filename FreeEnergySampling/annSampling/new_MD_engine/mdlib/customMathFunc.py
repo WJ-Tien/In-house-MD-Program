@@ -2,58 +2,9 @@
 import numpy as np
 from sympy import *
 
-
 # TODO 2019/4
 def integrator():
   pass
-
-def randMars():
-  # https://github.com/lammps/lammps/blob/master/src/random_mars.cpp
-  seed = np.random.randint(0, 900000000) 
-  save = 0
-  u = np.zeros(98)
-  ij = (seed-1) / 30082
-  kl = (seed-1) - 30082*ij
-  i = (ij/177) % 177 + 2
-  j = ij %177 + 2
-  k = (kl/169) % 178 + 1
-  l = kl % 169
-  for ii in range(1, 98): 
-    s = 0.0
-    t = 0.5
-    for jj in range(1,25):
-      m = ((i*j) % 179)*k % 179
-      i = j
-      j = k
-      k = m
-      l = (53*l+1) % 169
-      if l*m % 64 >= 32:
-        s += t
-      t *=0.5
-    u[ii] = s 
-
-  c = 362436.0 / 16777216.0
-  cd = 7654321.0 / 16777216.0
-  cm = 16777213.0 / 16777216.0
-  i97 = 97
-  j97 = 33
-  uni = u[i97] - u[j97]
-  if uni < 0.0:
-    uni += 1
-  u[i97] = uni
-  i97 -= 1
-  if i97 == 0:
-    i97 = 97
-  j97 -= 1
-  if j97 == 0:
-    j97 = 97
-  c -= cd
-  if c < 0.0:
-    c += cm
-  uni -= c
-  if uni < 0.0:
-    uni += 1
-  return uni
 
 def myRound(a):
   if (a - np.floor(a)) < 0.5:
@@ -173,13 +124,13 @@ def forcey2D(a, b):
 if __name__ == "__main__":
   pass
 
-  #bins = np.linspace(-np.pi, np.pi, 361)
+ # bins = np.linspace(-np.pi, np.pi, 361)
   
-  #T = 2 
-  #freeE = freeE1D(bins, T)
-  #with open("FreeE_1D_T%f.dat" %(T), "w") as fout:
-  #  for b, f in zip(bins, freeE):
-  #    fout.write(str(b) + " " + str(f) + "\n")
+ # T = 4 
+ # freeE = freeE1D(bins, T)
+ # with open("FreeE_1D_T%f.dat" %(T), "w") as fout:
+ #   for b, f in zip(bins, freeE):
+ #     fout.write(str(b) + " " + str(f) + "\n")
 
   """
   import matplotlib.pyplot as plt
@@ -205,18 +156,18 @@ if __name__ == "__main__":
   plt.show()
   """
   
-  """  
+ 
   import matplotlib.pyplot as plt
 
   binx = np.linspace(-2, 2, 41)
   biny = np.linspace(-2, 2, 41)
   binX, binY = np.meshgrid(binx, biny , indexing="ij")
   
-  temperature = 2
+  temperature = 4
   U = freeE2D(binX, binY, temperature)
 
 
-  with open("freeE2D", "w") as fileOutProperty:
+  with open("FreeE_2D_T4", "w") as fileOutProperty:
     for i in range(len(binx)):
       for j in range(len(biny)):
         fileOutProperty.write(str(binx[i]) + " ")
@@ -227,7 +178,7 @@ if __name__ == "__main__":
   cs = plt.contourf(binX, binY, freeE2D(binX, binY, temperature), 8, cmap=plt.cm.plasma)
   R  = plt.contour(binX, binY, freeE2D(binX, binY, temperature), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
   plt.show()
-  """
+
 
   #boltz = boltz1D(bins, 0.05)
   #with open("boltz_1D_T0.05.dat", "w") as fout:
