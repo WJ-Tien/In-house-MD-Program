@@ -44,9 +44,9 @@ class mdEngine(object):
         current_coord[n][0]  = current_coord[n][0] + current_vel[n][0] * self.time_step + (0.5 / self.mass) * current_force * self.time_step**2 
         current_coord[n][0] -= (myRound(current_coord[n][0] / self.box[0]) * self.box[0])
 
-        next_force           = self.getForce(current_coord[n][0], 0, current_vel[n][0], 0) 
+        #next_force           = self.getForce(current_coord[n][0], 0, current_vel[n][0], 0) 
 
-        current_vel[n][0]    = current_vel[n][0] + (0.5 / self.mass) * (current_force + next_force) * self.time_step
+        current_vel[n][0]    = current_vel[n][0] + (0.5 / self.mass) * (current_force + current_force) * self.time_step
 
     if self.ndims == 2:
       for n in range(self.nparticle):
@@ -59,11 +59,13 @@ class mdEngine(object):
         current_coord[n][0] -= (myRound(current_coord[n][0] / self.box[0]) * self.box[0])
         current_coord[n][1] -= (myRound(current_coord[n][1] / self.box[1]) * self.box[1])
 
-        next_force_x         = self.getForce(current_coord[n][0], 0, current_vel[n][0], current_coord[n][1]) 
-        next_force_y         = self.getForce(current_coord[n][0], 1, current_vel[n][1], current_coord[n][1]) 
+        #next_force_x         = self.getForce(current_coord[n][0], 0, current_vel[n][0], current_coord[n][1]) 
+        #next_force_y         = self.getForce(current_coord[n][0], 1, current_vel[n][1], current_coord[n][1]) 
 
-        current_vel[n][0]    = current_vel[n][0] + (0.5 / self.mass) * (current_force_x + next_force_x) * self.time_step
-        current_vel[n][1]    = current_vel[n][1] + (0.5 / self.mass) * (current_force_y + next_force_y) * self.time_step
+        #current_vel[n][0]    = current_vel[n][0] + (0.5 / self.mass) * (current_force_x + next_force_x) * self.time_step
+        #current_vel[n][1]    = current_vel[n][1] + (0.5 / self.mass) * (current_force_y + next_force_y) * self.time_step
+        current_vel[n][0]    = current_vel[n][0] + (0.5 / self.mass) * (current_force_x + current_force_x) * self.time_step
+        current_vel[n][1]    = current_vel[n][1] + (0.5 / self.mass) * (current_force_y + current_force_y) * self.time_step
 
   def velocityVerletLJ(self, current_coord, current_vel):
     # for Lennard Jones potential
