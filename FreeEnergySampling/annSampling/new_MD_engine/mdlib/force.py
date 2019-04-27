@@ -46,12 +46,6 @@ class Force(object):
   def _randomForce(self): 
     gaussian_random_value = np.random.normal(0, 1)
     return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (gaussian_random_value)
-    #uniform_random_value = np.random.uniform(-np.sqrt(3), np.sqrt(3)) 
-    #return np.sqrt(24 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (uniform_random_value)
-    #randMars_uniform_random_value = randMars() - 0.5
-    #return np.sqrt(24 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (randMars_uniform_random_value)
-    #uniform_random_value = np.random.uniform(-np.sqrt(3), np.sqrt(3)) 
-    #return np.sqrt(2 * self.mass * self.frictCoeff * self.kb * self.temperature / self.time_step) * (uniform_random_value)
 
   def getForce(self, coord_x, d, vel, coord_y):
 
