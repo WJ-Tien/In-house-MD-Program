@@ -1,0 +1,18 @@
+IMPLM NOTE1:
+  To implement free energy sampling method, we need to take advantage of the mdEngine but "not to modify" the engine itself.
+  Instead we use a python advanced concept called "decorator" to decorate the mdEngine so as to perform free energy sampling method with the core part of engine being un-modified.
+
+IMPLM NOTE:
+  The value of the rightmost bin = the value of the leftmost bin so as to retain PBC
+
+NOMENCLATURE:
+  ABF = adpative biasing "force"
+  ABP = adpative biasing "potential"
+
+SIM NOTE:
+  gamma=2 for 1D, gamma=2 for 2D so as to reach thermal equilibrium as time_step=0.005 (0.5 can be another choice)
+  {1 / (100 * 0.005) = 2}
+
+USEFUL RESOURCE:
+  1. https://stats.stackexchange.com/questions/110564/why-do-people-like-smooth-data
+  2. https://www2.ph.ed.ac.uk/~dmarendu/MVP/MVP03.pdf
