@@ -16,6 +16,7 @@ NOMENCLATURE:
 SIM NOTE:
   1. gamma=2 for 1D, gamma=2 for 2D so as to reach thermal equilibrium as time_step=0.005 (0.5 can be another choice) {1 / (100 * 0.005) = 2}
   2. higher deviation --> add regularization --> better result (0.00015~0.00025)
+  3. sigmoid > tanh > relu
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
