@@ -45,18 +45,18 @@ class trainingANN(object):
     self.hp_train.close()
 
     if self.ndims == 1:
-      # 1-20-16-1
+      # 1-50-40-20-1
       CV                    = tf.placeholder(tf.float32, [None, 1], name="colvars") # feature
       array_colvar_to_train = array_colvar_to_train[:, np.newaxis]                  # 361*1
 
       target                = tf.placeholder(tf.float32, [None, 1], name="targets") # real data; training set; label  
       array_target_to_learn = array_target_to_learn[:, np.newaxis]
-      layer1, w1, b1        = self.addDenseLayer(1, 96, tf.nn.sigmoid, None, CV)
-      layer2, w2, b2        = self.addDenseLayer(96, 72, tf.nn.sigmoid, None, layer1)
-      layer3, w3, b3        = self.addDenseLayer(72, 36, None, "annOutput", layer2)
-      layerOutput, w4, b4   = self.addDenseLayer(36, 1, None, "annOutput", layer3)
+      layer1, w1, b1        = self.addDenseLayer(1, 50, tf.nn.sigmoid, None, CV)
+      layer2, w2, b2        = self.addDenseLayer(50, 40, tf.nn.sigmoid, None, layer1)
+      layer3, w3, b3        = self.addDenseLayer(40, 20, tf.nn.sigmoid, None, layer2)
+      layerOutput, w4, b4   = self.addDenseLayer(20, 1, None, "annOutput", layer3)
       variables_to_feed     = {CV: array_colvar_to_train, target: array_target_to_learn}
-      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3)+  tf.nn.l2_loss(w4))*2) 
+      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3)+ tf.nn.l2_loss(w4))*2) 
 
     if self.ndims == 2: 
       # 1(2)-30-24-2
@@ -70,11 +70,12 @@ class trainingANN(object):
       #array_target_x_to_learn = array_target_to_learn[0].reshape(array_target_to_learn[0].shape[0] * array_target_to_learn[0].shape[1])[:, np.newaxis] # 1681 * 1
       array_target_to_learn = array_target_to_learn.reshape(self.size * self.size)[:, np.newaxis]
 
-      layer1, w1, b1        = self.addDenseLayer(1, 30, tf.nn.sigmoid, None, CV_x, CV_y)
-      layer2, w2, b2        = self.addDenseLayer(30, 24, tf.nn.sigmoid, None, layer1)
-      layerOutput, w3, b3   = self.addDenseLayer(24, 1, None, "annOutput", layer2) #1681*1
+      layer1, w1, b1        = self.addDenseLayer(1, 60, tf.nn.sigmoid, None, CV_x, CV_y)
+      layer2, w2, b2        = self.addDenseLayer(60, 40, tf.nn.sigmoid, None, layer1)
+      layer3, w3, b3        = self.addDenseLayer(40, 25, tf.nn.sigmoid, None, layer2)
+      layerOutput, w4, b4   = self.addDenseLayer(25, 1, None, "annOutput", layer3) #1681*1
       variables_to_feed     = {CV_x: CV_X, CV_y: CV_Y, target: array_target_to_learn}
-      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
+      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3) + tf.nn.l2_loss(w4))*2) 
 
     # https://stackoverflow.com/questions/49953379/tensorflow-multiple-loss-functions-vs-multiple-training-ops
     optimizer = tf.train.AdamOptimizer(learning_rate=learningRate) 
