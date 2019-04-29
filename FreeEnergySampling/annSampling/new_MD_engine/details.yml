@@ -1,3 +1,7 @@
+RUN SIM:
+  ./ABP.py (should modify in.ABP)
+  ./ABF.py (should modify in.ABF)
+
 IMPLM NOTE1:
   To implement free energy sampling method, we need to take advantage of the mdEngine but "not to modify" the engine itself.
   Instead we use a python advanced concept called "decorator" to decorate the mdEngine so as to perform free energy sampling method with the core part of engine being un-modified.
@@ -10,13 +14,24 @@ NOMENCLATURE:
   ABP = adpative biasing "potential"
 
 SIM NOTE:
-  gamma=2 for 1D, gamma=2 for 2D so as to reach thermal equilibrium as time_step=0.005 (0.5 can be another choice)
-  {1 / (100 * 0.005) = 2}
+  1. gamma=2 for 1D, gamma=2 for 2D so as to reach thermal equilibrium as time_step=0.005 (0.5 can be another choice) {1 / (100 * 0.005) = 2}
+  2. higher deviation --> add regularization --> better result (0.00015~0.00025)
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 USEFUL RESOURCE:
   1. https://stats.stackexchange.com/questions/110564/why-do-people-like-smooth-data
-  2. https://www2.ph.ed.ac.uk/~dmarendu/MVP/MVP03.pdf
-
+  2. https://www2.ph.ed.ac.uk/~dmarendu/MVP/MVP03.pdf (key for the vva of my thesis)
+  3. https://lammps.sandia.gov/threads/msg07840.html  (T, P fluctuation for langevin)
+  4. https://medium.com/@chih.sheng.huang821 (ML Background)
+  5. http://kirilllykov.github.io/blog/2012/10/13/writing-fixes-for-lammps/ (write fix for lammps)
 
 STATISCAL ANALYSIS:
-  https://www.ycc.idv.tw/confusion-matrix.html
+  https://www.ycc.idv.tw/confusion-matrix.html (Confusion Matrix)
+
+PCA:
+  http://arbu00.blogspot.com/2017/02/6-principal-component-analysispca.html
+  是一種特徵提取的技術，利用特徵降維來避免因維度災難所造成的過度適合(Overfitting)現象
+  PCA著眼在高維度的數據，"最大化變異數"並投影到與原數據及相同維數或較低維數的"新特徵子空間"。新特徵子空間的正交軸即是"主成分"。
+  eigenvalue就是變異量(variance)，eigenvector就是讓資料投影下去會有最大變異量的投影軸。
+  
