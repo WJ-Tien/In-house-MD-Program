@@ -59,7 +59,7 @@ class trainingANN(object):
       loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3)+ tf.nn.l2_loss(w4))*2) 
 
     if self.ndims == 2: 
-      # 1(2)-30-24-2
+      # 1(2)-60-40-25-2
       CV_x                  = tf.placeholder(tf.float32, [None, 1], name="colvars_x")
       CV_y                  = tf.placeholder(tf.float32, [None, 1], name="colvars_y")
       CV_X, CV_Y            = np.meshgrid(array_colvar_to_train, array_colvar_to_train, indexing="ij") # 41 ---> 41*41
@@ -71,9 +71,9 @@ class trainingANN(object):
       array_target_to_learn = array_target_to_learn.reshape(self.size * self.size)[:, np.newaxis]
 
       layer1, w1, b1        = self.addDenseLayer(1, 60, tf.nn.sigmoid, None, CV_x, CV_y)
-      layer2, w2, b2        = self.addDenseLayer(60, 40, tf.nn.sigmoid, None, layer1)
-      layer3, w3, b3        = self.addDenseLayer(40, 25, tf.nn.sigmoid, None, layer2)
-      layerOutput, w4, b4   = self.addDenseLayer(25, 1, None, "annOutput", layer3) #1681*1
+      layer2, w2, b2        = self.addDenseLayer(60, 50, tf.nn.sigmoid, None, layer1)
+      layer3, w3, b3        = self.addDenseLayer(50, 30, tf.nn.sigmoid, None, layer2)
+      layerOutput, w4, b4   = self.addDenseLayer(30, 1, None, "annOutput", layer3) #1681*1
       variables_to_feed     = {CV_x: CV_X, CV_y: CV_Y, target: array_target_to_learn}
       loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3) + tf.nn.l2_loss(w4))*2) 
 
