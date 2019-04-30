@@ -3,11 +3,12 @@ RUN SIM:
   ./ABF.py (should modify in.ABF)
 
 IMPLM NOTE1:
-  To implement free energy sampling method, we need to take advantage of the mdEngine but "not to modify" the engine itself.
-  Instead we use a python advanced concept called "decorator" to decorate the mdEngine so as to perform free energy sampling method with the core part of engine being un-modified.
+  1. To implement free energy sampling method, we need to take advantage of the mdEngine but "not to modify" the engine itself.
+  2. Instead we use a python advanced concept called "decorator" to decorate the mdEngine so as to perform free energy sampling method with the core part of engine being un-modified.
+  3. The value of the rightmost bin = the value of the leftmost bin so as to retain PBC
+  4. 
 
 IMPLM NOTE:
-  The value of the rightmost bin = the value of the leftmost bin so as to retain PBC
 
 NOMENCLATURE:
   ABF = adpative biasing "force"
@@ -17,7 +18,8 @@ SIM NOTE:
   1. gamma=2 for 1D, gamma=2 for 2D so as to reach thermal equilibrium as time_step=0.005 (0.5 can be another choice) {1 / (100 * 0.005) = 2}
   2. higher deviation --> add regularization --> better result (0.00015~0.00025)
   3. sigmoid > tanh > relu
-
+  4. mass 0.1, Temperature 4, time_length 16M, interval 4M or 6M
+  
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 USEFUL RESOURCE:
@@ -26,6 +28,7 @@ USEFUL RESOURCE:
   3. https://lammps.sandia.gov/threads/msg07840.html  (T, P fluctuation for langevin)
   4. https://medium.com/@chih.sheng.huang821 (ML Background)
   5. http://kirilllykov.github.io/blog/2012/10/13/writing-fixes-for-lammps/ (write fix for lammps)
+  6. https://www.quora.com/What-does-it-mean-that-we-dont-really-understand-what-happens-in-neural-networks
 
 STATISCAL ANALYSIS:
   https://www.ycc.idv.tw/confusion-matrix.html (Confusion Matrix)
