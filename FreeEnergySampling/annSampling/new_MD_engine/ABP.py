@@ -268,7 +268,7 @@ class ABP(object):
           self._resetColvarsHist()
       
 
-      if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no" and self.p["init_frame"] != 0: #for regular ABP
+      if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no" and self.p["init_frame"] != 0: # for regular ABP
         self.getCurrentFreeEnergy()
         self._updateBiasingPotential()
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], convABP)

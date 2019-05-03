@@ -153,9 +153,9 @@ class ABF(object):
     init_real_world_time = time.time()
 
     # PRE-PROCESSING
-    lammpstrj      = open("m%.1f_T%.3f_gamma%.4f_len_%d_%s_%s.lammpstrj" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
-    forceOnCVs     = open("Force_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
-    histogramOnCVs = open("Hist_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
+    lammpstrj      = open("m%.1f_T%.3f_gamma%.4f_len_%d_%s_%s.lammpstrj" % (self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
+    forceOnCVs     = open("Force_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat"  % (self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
+    histogramOnCVs = open("Hist_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat"   % (self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
 
     withANN        = open("instantForceWANN_"  + str(self.p["ndims"]) + "D.dat", "a")
     woANN          = open("instantForceWOANN_" + str(self.p["ndims"]) + "D.dat", "a")
@@ -169,7 +169,6 @@ class ABF(object):
 
       self.p["init_frame"] += 1
       self.IO.printCurrentStatus(self.p["init_frame"], init_real_world_time)  
-
       self.mdInitializer.checkTargetTemperature(self.current_vel, self.p["init_frame"], self.p["total_frame"])
 
       if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
@@ -177,7 +176,7 @@ class ABF(object):
         self.colvars_force = (self.colvars_force / self.colvars_count)
         self.colvars_force[np.isnan(self.colvars_force)] = 0
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force_NN, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], withANN)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woANN)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force,    self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woANN)
         self.colvars_force = (self.colvars_force * self.colvars_count)
 
       if self.p["init_frame"] % self.p["certainOutFreq"] == 0 and self.p["init_frame"] != 0 and self.p["nnCheckFlag"] == "no":
@@ -213,8 +212,8 @@ class ABF(object):
         s.render(self.colvars_force_NN[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
         s.render(self.colvars_force_NN[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
       else:
-        s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
-        s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
+        s.render(self.colvars_force[0],    name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
+        s.render(self.colvars_force[1],    name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
 
     # Close files, mkdir and mv files
     self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs, withANN, woANN)
