@@ -272,7 +272,7 @@ class ABP(object):
         self.getCurrentFreeEnergy()
         self._updateBiasingPotential()
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], convABP)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_hist, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempHist)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_hist/np.sum(self.colvars_hist), self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempHist)
         self.IO.certainFrequencyOutput(self.colvars_coord, self.biasingPotentialConv, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempBsp)
         if self.p["init_frame"] != self.p["total_frame"]:
           self._resetColvarsHist() 
