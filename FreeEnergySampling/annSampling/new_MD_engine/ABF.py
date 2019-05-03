@@ -2,7 +2,7 @@
 from mdlib.mdEngine import mdEngine
 from mdlib.mdFileIO import mdFileIO 
 from mdlib.force import Force
-from mdlib.customMathFunc import getIndices, paddingRighMostBins
+from mdlib.customMathFunc import getIndices, paddingRightMostBin
 from mdlib.render import rendering
 from annlib.abfANN import trainingANN
 import numpy as np
@@ -136,7 +136,7 @@ class ABF(object):
 
         self.colvars_force = (self.colvars_force / self.colvars_count)
         self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
-        self.colvars_force = paddingRighMostBins(self.colvars_force)
+        self.colvars_force = paddingRightMostBin(self.colvars_force)
 
         if self.p["init_frame"] < self.p["trainingFreq"] * self.p["switchSteps"]:
           self.colvars_force_NN = \
@@ -196,7 +196,7 @@ class ABF(object):
 
     # post-processing
     probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"]) # both numerator and denominator should actually be divided by two but this would be cacncelled
-    probability = paddingRighMostBins(probability) 
+    probability = paddingRightMostBin(probability) 
     self.IO.propertyOnColvarsOutput(self.bins, probability, self.colvars_count/2, histogramOnCVs)
 
     # original data output
@@ -206,7 +206,7 @@ class ABF(object):
     else:
       self.colvars_force = (self.colvars_force / self.colvars_count)
       self.colvars_force[np.isnan(self.colvars_force)] = 0
-      self.colvars_force = paddingRighMostBins(self.colvars_force) 
+      self.colvars_force = paddingRightMostBin(self.colvars_force) 
       self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
 
     # ndims >= 2 -> plot using matplotlib #TODO put it in the self.IO 
@@ -220,9 +220,8 @@ class ABF(object):
         s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
         s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
 
+
     self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs, withABF, woABF)
-
-
     self.IO.makeDirAndMoveFiles(self.p["ndims"], self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"],\
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 

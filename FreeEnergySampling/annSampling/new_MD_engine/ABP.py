@@ -3,7 +3,7 @@ from mdlib.mdEngine import mdEngine
 from mdlib.mdFileIO import mdFileIO
 from mdlib.force import Force
 from mdlib.render import rendering
-from mdlib.customMathFunc import getIndices, paddingRighMostBins
+from mdlib.customMathFunc import getIndices, paddingRightMostBin
 from annlib.abpANN import trainingANN
 import numpy as np
 import tensorflow as tf
@@ -36,7 +36,7 @@ class ABP(object):
       self.colvars_FreeE_NN = np.zeros(len(self.bins), dtype=np.float64) 
       self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
       self.colvars_hist     = np.zeros(len(self.bins), dtype=np.float64) 
-      self.biasingPotentialFrom = np.zeros(len(self.bins), dtype=np.float64)
+      self.biasingPotentialConv   = np.zeros(len(self.bins), dtype=np.float64)
       self.biasingPotentialFromNN = np.zeros(len(self.bins), dtype=np.float64)
 
     if self.p["ndims"] == 2:
@@ -45,7 +45,7 @@ class ABP(object):
       self.colvars_FreeE_NN = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
       self.colvars_count    = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
       self.colvars_hist     = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.biasingPotentialFrom = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64)
+      self.biasingPotentialConv   = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64)
       self.biasingPotentialFromNN = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64)
 
   def _histDistrRecord(self, coord_x, coord_y, d):
@@ -86,13 +86,13 @@ class ABP(object):
         if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
           return 0 
         else:
-          return self.biasingPotentialFrom[getIndices(coord_x, self.bins)]
+          return self.biasingPotentialConv[getIndices(coord_x, self.bins)]
 
       if self.p["ndims"]== 2: 
         if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
           return 0 
         else:
-          return self.biasingPotentialFrom[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]  
+          return self.biasingPotentialConv[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]  
 
     else:
       return 0
@@ -167,7 +167,7 @@ class ABP(object):
       maxValueOfBiasingPotential = np.amax(self.biasingPotentialFromNN)
 
     elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no":
-      maxValueOfBiasingPotential = np.amax(self.biasingPotentialFrom)
+      maxValueOfBiasingPotential = np.amax(self.biasingPotentialConv)
 
     else:
       maxValueOfBiasingPotential = 0
@@ -199,11 +199,14 @@ class ABP(object):
     self.colvars_FreeE = -self.p["kb"] * self.p["temperature"] * np.log(self._probability())
     self.colvars_FreeE[np.isneginf(self.colvars_FreeE)] = 0.0  # deal with log(0) = -inf
     self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0  # deal with inf
-    self.colvars_FreeE = paddingRighMostBins(self.colvars_FreeE)
+    self.colvars_FreeE = paddingRightMostBin(self.colvars_FreeE)
 
   def _updateBiasingPotential(self):
     self.biasingPotentialFromNN = -copy.deepcopy(self.colvars_FreeE_NN) # phi(x) = -Fhat(x)  for ANN
-    self.biasingPotentialFrom = -copy.deepcopy(self.colvars_FreeE) # phi(x) = -Fhat(x) for non-ANN
+    self.biasingPotentialConv = -copy.deepcopy(self.colvars_FreeE) # phi(x) = -Fhat(x) for non-ANN
+
+  def criteriaCheck(self):
+    pass
 
   def _learningProxy(self):
     if self.p["nnCheckFlag"] == "yes":
@@ -217,6 +220,14 @@ class ABP(object):
         else:
           self.colvars_FreeE_NN, self.gradient = \
           output.training(self.colvars_coord, self.colvars_FreeE, self.p["lateLearningRate"], self.p["lateRegularCoeff"], self.p["lateEpoch"], self.p["nnOutputFreq"]) 
+
+
+  def _accumulateColvarsHist(self):
+    for n in range(self.p["nparticle"]): #TODO
+      if self.p["ndims"] == 1:
+        self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)] += 1
+      elif self.p["ndims"] == 2:
+        self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)][getIndices(self.current_coord[n][1], self.bins)] += 1
 
   def _resetColvarsHist(self):
     self.colvars_hist.fill(0) 
@@ -257,9 +268,7 @@ class ABP(object):
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], convABP)
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_hist/np.sum(self.colvars_hist), self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempHist)
         self.IO.certainFrequencyOutput(self.colvars_coord, self.biasingPotentialFromNN, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempBsp)
-        if self.p["init_frame"] == self.p["total_frame"]: # the last frame
-          pass 
-        else:
+        if self.p["init_frame"] != self.p["total_frame"]: # the last frame
           self._resetColvarsHist() # zero the histogram
       
 
@@ -268,37 +277,36 @@ class ABP(object):
         self._updateBiasingPotential()
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], convABP)
         self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_hist, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempHist)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.biasingPotentialFrom, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempBsp)
-        if self.p["init_frame"] == self.p["total_frame"]: # the last frame
-          pass 
-        else:
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.biasingPotentialConv, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempBsp)
+        if self.p["init_frame"] != self.p["total_frame"]: # the last frame
           self._resetColvarsHist() # zero the histogram
 
       if self.p["init_frame"] == self.p["total_frame"]: # the last frame
         self.getCurrentFreeEnergy()
-      
 
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
 
+      self._accumulateColvarsHist()
+
+      """
       for n in range(self.p["nparticle"]): #TODO
         if self.p["ndims"] == 1:
           self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)] += 1
         elif self.p["ndims"] == 2:
           self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)][getIndices(self.current_coord[n][1], self.bins)] += 1
+      """
 
       self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
     # End of simulation
 
     # post-processing
-    #probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"])   # both numerator and denominator should actually divided by two but these would be cacncelled
-    #probability = paddingRighMostBins(self.p["ndims"], probability) 
     probability = copy.deepcopy((self.colvars_hist / np.sum(self.colvars_hist)))
-    probability = paddingRighMostBins(probability)
+    probability = paddingRightMostBin(probability)
     self.IO.propertyOnColvarsOutput(self.bins, probability, self.colvars_hist, histogramOnCVs)
 
     self.colvars_force = (self.colvars_force / self.colvars_count)
     self.colvars_force[np.isnan(self.colvars_force)] = 0
-    self.colvars_force = paddingRighMostBins(self.colvars_force) 
+    self.colvars_force = paddingRightMostBin(self.colvars_force) 
     self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
 
     if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":  
@@ -312,9 +320,9 @@ class ABP(object):
       s.render(self.colvars_FreeE, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "Usurface_Original" +str(self.p["ndims"])+"D"))
       s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forceX_UnderABP" +str(self.p["ndims"])+"D"))
       s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forceY_UnderABP" +str(self.p["ndims"])+"D"))
+      s.render(probability, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "boltzDistr_NN" + str(self.p["ndims"])+"D"))
       if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":  
         s.render(self.colvars_FreeE_NN, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "Usurface_NN" + str(self.p["ndims"])+"D"))
-        s.render(probability, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "boltzDistr_NN" + str(self.p["ndims"])+"D"))
 
     # close files, mdkir and mv files
     self.IO.closeAllFiles(lammpstrj, forceOnCVs, freeEOnCVs, histogramOnCVs, annABP, convABP, tempHist, tempBsp)

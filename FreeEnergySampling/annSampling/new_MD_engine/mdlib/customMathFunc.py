@@ -18,7 +18,7 @@ def getIndices(input_var, bins):
   shiftValue = int(myRound(abs(bins[0]) / binw))
   return int(np.floor(input_var/ binw)) + shiftValue
 
-def paddingRighMostBins(input_numpy_array):
+def paddingRightMostBin(input_numpy_array):
   """ Detail with the rightmost bin.
       When accumulating the counts on the colvars, we neglect the counts of the rightmost bins since it usually causes some floating point precision issues. 
       This simply originated from the implementation I used, i.e., accumulate the histogram by using left close method e.g. value between 0~1 belongs to 0.
@@ -87,7 +87,10 @@ def freeE2D(a, b, temperature):
   a = np.array(a)
   b = np.array(b)
   p = boltz2D(a, b, temperature) 
+  #res = -1*temperature*np.log(p)
+  #res = paddingRightMostBin(res)
   return -1*temperature*np.log(p)
+  #return res 
   
 def Usurface1D(a):
   a = np.array(a)
@@ -132,11 +135,13 @@ if __name__ == "__main__":
  #   for b, f in zip(bins, freeE):
  #     fout.write(str(b) + " " + str(f) + "\n")
 
-  """
+  
   import matplotlib.pyplot as plt
 
-  binx = np.linspace(-2, 2, 41)
-  biny = np.linspace(-2, 2, 41)
+  binx = np.linspace(-2, 2, 201)
+  biny = np.linspace(-2, 2, 201)
+  #binx = np.linspace(-2, 2, 41)
+  #biny = np.linspace(-2, 2, 41)
   binX, binY = np.meshgrid(binx, biny , indexing="ij")
 
   fx = forcex2D(binX, binY)
@@ -154,9 +159,10 @@ if __name__ == "__main__":
   cs = plt.contourf(binX, binY, forcex2D(binX, binY), 8, cmap=plt.cm.plasma)
   R  = plt.contour(binX, binY, forcex2D(binX, binY), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
   plt.show()
-  """
+ 
   
  
+"""
   import matplotlib.pyplot as plt
 
   binx = np.linspace(-2, 2, 41)
@@ -178,6 +184,7 @@ if __name__ == "__main__":
   cs = plt.contourf(binX, binY, freeE2D(binX, binY, temperature), 8, cmap=plt.cm.plasma)
   R  = plt.contour(binX, binY, freeE2D(binX, binY, temperature), 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
   plt.show()
+  """
 
 
   #boltz = boltz1D(bins, 0.05)
