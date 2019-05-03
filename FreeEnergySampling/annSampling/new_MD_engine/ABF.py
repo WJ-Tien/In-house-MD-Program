@@ -24,9 +24,10 @@ class ABF(object):
 
     self.initializeForce = Force(self.p["kb"], self.p["time_step"], self.p["temperature"], self.p["ndims"], self.p["mass"], self.p["thermoStatFlag"], self.p["frictCoeff"])
 
-    # TODO initialize atom_coords in another module 
+    # init coord and vel 
     self.current_coord   = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
     self.current_vel     = self.mdInitializer.genVelocity() 
+    # init coord and vel
     
     if self.p["ndims"] == 1:
       self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
@@ -38,7 +39,7 @@ class ABF(object):
       self.colvars_force_NN = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
       self.colvars_count    = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
 
-  def _histDistrRecord(self, coord_x, coord_y, d):
+  def _forceHistDistrRecord(self, coord_x, coord_y, d):
 
     if self.p["ndims"] == 1:
       self.colvars_count[getIndices(coord_x, self.bins)] += 1
@@ -84,8 +85,8 @@ class ABF(object):
       Fabf = func(self, coord_x, d, vel, coord_y)
       currentFsys = self.initializeForce.getForce(coord_x, d, vel, coord_y)
       self._forceDistrRecord(coord_x, currentFsys, coord_y, d)
-      self._histDistrRecord(coord_x, coord_y, d)
-      return Fabf + currentFsys # Fabf + currentFsys
+      self._forceHistDistrRecord(coord_x, coord_y, d)
+      return Fabf + currentFsys 
     return _wrapper
 
   @_abfDecorator
@@ -102,15 +103,15 @@ class ABF(object):
       if self.p["init_frame"] < self.p["trainingFreq"]:
         Fabf = self._calBiasingForce(coord_x, coord_y, d)
 
-      else: # ANN takes over here
+      else: # ANN takes over here; reload the previous training model
 
         tf.reset_default_graph()
 
-        with tf.Session() as sess: # reload the previous training model
+        with tf.Session() as sess: 
           Saver = tf.train.import_meta_graph("net" + str(self.p["ndims"]) + "D" +"/netSaver.ckpt.meta")
           Saver.restore(sess, tf.train.latest_checkpoint("net" + str(self.p["ndims"]) +"D/"))
           graph = tf.get_default_graph()
-          #y_estimatedOP = graph.get_operation_by_name("criticalOP")  #get tensor with suffix :0
+          #y_estimatedOP = graph.get_operation_by_name("criticalOP")  # get tensor with suffix :0
           layerOutput = graph.get_tensor_by_name("annOutput:0") 
 
           if self.p["ndims"] == 1:
@@ -151,21 +152,19 @@ class ABF(object):
 
     init_real_world_time = time.time()
 
-    # pre-processing
+    # PRE-PROCESSING
     lammpstrj      = open("m%.1f_T%.3f_gamma%.4f_len_%d_%s_%s.lammpstrj" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
     forceOnCVs     = open("Force_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
     histogramOnCVs = open("Hist_m%.1fT%.3f_gamma%.4f_len_%d_%s_%s.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"], self.p["abfCheckFlag"], self.p["nnCheckFlag"]), "w")
 
-    withABF        = open("instantForceWABF_1D.dat", "a")
-    woABF          = open("instantForceWOABF_1D.dat", "a")
+    withANN        = open("instantForceWANN_"  + str(self.p["ndims"]) + "D.dat", "a")
+    woANN          = open("instantForceWOANN_" + str(self.p["ndims"]) + "D.dat", "a")
 
-    # Start of the simulation
-    # the first frame
+    # START of the simulation
     self.IO.writeParams(self.p)
     self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
     self.IO.printCurrentStatus(self.p["init_frame"], init_real_world_time)  
     
-    # the rest of the frames
     while self.p["init_frame"] < self.p["total_frame"]: 
 
       self.p["init_frame"] += 1
@@ -177,29 +176,26 @@ class ABF(object):
         self._learningProxy()
         self.colvars_force = (self.colvars_force / self.colvars_count)
         self.colvars_force[np.isnan(self.colvars_force)] = 0
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force_NN, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], withABF)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woABF)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force_NN, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], withANN)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woANN)
         self.colvars_force = (self.colvars_force * self.colvars_count)
 
       if self.p["init_frame"] % self.p["certainOutFreq"] == 0 and self.p["init_frame"] != 0 and self.p["nnCheckFlag"] == "no":
         self.colvars_force = (self.colvars_force / self.colvars_count)
         self.colvars_force[np.isnan(self.colvars_force)] = 0
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woABF)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woANN)
         self.colvars_force = (self.colvars_force * self.colvars_count)
       
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
 
       self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
+    # END of the simulation
 
-
-    # End of simulation
-
-    # post-processing
+    # POST-PROCESSING
     probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"]) # both numerator and denominator should actually be divided by two but this would be cacncelled
     probability = paddingRightMostBin(probability) 
     self.IO.propertyOnColvarsOutput(self.bins, probability, self.colvars_count/2, histogramOnCVs)
 
-    # original data output
     if self.p["nnCheckFlag"] == "yes":
       self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
 
@@ -209,7 +205,7 @@ class ABF(object):
       self.colvars_force = paddingRightMostBin(self.colvars_force) 
       self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force, self.colvars_count, forceOnCVs)
 
-    # ndims >= 2 -> plot using matplotlib #TODO put it in the self.IO 
+    # ndims >= 2 -> plot using matplotlib 
     if self.p["ndims"] == 2: 
       s = rendering(self.p["ndims"], self.p["half_boxboundary"], self.p["binNum"], self.p["temperature"])
       s.render(probability[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "boltzDist" +str(self.p["ndims"])+"D"))
@@ -220,8 +216,8 @@ class ABF(object):
         s.render(self.colvars_force[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
         s.render(self.colvars_force[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
 
-
-    self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs, withABF, woABF)
+    # Close files, mkdir and mv files
+    self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs, withANN, woANN)
     self.IO.makeDirAndMoveFiles(self.p["ndims"], self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"],\
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
