@@ -6,26 +6,29 @@ import numpy as np
 
 def integrator(ndims, cv, force, half_boxboundary, outputfile):
 
+  cv    = np.array(cv)
+  force = np.array(force)
+
   if ndims == 1: # OK
 
-    accIntg  = 0
-    FE       = []
     intg_interval = abs(cv[0] - cv[1])
-    factor   = intg_interval * 0.5 
+    accIntg       = 0
+    FE            = np.zeros(force.shape[0]) 
+    factor        = intg_interval * 0.5 
 
     for i in range(len(force) - 1):
       accIntg -= (force[i] + force[i+1])  # freeE = -Sf(x)dx
-      FE.append(accIntg * factor)
+      FE[i] = accIntg * factor 
 
-    FE.append(FE[0]) 
+    FE = paddingRightMostBin(FE)
 
     with open(outputfile, "w") as fout:
       for i, j in zip(cv, FE):
         fout.write(str(i) + " " + str(j) + "\n")
 
-  #--------------------------------------------------#
+#---------------------------------------------------------------------#
 
-  if ndims == 2: # Issues
+  if ndims == 2: # probably OK? 
 
     intg_interval = abs(cv[1][0][0] - cv[1][0][1])
     factor   = intg_interval * 0.5 
@@ -75,7 +78,6 @@ if __name__ == "__main__":
         line = line.split() 
         cv.append(float(line[0]))
         force.append(float(line[1]))
-
 
   if ndims == 2:
     dsz   = 41 
