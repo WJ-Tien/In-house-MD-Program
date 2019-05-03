@@ -11,7 +11,7 @@ def integrator(ndims, cv, force, half_boxboundary, outputfile):
     accIntg  = 0
     FE       = []
     intg_interval = abs(cv[0] - cv[1])
-    factor   = (intg_interval * 0.5) ** ndims
+    factor   = intg_interval * 0.5 
 
     for i in range(len(force) - 1):
       accIntg -= (force[i] + force[i+1])  # freeE = -Sf(x)dx
@@ -28,7 +28,7 @@ def integrator(ndims, cv, force, half_boxboundary, outputfile):
   if ndims == 2: # Issues
 
     intg_interval = abs(cv[1][0][0] - cv[1][0][1])
-    factor   = (intg_interval * 0.5) 
+    factor   = intg_interval * 0.5 
     FE_X     = 0
     FE_Y     = 0
     acc_at_x = np.zeros((force.shape[1]))
@@ -95,6 +95,5 @@ if __name__ == "__main__":
         if j == dsz:
           i += 1
           j = 0
-
 
   integrator(ndims, cv, force, half_boxboundary,  "FreeE_" + str(ndims) + "D.dat")
