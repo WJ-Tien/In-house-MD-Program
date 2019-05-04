@@ -153,14 +153,14 @@ class ABF(object):
 
     return Fabf
 
-  def _criteriaModCurr(self, prev, curr):
+  def _criteriaModCurr(self):
     if self.criteriaCounter <= 1:
-      prev = copy.deepcopy(self.colvars_hist) # w/o unbiasing
+      self.criteria_prev = copy.deepcopy(self.colvars_hist / np.sum(self.colvars_hist)) # w/o unbiasing
     else:
-      curr = copy.deepcopy(self.colvars_hist) # w/o unbiasing
+      self.criteria_curr = copy.deepcopy(self.colvars_hist / np.sum(self.colvars_hist)) # w/o unbiasing
 
-  def _criteriaModPrev(self, prev, curr):
-      prev = copy.deepcopy(curr)
+  def _criteriaModPrev(self):
+      self.criteria_prev = copy.deepcopy(self.criteria_curr)
 
   def _criteriaCheck(self, holder, prev, curr, msERROR):
     if self.criteriaCounter >= 2:
@@ -229,7 +229,7 @@ class ABF(object):
 
       if self.p["init_frame"] % self.p["earlyStopCheck"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes":
         self.criteriaCounter += 1 
-        self._criteriaModCurr(self.criteria_prev, self.criteria_curr)
+        self._criteriaModCurr()
 
         if self._criteriaCheck(self.criteria_hist, self.criteria_prev, self.criteria_curr, self.p["trainingCriteria"]):
           self.getCurrentFreeEnergy() 
@@ -241,7 +241,7 @@ class ABF(object):
             self._learningProxy()
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
 
-          self._criteriaModPrev(self.criteria_prev, self.criteria_curr)
+          self._criteriaModPrev()
 
           # retrieve FE
           if self.criteriaFEBool % 2 == 0:

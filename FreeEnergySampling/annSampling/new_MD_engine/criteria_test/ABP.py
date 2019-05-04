@@ -200,14 +200,14 @@ class ABP(object):
     self.biasingPotentialFromNN = -copy.deepcopy(self.colvars_FreeE_NN) # phi(x) = -Fhat(x); for ANN
     self.biasingPotentialConv = -copy.deepcopy(self.colvars_FreeE)      # phi(x) = -Fhat(x); for non-ANN
 
-  def _criteriaModCurr(self, prev, curr):
+  def _criteriaModCurr(self):
     if self.criteriaCounter <= 1:
-      prev = self._probability()
+      self.criteria_prev = self._probability()
     else:
-      curr = self._probability()
+      self.criteria_curr = self._probability()
 
-  def _criteriaModPrev(self, prev, curr):
-      prev = copy.deepcopy(curr)
+  def _criteriaModPrev(self):
+      self.criteria_prev = copy.deepcopy(self.criteria_curr)
 
   def _criteriaCheck(self, holder, prev, curr, msERROR):
     # MSE first TODO scaled MSE
@@ -274,7 +274,7 @@ class ABP(object):
       # early stop
       if self.p["init_frame"] % self.p["earlyStopCheck"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes":
         self.criteriaCounter += 1 
-        self._criteriaModCurr(self.criteria_prev, self.criteria_curr)
+        self._criteriaModCurr()
 
         if self._criteriaCheck(self.criteria_hist, self.criteria_prev, self.criteria_curr, self.p["trainingCriteria"]):
           self.getCurrentFreeEnergy()
@@ -287,7 +287,7 @@ class ABP(object):
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], earlyFreeE)
 
           self._updateBiasingPotential()
-          self._criteriaModPrev(self.criteria_prev, self.criteria_curr)
+          self._criteriaModPrev()
 
           # retrieve FE
           if self.criteriaFEBool % 2 == 0:
@@ -348,5 +348,5 @@ class ABP(object):
 
 
 if __name__ == "__main__":
-  ABP("in.ABP_2D").mdrun()
-  #ABP("in.ABP_1D").mdrun()
+  #ABP("in.ABP_2D").mdrun()
+  ABP("in.ABP_1D").mdrun()
