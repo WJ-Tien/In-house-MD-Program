@@ -31,6 +31,7 @@ class ABP(object):
     self.current_vel     = self.mdInitializer.genVelocity() 
     
     self.criteriaCounter = 0 
+    self.criteriaFEBool  = 0
     
     if self.p["ndims"] == 1:
       self.colvars_force          = np.zeros(len(self.bins), dtype=np.float64) 
@@ -199,34 +200,25 @@ class ABP(object):
     self.biasingPotentialFromNN = -copy.deepcopy(self.colvars_FreeE_NN) # phi(x) = -Fhat(x); for ANN
     self.biasingPotentialConv = -copy.deepcopy(self.colvars_FreeE)      # phi(x) = -Fhat(x); for non-ANN
 
-  def _criteriaModCurr(self, prev, curr, name):
-
-    if name == "probDistr":
-      if self.criteriaCounter <= 1:
-        prev = self._probability()
-      else:
-        curr = self._probability()
-
-    if name == "freeE":
-      if self.criteriaCounter <= 1:
-        prev = -self.p["kb"] * self.p["temperature"] * np.log(self._probability())
-      else:
-        curr = -self.p["kb"] * self.p["temperature"] * np.log(self._probability())
+  def _criteriaModCurr(self, prev, curr):
+    if self.criteriaCounter <= 1:
+      prev = self._probability()
+    else:
+      curr = self._probability()
 
   def _criteriaModPrev(self, prev, curr):
-      #self.criteria_prev = copy.deepcopy(self.criteria_curr)
       prev = copy.deepcopy(curr)
 
   def _criteriaCheck(self, holder, prev, curr, msERROR):
     # MSE first TODO scaled MSE
     if self.criteriaCounter >= 2:
-      #self.criteria = (self.criteria_prev - self.criteria_curr) ** 2 / self.criteria_curr
-      #self.criteria[np.isnan(self.criteria)] = 0.0    # deal with  inf
-      #self.criteria = self.criteria[self.criteria > self.p["trainingCriteria"]]
       holder = (prev - curr) ** 2 / curr
       holder[np.isnan(holder)] = 0.0   
       holder[np.isinf(holder)] = 0.0    
       holder[np.isneginf(holder)] = 0.0  
+      with open("holder.dat", "a") as fout:
+        fout.write(str(self.p["init_frame"]) + "\n")
+        fout.write(str(holder) + "\n")
       holder = holder[holder > msERROR]
       return not holder.size 
     return False
@@ -283,61 +275,50 @@ class ABP(object):
       # early stop
       if self.p["init_frame"] % self.p["earlyStopCheck"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes":
         self.criteriaCounter += 1 
-        self._criteriaModCurr(self.criteria_prev, self.criteria_curr, "hist")
-        self._criteriaModCurr(self.colvars_FreeE_prev, self.colvars_FreeE_curr, "freeE")
-
-        if self._criteriaCheck(self.criteria_Free, self.colvars_FreeE_prev, self.colvars_FreeE_curr, self.p["simlEndCriteria"]):
-          self.getCurrentFreeEnergy()
-          break
+        self._criteriaModCurr(self.criteria_prev, self.criteria_curr)
 
         if self._criteriaCheck(self.criteria_hist, self.criteria_prev, self.criteria_curr, self.p["trainingCriteria"]):
           self.getCurrentFreeEnergy()
+
           if self.p["nnCheckFlag"] == "no": 
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
+
           else:
             self._learningProxy()
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], earlyFreeE)
+
           self._updateBiasingPotential()
+
+
+          self._criteriaModPrev(self.criteria_prev, self.criteria_curr)
+
+          # retrieve FE
+          if self.criteriaFEBool % 2 == 0:
+            if self.p["nnCheckFlag"] == "yes": 
+              self.colvars_FreeE_prev = copy.deepcopy(self.colvars_FreeE_NN)
+            else:
+              self.colvars_FreeE_prev = copy.deepcopy(self.colvars_FreeE)
+          else:
+            if self.p["nnCheckFlag"] == "yes": 
+              self.colvars_FreeE_curr = copy.deepcopy(self.colvars_FreeE_NN)
+            else:
+              self.colvars_FreeE_curr = copy.deepcopy(self.colvars_FreeE)
+
+          self.criteriaFEBool += 1
+          
+          # To clean invalid data (inf, nan), we let some data == 0, this would cause issues when evaluating criteria, so we should at least do twice
+          if self._criteriaCheck(self.criteria_FreeE, self.colvars_FreeE_prev, self.colvars_FreeE_curr, self.p["simlEndCriteria"]) and self.criteriaFEBool >= 2:
+            break
+          # retrieve FE
+
           if self.p["init_frame"] != self.p["total_frame"]:
             self._resetColvarsHist() 
-        self._criteriaModPrev(self.criteria_prev, self.criteria_curr)
-        self._criteriaModPrev(self.colvars_FreeE_prev, self.colvars_FreeE_curr)
-
-      """
-      # for ANN-ABP
-      if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes": 
-        self.getCurrentFreeEnergy()
-        self._learningProxy()
-        self._updateBiasingPotential()
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], annABP)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], convABP)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_hist/np.sum(self.colvars_hist), self.colvars_hist, self.p["init_frame"], tempHist)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.biasingPotentialFromNN, self.colvars_hist, self.p["init_frame"], tempBsp)
-        if self.p["init_frame"] != self.p["total_frame"]: 
-          self._resetColvarsHist()
-
-      # for regular ABP
-      if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no": 
-        self.getCurrentFreeEnergy()
-        self._updateBiasingPotential()
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], convABP)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_hist, self.colvars_hist, self.p["init_frame"], tempHist)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.biasingPotentialConv, self.colvars_hist, self.p["init_frame"], tempBsp)
-        if self.p["init_frame"] != self.p["total_frame"]:
-          self._resetColvarsHist() 
-      """
-
-      #if self.p["init_frame"] == self.p["total_frame"]: 
-      #  self.getCurrentFreeEnergy()
-
 
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
       self._accumulateColvarsHist()
 
       self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
 
-      if self.p["init_frame"] % self.p["simlEndCriteria"] == 0 and self.p["init_frame"] != 0:
-        pass
     # END of the simulation
 
     # POST-PROCESSING
@@ -371,7 +352,5 @@ class ABP(object):
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
 
-
-
 if __name__ == "__main__":
-  ABP("in.ABP").mdrun()
+  ABP("in.ABP_2D").mdrun()
