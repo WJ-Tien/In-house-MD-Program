@@ -4,6 +4,7 @@ from mdlib.mdFileIO import mdFileIO
 from mdlib.force import Force
 from mdlib.customMathFunc import getIndices, paddingRightMostBin
 from mdlib.render import rendering
+from mdlib.integrator import integrator
 from annlib.abfANN import trainingANN
 import numpy as np
 import tensorflow as tf
@@ -28,16 +29,33 @@ class ABF(object):
     self.current_coord   = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
     self.current_vel     = self.mdInitializer.genVelocity() 
     # init coord and vel
+
+    self.criteriaCounter = 0 
+    self.criteriaFEBool  = 0
     
     if self.p["ndims"] == 1:
-      self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
-      self.colvars_force_NN = np.zeros(len(self.bins), dtype=np.float64) 
-      self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_force      = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_force_NN   = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_count      = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_hist       = np.zeros(len(self.bins), dtype=np.float64) 
+      self.criteria_hist      = np.zeros(len(self.bins), dtype=np.float64) 
+      self.criteria_prev      = np.zeros(len(self.bins), dtype=np.float64) 
+      self.criteria_curr      = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_FreeE      = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_FreeE_prev = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_FreeE_curr = np.zeros(len(self.bins), dtype=np.float64) 
 
     if self.p["ndims"] == 2:
-      self.colvars_force    = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.colvars_force_NN = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.colvars_count    = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_force      = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_force_NN   = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_count      = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_hist       = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.criteria_hist      = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.criteria_prev      = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.criteria_curr      = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_FreeE      = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_FreeE_prev = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_FreeE_curr = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
 
   def _forceHistDistrRecord(self, coord_x, coord_y, d):
 
@@ -130,9 +148,40 @@ class ABF(object):
 
     return Fabf
 
+  def _criteriaModCurr(self, prev, curr):
+    if self.criteriaCounter <= 1:
+      prev = copy.deepcopy(self.colvars_hist) # w/o unbiasing
+    else:
+      curr = copy.deepcopy(self.colvars_hist) # w/o unbiasing
+
+  def _criteriaModPrev(self, prev, curr):
+      prev = copy.deepcopy(curr)
+
+  def _criteriaCheck(self, holder, prev, curr, msERROR):
+    if self.criteriaCounter >= 2:
+      holder = (prev - curr) ** 2 / curr
+      holder[np.isnan(holder)] = 0.0   
+      holder[np.isinf(holder)] = 0.0    
+      holder[np.isneginf(holder)] = 0.0  
+      with open("holder.dat", "a") as fout:
+        fout.write(str(self.p["init_frame"]) + "\n")
+        fout.write(str(holder) + "\n")
+      holder = holder[holder > msERROR]
+      return not holder.size 
+    return False
+
+  def _accumulateColvarsHist(self):
+    for n in range(self.p["nparticle"]):
+      if self.p["ndims"] == 1:
+        self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)] += 1
+      elif self.p["ndims"] == 2:
+        self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)][getIndices(self.current_coord[n][1], self.bins)] += 1
+
+  def getCurrentFreeEnergy(self):
+    self.colvars_FreeE = integrator(self.p["ndims"], self.colvars_coord, self.colvars_force, self.p["half_boxboundary"], self.p["init_frame"], self.p["shiftConst"], "tempFreeE.dat"):
+
   def _learningProxy(self):
     if self.p["nnCheckFlag"] == "yes":
-      if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0: 
         output = trainingANN("loss.dat", "hyperparam.dat", self.p["ndims"], len(self.bins)) 
 
         self.colvars_force = (self.colvars_force / self.colvars_count)
@@ -159,6 +208,7 @@ class ABF(object):
 
     withANN        = open("instantForceWANN_"  + str(self.p["ndims"]) + "D.dat", "a")
     woANN          = open("instantForceWOANN_" + str(self.p["ndims"]) + "D.dat", "a")
+    earlyFreeE     = open("earlyFreeE.dat", "a")
 
     # START of the simulation
     self.IO.writeParams(self.p)
@@ -171,29 +221,45 @@ class ABF(object):
       self.IO.printCurrentStatus(self.p["init_frame"], init_real_world_time)  
       self.mdInitializer.checkTargetTemperature(self.current_vel, self.p["init_frame"], self.p["total_frame"])
 
-      if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
-        self._learningProxy()
-        self.colvars_force = (self.colvars_force / self.colvars_count)
-        self.colvars_force[np.isnan(self.colvars_force)] = 0
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force_NN, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], withANN)
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force,    self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woANN)
-        self.colvars_force = (self.colvars_force * self.colvars_count)
+      if self.p["init_frame"] % self.p["earlyStopCheck"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes":
+        self.criteriaCounter += 1 
+        self._criteriaModCurr(self.criteria_prev, self.criteria_curr)
 
-      if self.p["init_frame"] % self.p["certainOutFreq"] == 0 and self.p["init_frame"] != 0 and self.p["nnCheckFlag"] == "no":
-        self.colvars_force = (self.colvars_force / self.colvars_count)
-        self.colvars_force[np.isnan(self.colvars_force)] = 0
-        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force, self.colvars_count, self.p["init_frame"], self.p["certainOutFreq"], woANN)
-        self.colvars_force = (self.colvars_force * self.colvars_count)
-      
+        if self._criteriaCheck(self.criteria_hist, self.criteria_prev, self.criteria_curr, self.p["trainingCriteria"]):
+          self.getCurrentFreeEnergy() 
+
+          if self.p["nnCheckFlag"] == "no": 
+            self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
+
+          else:
+            self._learningProxy()
+            self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], earlyFreeE)
+
+          self._criteriaModPrev(self.criteria_prev, self.criteria_curr)
+
+          # retrieve FE
+          if self.criteriaFEBool % 2 == 0:
+              self.colvars_FreeE_prev = copy.deepcopy(self.colvars_FreeE)
+          else:
+              self.colvars_FreeE_curr = copy.deepcopy(self.colvars_FreeE)
+
+          self.criteriaFEBool += 1
+          
+          # To clean invalid data (inf, nan), we let some data == 0, this would cause issues when evaluating criteria, so we should at least do twice
+          if self._criteriaCheck(self.criteria_FreeE, self.colvars_FreeE_prev, self.colvars_FreeE_curr, self.p["simlEndCriteria"]) and self.criteriaFEBool >= 2:
+            break
+          # retrieve FE
+
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
+      self._accumulateColvarsHist()
 
       self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
     # END of the simulation
 
     # POST-PROCESSING
-    probability = self.colvars_count / (np.sum(self.colvars_count) / self.p["ndims"]) # both numerator and denominator should actually be divided by two but this would be cacncelled
-    probability = paddingRightMostBin(probability) 
-    self.IO.propertyOnColvarsOutput(self.bins, probability, self.colvars_count/2, histogramOnCVs)
+    probability = copy.deepcopy((self.colvars_hist / np.sum(self.colvars_hist)))
+    probability = paddingRightMostBin(probability)
+    self.IO.propertyOnColvarsOutput(self.bins, probability, self.colvars_hist, histogramOnCVs)
 
     if self.p["nnCheckFlag"] == "yes":
       self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
@@ -216,7 +282,7 @@ class ABF(object):
         s.render(self.colvars_force[1],    name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
 
     # Close files, mkdir and mv files
-    self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs, withANN, woANN)
+    self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs, withANN, woANN, earlyFreeE)
     self.IO.makeDirAndMoveFiles(self.p["ndims"], self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"],\
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
