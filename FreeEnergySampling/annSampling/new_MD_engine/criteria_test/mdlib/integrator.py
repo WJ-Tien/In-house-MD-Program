@@ -1,5 +1,4 @@
 #!/usr/bin/env python3 
-from sys import argv
 from mdlib.render import rendering
 from mdlib.customMathFunc import paddingRightMostBin
 import numpy as np
@@ -10,9 +9,6 @@ def integrator(ndims, cv, force, half_boxboundary, frame, shiftConst, outputfile
   force = np.array(force)
 
   if ndims == 1: # OK
-
-    cv    = []
-    force = []
 
     intg_interval = abs(cv[0] - cv[1])
     accIntg       = 0
