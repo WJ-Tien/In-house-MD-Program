@@ -84,13 +84,13 @@ class ABP(object):
     if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
 
       if self.p["ndims"] == 1:
-        if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
+        if self.p["init_frame"] <= self.p["earlyStopCheck"]: # initial sweep
           return 0 
         else:
           return self.biasingPotentialFromNN[getIndices(coord_x, self.bins)]
 
       if self.p["ndims"]== 2: 
-        if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
+        if self.p["init_frame"] <= self.p["earlyStopCheck"]: # initial sweep
           return 0 
         else:
           return self.biasingPotentialFromNN[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]  
@@ -98,13 +98,13 @@ class ABP(object):
     elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no":
 
       if self.p["ndims"] == 1:
-        if self.p["init_frame"] <= self.p["trainingFreq"]: 
+        if self.p["init_frame"] <= self.p["earlyStopCheck"]: 
           return 0 
         else:
           return self.biasingPotentialConv[getIndices(coord_x, self.bins)]
 
       if self.p["ndims"]== 2: 
-        if self.p["init_frame"] <= self.p["trainingFreq"]:
+        if self.p["init_frame"] <= self.p["earlyStopCheck"]:
           return 0 
         else:
           return self.biasingPotentialConv[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]  
@@ -114,10 +114,10 @@ class ABP(object):
 
   def _calBiasingForce(self, coord_x, coord_y, d):
 
-    if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no" or (self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] <= self.p["trainingFreq"]):
+    if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no" or (self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] <= self.p["earlyStopCheck"]):
       bsForce = copy.deepcopy(self.colvars_FreeE)
 
-    elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] > self.p["trainingFreq"]:
+    elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] > self.p["earlyStopCheck"]:
       bsForce = copy.deepcopy(self.colvars_FreeE_NN)
 
     elif self.p["abfCheckFlag"] == "no" and self.p["nnCheckFlag"] == "no":
@@ -212,7 +212,7 @@ class ABP(object):
   def _criteriaCheck(self, holder, prev, curr, msERROR):
     # MSE first TODO scaled MSE
     if self.criteriaCounter >= 2:
-      holder = (prev - curr) ** 2 / curr
+      holder = ((prev - curr)/curr) ** 2 
       holder[np.isnan(holder)] = 0.0   
       holder[np.isinf(holder)] = 0.0    
       holder[np.isneginf(holder)] = 0.0  
@@ -227,7 +227,7 @@ class ABP(object):
     if self.p["nnCheckFlag"] == "yes":
       output = trainingANN("loss.dat", "hyperparam.dat", self.p["ndims"], len(self.bins), self.binw) 
 
-      if self.p["init_frame"] < self.p["trainingFreq"] * self.p["switchSteps"]:
+      if self.p["init_frame"] < self.p["earlyStopCheck"] * self.p["switchSteps"]:
         self.colvars_FreeE_NN , _ = \
         output.training(self.colvars_coord, self.colvars_FreeE, self.p["earlyLearningRate"], self.p["earlyRegularCoeff"], self.p["earlyEpoch"], self.p["nnOutputFreq"]) 
 
@@ -260,7 +260,6 @@ class ABP(object):
     tempBsp        = open("tempBsp.dat",  "a")
     earlyFreeE     = open("earlyFreeE.dat", "a")
 
-
     # START of the simulation
     self.IO.writeParams(self.p)
     self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
@@ -288,18 +287,16 @@ class ABP(object):
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], earlyFreeE)
 
           self._updateBiasingPotential()
-
-
           self._criteriaModPrev(self.criteria_prev, self.criteria_curr)
 
           # retrieve FE
           if self.criteriaFEBool % 2 == 0:
-            if self.p["nnCheckFlag"] == "yes": 
+            if self.p["nnCheckFlag"] == "yes":
               self.colvars_FreeE_prev = copy.deepcopy(self.colvars_FreeE_NN)
             else:
               self.colvars_FreeE_prev = copy.deepcopy(self.colvars_FreeE)
           else:
-            if self.p["nnCheckFlag"] == "yes": 
+            if self.p["nnCheckFlag"] == "yes":
               self.colvars_FreeE_curr = copy.deepcopy(self.colvars_FreeE_NN)
             else:
               self.colvars_FreeE_curr = copy.deepcopy(self.colvars_FreeE)
@@ -310,9 +307,7 @@ class ABP(object):
           if self._criteriaCheck(self.criteria_FreeE, self.colvars_FreeE_prev, self.colvars_FreeE_curr, self.p["simlEndCriteria"]) and self.criteriaFEBool >= 2:
             break
           # retrieve FE
-
-          if self.p["init_frame"] != self.p["total_frame"]:
-            self._resetColvarsHist() 
+          self._resetColvarsHist()
 
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
       self._accumulateColvarsHist()
@@ -354,3 +349,4 @@ class ABP(object):
 
 if __name__ == "__main__":
   ABP("in.ABP_2D").mdrun()
+  #ABP("in.ABP_1D").mdrun()

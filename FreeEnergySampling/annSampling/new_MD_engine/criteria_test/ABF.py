@@ -9,6 +9,7 @@ from annlib.abfANN import trainingANN
 import numpy as np
 import tensorflow as tf
 import time
+import copy
 
 class ABF(object):
 
@@ -35,24 +36,28 @@ class ABF(object):
     
     if self.p["ndims"] == 1:
       self.colvars_force      = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_force_tmp  = np.zeros(len(self.bins), dtype=np.float64) 
       self.colvars_force_NN   = np.zeros(len(self.bins), dtype=np.float64) 
       self.colvars_count      = np.zeros(len(self.bins), dtype=np.float64) 
       self.colvars_hist       = np.zeros(len(self.bins), dtype=np.float64) 
       self.criteria_hist      = np.zeros(len(self.bins), dtype=np.float64) 
       self.criteria_prev      = np.zeros(len(self.bins), dtype=np.float64) 
       self.criteria_curr      = np.zeros(len(self.bins), dtype=np.float64) 
+      self.criteria_FreeE     = np.zeros(len(self.bins), dtype=np.float64)
       self.colvars_FreeE      = np.zeros(len(self.bins), dtype=np.float64) 
       self.colvars_FreeE_prev = np.zeros(len(self.bins), dtype=np.float64) 
       self.colvars_FreeE_curr = np.zeros(len(self.bins), dtype=np.float64) 
 
     if self.p["ndims"] == 2:
       self.colvars_force      = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_force_tmp  = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
       self.colvars_force_NN   = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
       self.colvars_count      = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
       self.colvars_hist       = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
       self.criteria_hist      = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
       self.criteria_prev      = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
       self.criteria_curr      = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.criteria_FreeE     = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64)
       self.colvars_FreeE      = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
       self.colvars_FreeE_prev = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
       self.colvars_FreeE_curr = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
@@ -118,7 +123,7 @@ class ABF(object):
 
     elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
 
-      if self.p["init_frame"] < self.p["trainingFreq"]:
+      if self.p["init_frame"] < self.p["earlyStopCheck"]:
         Fabf = self._calBiasingForce(coord_x, coord_y, d)
 
       else: # ANN takes over here; reload the previous training model
@@ -159,13 +164,10 @@ class ABF(object):
 
   def _criteriaCheck(self, holder, prev, curr, msERROR):
     if self.criteriaCounter >= 2:
-      holder = (prev - curr) ** 2 / curr
+      holder = ((prev - curr)/ curr)** 2 
       holder[np.isnan(holder)] = 0.0   
       holder[np.isinf(holder)] = 0.0    
       holder[np.isneginf(holder)] = 0.0  
-      with open("holder.dat", "a") as fout:
-        fout.write(str(self.p["init_frame"]) + "\n")
-        fout.write(str(holder) + "\n")
       holder = holder[holder > msERROR]
       return not holder.size 
     return False
@@ -175,10 +177,14 @@ class ABF(object):
       if self.p["ndims"] == 1:
         self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)] += 1
       elif self.p["ndims"] == 2:
-        self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)][getIndices(self.current_coord[n][1], self.bins)] += 1
+        self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)][getIndices(self.current_coord[n][1], self.bins)] += 1 
 
   def getCurrentFreeEnergy(self):
-    self.colvars_FreeE = integrator(self.p["ndims"], self.colvars_coord, self.colvars_force, self.p["half_boxboundary"], self.p["init_frame"], self.p["shiftConst"], "tempFreeE.dat"):
+    self.colvars_force_tmp = copy.deepcopy(self.colvars_force / self.colvars_count)
+    self.colvars_force_tmp[np.isnan(self.colvars_force_tmp)] = 0 
+    self.colvars_force_tmp = paddingRightMostBin(self.colvars_force_tmp)
+    
+    self.colvars_FreeE = integrator(self.p["ndims"], self.colvars_coord, self.colvars_force_tmp, self.p["half_boxboundary"], self.p["init_frame"], self.p["shiftConst"], "tempFreeE.dat")
 
   def _learningProxy(self):
     if self.p["nnCheckFlag"] == "yes":
@@ -188,7 +194,7 @@ class ABF(object):
         self.colvars_force[np.isnan(self.colvars_force)] = 0 # 0/0 = nan n/0 = inf
         self.colvars_force = paddingRightMostBin(self.colvars_force)
 
-        if self.p["init_frame"] < self.p["trainingFreq"] * self.p["switchSteps"]:
+        if self.p["init_frame"] < self.p["earlyStopCheck"] * self.p["switchSteps"]:
           self.colvars_force_NN = \
           output.training(self.colvars_coord, self.colvars_force, self.p["earlyLearningRate"], self.p["earlyRegularCoeff"], self.p["earlyEpoch"], self.p["nnOutputFreq"]) 
         else:
@@ -233,7 +239,7 @@ class ABF(object):
 
           else:
             self._learningProxy()
-            self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], earlyFreeE)
+            self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
 
           self._criteriaModPrev(self.criteria_prev, self.criteria_curr)
 
@@ -287,4 +293,5 @@ class ABF(object):
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
 if __name__ == "__main__":
-  ABF("in.ABF").mdrun()
+  ABF("in.ABF_1D").mdrun()
+  #ABF("in.ABF_2D").mdrun()
