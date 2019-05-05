@@ -250,7 +250,7 @@ class ABF(object):
     probability = copy.deepcopy((self.colvars_hist / np.sum(self.colvars_hist)))
     probability = paddingRightMostBin(probability)
     self.IO.propertyOnColvarsOutput(self.bins, probability, self.colvars_hist, histogramOnCVs)
-    self.IO.propertyOnColvarsOutput(self.bins, self.colvars_FreeE, self.colvars_count, FinalFE)
+    self.IO.propertyOnColvarsOutput(self.bins, self.colvars_FreeE, self.colvars_hist, FinalFE)
 
     if self.p["nnCheckFlag"] == "yes":
       self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
@@ -282,5 +282,5 @@ class ABF(object):
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
 if __name__ == "__main__":
-  ABF("in.ABF_1D").mdrun()
-  #ABF("in.ABF_2D").mdrun()
+  #ABF("in.ABF_1D").mdrun()
+  ABF("in.ABF_2D").mdrun()
