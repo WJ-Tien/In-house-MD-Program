@@ -156,9 +156,15 @@ class ABF(object):
         self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)][getIndices(self.current_coord[n][1], self.bins)] += 1 
 
   def getCurrentFreeEnergy(self):
-    self.colvars_force_tmp = copy.deepcopy(self.colvars_force / self.colvars_count)
-    self.colvars_force_tmp[np.isnan(self.colvars_force_tmp)] = 0 
-    self.colvars_force_tmp = paddingRightMostBin(self.colvars_force_tmp)
+
+    if self.p["nnCheckFlag"] == "no":
+      self.colvars_force_tmp = copy.deepcopy(self.colvars_force / self.colvars_count)
+      self.colvars_force_tmp[np.isnan(self.colvars_force_tmp)] = 0 
+      self.colvars_force_tmp = paddingRightMostBin(self.colvars_force_tmp)
+    else:
+      self.colvars_force_tmp = copy.deepcopy(self.colvars_force_NN)
+      self.colvars_force_tmp[np.isnan(self.colvars_force_tmp)] = 0 
+      self.colvars_force_tmp = paddingRightMostBin(self.colvars_force_tmp)
     
     self.colvars_FreeE = integrator(self.p["ndims"], self.colvars_coord, self.colvars_force_tmp, self.p["half_boxboundary"], self.p["init_frame"], self.p["shiftConst"], "tempFreeE.dat")
 
@@ -191,6 +197,7 @@ class ABF(object):
     withANN        = open("instantForceWANN_"  + str(self.p["ndims"]) + "D.dat", "a")
     woANN          = open("instantForceWOANN_" + str(self.p["ndims"]) + "D.dat", "a")
     earlyFreeE     = open("earlyFreeE.dat", "a")
+    FinalFE        = open("FreeE.dat", "w")
 
     # START of the simulation
     self.IO.writeParams(self.p)
@@ -208,13 +215,14 @@ class ABF(object):
         self._criteriaModCurr()
 
         if self._criteriaCheck(self.criteria_hist, self.criteria_prev, self.criteria_curr, self.p["trainingCriteria"]):
-          self.getCurrentFreeEnergy() 
 
           if self.p["nnCheckFlag"] == "no": 
+            self.getCurrentFreeEnergy() 
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
 
           else:
             self._learningProxy()
+            self.getCurrentFreeEnergy() 
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
 
           self._criteriaModPrev()
@@ -245,6 +253,7 @@ class ABF(object):
 
     if self.p["nnCheckFlag"] == "yes":
       self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
+      self.IO.propertyOnColvarsOutput(self.bins, self.colvars_FreeE, self.colvars_count, forceOnCVs)
 
     else:
       self.colvars_force = (self.colvars_force / self.colvars_count)
@@ -255,16 +264,20 @@ class ABF(object):
     # ndims >= 2 -> plot using matplotlib 
     if self.p["ndims"] == 2: 
       s = rendering(self.p["ndims"], self.p["half_boxboundary"], self.p["binNum"], self.p["temperature"])
-      s.render(probability[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "boltzDist" +str(self.p["ndims"])+"D"))
+      s.render(probability, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "boltzDist" +str(self.p["ndims"])+"D"))
+      s.render(self.colvars_FreeE, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "FEsurface" +str(self.p["ndims"])+"D"))
       if self.p["nnCheckFlag"] == "yes":
-        s.render(self.colvars_force_NN[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
-        s.render(self.colvars_force_NN[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
+        try:
+          s.render(self.colvars_force_NN[0], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
+          s.render(self.colvars_force_NN[1], name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
+        except: # no chance to train 
+          pass
       else:
         s.render(self.colvars_force[0],    name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcex" +str(self.p["ndims"])+"D"))
         s.render(self.colvars_force[1],    name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "forcey" +str(self.p["ndims"])+"D"))
 
     # Close files, mkdir and mv files
-    self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs, withANN, woANN, earlyFreeE)
+    self.IO.closeAllFiles(lammpstrj, forceOnCVs, histogramOnCVs, withANN, woANN, earlyFreeE, FinalFE)
     self.IO.makeDirAndMoveFiles(self.p["ndims"], self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"],\
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
