@@ -1,7 +1,7 @@
 ### Classification
-with_StopCriteria      (latest, coarse_calc, good) 
-wo_StopCriteria_init   (original, fine_calc, good)
-wo_StopCriteria_Coarse (original, coarse_calc, good)
+* with_StopCriteria      (latest, coarse_calc, good) 
+* wo_StopCriteria_init   (original, fine_calc, good)
+* wo_StopCriteria_Coarse (original, coarse_calc, good)
 
 ### mdlib 
 * Required modules to run classic newtonian/langevin md and advanced sampling methods
