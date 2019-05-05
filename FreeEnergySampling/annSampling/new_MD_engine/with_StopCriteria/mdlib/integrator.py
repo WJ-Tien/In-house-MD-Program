@@ -62,7 +62,8 @@ def integrator(ndims, cv, force, half_boxboundary, frame, shiftConst, outputfile
       fout.write("#" + " " + str(frame) + "\n")
       for i in range(force.shape[1]):
         for j in range(force.shape[2]):
-          fout.write(str(cv[0][i][j]) + " " + str(cv[1][i][j]) + " " + str(FE[i][j]) +  "\n")
+          fout.write(str(cv[i]) + " ")
+          fout.write(str(cv[j]) + " " + str(FE[i][j]) +  "\n")
       fout.write("\n")
 
     s = rendering(ndims, half_boxboundary, force.shape[1] - 1)
