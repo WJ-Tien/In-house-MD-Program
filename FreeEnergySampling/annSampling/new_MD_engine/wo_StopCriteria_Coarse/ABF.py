@@ -83,9 +83,9 @@ class ABF(object):
                   self._entropicCorrection()) * self._inverseGradient()) 
     if (self.p["abfCheckFlag"] == "yes" and  self.p["nnCheckFlag"] == "yes") and self.p["init_frame"] >= self.p["trainingFreq"]:
         if self.p["ndims"] == 1:
-          return self.colvars_force_NN[getIndices(coord_x, self.bins)]
+          return -self.colvars_force_NN[getIndices(coord_x, self.bins)]
         if self.p["ndims"] == 2:
-          return self.colvars_force_NN[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
+          return -self.colvars_force_NN[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
 
   def _abfDecorator(func):
     def _wrapper(self, coord_x, d, vel, coord_y):
@@ -198,5 +198,5 @@ class ABF(object):
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
 if __name__ == "__main__":
-  #ABF("in.ABF").mdrun()
-  ABF("in.ABF_2D").mdrun()
+  ABF("in.ABF").mdrun()
+  #ABF("in.ABF_2D").mdrun()
