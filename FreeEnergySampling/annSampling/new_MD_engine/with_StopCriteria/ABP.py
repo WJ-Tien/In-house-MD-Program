@@ -114,10 +114,10 @@ class ABP(object):
 
   def _calBiasingForce(self, coord_x, coord_y, d):
 
-    if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no" or (self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] <= self.p["earlyStopCheck"]):
+    if (self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no") or (self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] <= self.p["earlyStopCheck"]):
       bsForce = copy.deepcopy(self.colvars_FreeE)
 
-    elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] > self.p["earlyStopCheck"]:
+    elif (self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes") and self.p["init_frame"] > self.p["earlyStopCheck"]:
       bsForce = copy.deepcopy(self.colvars_FreeE_NN)
 
     elif self.p["abfCheckFlag"] == "no" and self.p["nnCheckFlag"] == "no":
@@ -348,5 +348,5 @@ class ABP(object):
 
 
 if __name__ == "__main__":
-  ABP("in.ABP_2D").mdrun()
-  #ABP("in.ABP_1D").mdrun()
+  #ABP("in.ABP_2D").mdrun()
+  ABP("in.ABP_1D").mdrun()
