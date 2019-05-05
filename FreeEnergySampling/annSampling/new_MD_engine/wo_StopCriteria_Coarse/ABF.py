@@ -67,18 +67,25 @@ class ABF(object):
     return self.p["kb"] * self.p["temperature"] * self._Jacobian()
 
   def _calBiasingForce(self, coord_x, coord_y, d):
-    if self.p["ndims"] == 1:
-      if self.colvars_count[getIndices(coord_x, self.bins)] == 0:
-        return 0
-      else:
-        return -((self.colvars_force[getIndices(coord_x, self.bins)] / self.colvars_count[getIndices(coord_x, self.bins)] + self._entropicCorrection()) * self._inverseGradient())
 
-    if self.p["ndims"] == 2:
-      if self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] == 0:
-        return 0
-      else:
-        return -((self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] / self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] +\
-                self._entropicCorrection()) * self._inverseGradient()) 
+    if (self.p["abfCheckFlag"] == "yes" and  self.p["nnCheckFlag"] == "no") or (self.p["abfCheckFlag"] == "yes" and  self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] < self.p["trainingFreq"]):
+      if self.p["ndims"] == 1:
+        if self.colvars_count[getIndices(coord_x, self.bins)] == 0:
+          return 0
+        else:
+          return -((self.colvars_force[getIndices(coord_x, self.bins)] / self.colvars_count[getIndices(coord_x, self.bins)] + self._entropicCorrection()) * self._inverseGradient())
+
+      if self.p["ndims"] == 2:
+        if self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] == 0:
+          return 0
+        else:
+          return -((self.colvars_force[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] / self.colvars_count[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)] +\
+                  self._entropicCorrection()) * self._inverseGradient()) 
+    if (self.p["abfCheckFlag"] == "yes" and  self.p["nnCheckFlag"] == "yes") and self.p["init_frame"] >= self.p["trainingFreq"]:
+        if self.p["ndims"] == 1:
+          return self.colvars_force_NN[getIndices(coord_x, self.bins)]
+        if self.p["ndims"] == 2:
+          return self.colvars_force_NN[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
 
   def _abfDecorator(func):
     def _wrapper(self, coord_x, d, vel, coord_y):
@@ -95,38 +102,8 @@ class ABF(object):
     if self.p["abfCheckFlag"] == "no" and self.p["nnCheckFlag"] == "no":
       Fabf = 0  
 
-    elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no":
+    else:
       Fabf = self._calBiasingForce(coord_x, coord_y, d)
-
-    elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
-
-      if self.p["init_frame"] < self.p["trainingFreq"]:
-        Fabf = self._calBiasingForce(coord_x, coord_y, d)
-
-      else: # ANN takes over here; reload the previous training model
-
-        tf.reset_default_graph()
-
-        with tf.Session() as sess: 
-          Saver = tf.train.import_meta_graph("net" + str(self.p["ndims"]) + "D" +"/netSaver.ckpt.meta")
-          Saver.restore(sess, tf.train.latest_checkpoint("net" + str(self.p["ndims"]) +"D/"))
-          graph = tf.get_default_graph()
-          #y_estimatedOP = graph.get_operation_by_name("criticalOP")  # get tensor with suffix :0
-          layerOutput = graph.get_tensor_by_name("annOutput:0") 
-
-          if self.p["ndims"] == 1:
-            coord_x = np.array([coord_x])[:, np.newaxis]  
-            CV      = graph.get_tensor_by_name("colvars:0") 
-            Fabf    = -sess.run(layerOutput, feed_dict={CV: coord_x}).reshape(self.p["ndims"])[d]
-
-          if self.p["ndims"] == 2:
-            coord_x = np.array([coord_x])[:, np.newaxis]  
-            coord_y = np.array([coord_y])[:, np.newaxis]  
-            CV_x    = graph.get_tensor_by_name("colvars_x:0") 
-            CV_y    = graph.get_tensor_by_name("colvars_y:0") 
-            Fabf    = -sess.run(layerOutput, feed_dict={CV_x: coord_x, CV_y: coord_y}).reshape(self.p["ndims"])[d] 
-
-        tf.reset_default_graph()
 
     return Fabf
 
@@ -221,4 +198,5 @@ class ABF(object):
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
 if __name__ == "__main__":
-  ABF("in.ABF").mdrun()
+  #ABF("in.ABF").mdrun()
+  ABF("in.ABF_2D").mdrun()
