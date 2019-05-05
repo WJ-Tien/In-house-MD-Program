@@ -254,7 +254,6 @@ class ABF(object):
 
     if self.p["nnCheckFlag"] == "yes":
       self.IO.propertyOnColvarsOutput(self.bins, self.colvars_force_NN, self.colvars_count, forceOnCVs)
-      self.IO.propertyOnColvarsOutput(self.bins, self.colvars_FreeE, self.colvars_count, forceOnCVs)
 
     else:
       self.colvars_force = (self.colvars_force / self.colvars_count)
