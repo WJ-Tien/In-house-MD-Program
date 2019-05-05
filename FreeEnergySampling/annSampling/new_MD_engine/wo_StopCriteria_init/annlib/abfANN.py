@@ -2,17 +2,15 @@
 
 import tensorflow as tf 
 import numpy as np
-import copy
 
 class trainingANN(object):
   
-  def __init__(self, fileLoss, filehyperparam, ndims, size, binw):
+  def __init__(self, fileLoss, filehyperparam, ndims, size):
 
     self.Loss_train = open(str(fileLoss), "a")
     self.hp_train   = open(str(filehyperparam), "a")
     self.ndims      = ndims
     self.size       = size
-    self.binw       = binw
     self.estTarget  = np.zeros((self.size)) if self.ndims == 1 else np.zeros((self.ndims, self.size, self.size))  
 
   def addDenseLayer(self, input_neuron_size, output_neuron_size, activationFunc=None, nameFlag=None, *input_colvars):
@@ -45,37 +43,40 @@ class trainingANN(object):
     self.hp_train.close()
 
     if self.ndims == 1:
-      # 1-50-40-20-1
+      # 1-20-16-1
       CV                    = tf.placeholder(tf.float32, [None, 1], name="colvars") # feature
       array_colvar_to_train = array_colvar_to_train[:, np.newaxis]                  # 361*1
 
       target                = tf.placeholder(tf.float32, [None, 1], name="targets") # real data; training set; label  
       array_target_to_learn = array_target_to_learn[:, np.newaxis]
-      layer1, w1, b1        = self.addDenseLayer(1, 50, tf.nn.sigmoid, None, CV)
-      layer2, w2, b2        = self.addDenseLayer(50, 40, tf.nn.sigmoid, None, layer1)
-      layer3, w3, b3        = self.addDenseLayer(40, 20, tf.nn.sigmoid, None, layer2)
-      layerOutput, w4, b4   = self.addDenseLayer(20, 1, None, "annOutput", layer3)
+
+      layer1, w1, b1        = self.addDenseLayer(1, 20, tf.nn.sigmoid, None, CV)
+      layer2, w2, b2        = self.addDenseLayer(20, 16, tf.nn.sigmoid, None, layer1)
+      layerOutput, w3, b3   = self.addDenseLayer(16, 1, None, "annOutput", layer2)
       variables_to_feed     = {CV: array_colvar_to_train, target: array_target_to_learn}
-      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3)+ tf.nn.l2_loss(w4))*2) 
+      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
 
     if self.ndims == 2: 
-      # 1(2)-60-40-25-2
+      # 1(2)-30-24-2
       CV_x                  = tf.placeholder(tf.float32, [None, 1], name="colvars_x")
       CV_y                  = tf.placeholder(tf.float32, [None, 1], name="colvars_y")
       CV_X, CV_Y            = np.meshgrid(array_colvar_to_train, array_colvar_to_train, indexing="ij") # 41 ---> 41*41
       CV_X                  = CV_X.reshape(CV_X.size)[:, np.newaxis]                                   # 2D (41*41) --> 2D (1681*1)
       CV_Y                  = CV_Y.reshape(CV_Y.size)[:, np.newaxis]
 
-      target                = tf.placeholder(tf.float32, [None, 1], name="target")  
-      #array_target_x_to_learn = array_target_to_learn[0].reshape(array_target_to_learn[0].shape[0] * array_target_to_learn[0].shape[1])[:, np.newaxis] # 1681 * 1
-      array_target_to_learn = array_target_to_learn.reshape(self.size * self.size)[:, np.newaxis]
+      target_x              = tf.placeholder(tf.float32, [None, 1], name="target_x")  
+      target_y              = tf.placeholder(tf.float32, [None, 1], name="target_y")  
+      array_target_x_to_learn = array_target_to_learn[0].reshape(array_target_to_learn[0].shape[0] * array_target_to_learn[0].shape[1])[:, np.newaxis] # 1681 * 1
+      array_target_y_to_learn = array_target_to_learn[1].reshape(array_target_to_learn[1].shape[0] * array_target_to_learn[1].shape[1])[:, np.newaxis] # 1681 * 1
 
-      layer1, w1, b1        = self.addDenseLayer(1, 60, tf.nn.sigmoid, None, CV_x, CV_y)
-      layer2, w2, b2        = self.addDenseLayer(60, 50, tf.nn.sigmoid, None, layer1)
-      layer3, w3, b3        = self.addDenseLayer(50, 30, tf.nn.sigmoid, None, layer2)
-      layerOutput, w4, b4   = self.addDenseLayer(30, 1, None, "annOutput", layer3) #1681*1
-      variables_to_feed     = {CV_x: CV_X, CV_y: CV_Y, target: array_target_to_learn}
-      loss                  = tf.reduce_mean(tf.square(layerOutput - target) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3) + tf.nn.l2_loss(w4))*2) 
+
+      layer1, w1, b1        = self.addDenseLayer(1, 30, tf.nn.sigmoid, None, CV_x, CV_y)
+      layer2, w2, b2        = self.addDenseLayer(30, 24, tf.nn.sigmoid, None, layer1)
+      layerOutput, w3, b3   = self.addDenseLayer(24, 2, None, "annOutput", layer2) #1681*2
+      layerOutput_x         = layerOutput[:, 0][:, np.newaxis] # 1681 * 1
+      layerOutput_y         = layerOutput[:, 1][:, np.newaxis] # 1681 * 1
+      variables_to_feed     = {CV_x: CV_X, CV_y: CV_Y, target_x: array_target_x_to_learn, target_y: array_target_y_to_learn}
+      loss                  = tf.reduce_mean(tf.square(layerOutput_x - target_x) + tf.square(layerOutput_y - target_y) + regularFactor*(tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))*2) 
 
     # https://stackoverflow.com/questions/49953379/tensorflow-multiple-loss-functions-vs-multiple-training-ops
     optimizer = tf.train.AdamOptimizer(learning_rate=learningRate) 
@@ -92,52 +93,23 @@ class trainingANN(object):
       self.Loss_train.write("\n")
       self.Loss_train.close() 
 
-
       # TODO better structure   
-      reshape_estTarget = sess.run(layerOutput, feed_dict=variables_to_feed) 
+      reshape_estTarget = sess.run(layerOutput, feed_dict=variables_to_feed) # remove the np.newaxis
 
       if self.ndims == 1:
         self.estTarget = reshape_estTarget.reshape(self.size)
-        bsForce        = copy.deepcopy(self.estTarget)
-        bsForce        = np.diff(bsForce)
-        bsForce        = np.append(bsForce, bsForce[-1]) # padding to the right legnth
-        bsForce        = (bsForce / self.binw)
 
       if self.ndims == 2:
-        freeE = np.array(sess.run(layerOutput, feed_dict=variables_to_feed))[:,0] # 1681 1 --> 1681 
+        estTargetX = reshape_estTarget[:, 0].reshape(self.size, self.size)
+        estTargetY = reshape_estTarget[:, 1].reshape(self.size, self.size)
+        self.estTarget[0] = estTargetX
+        self.estTarget[1] = estTargetY
 
-        gX = copy.deepcopy(freeE.reshape(self.size, self.size))
-        gX = np.diff(gX, axis=0)
-        gX = np.append(gX, [gX[-1, :]], axis=0)
-        gX =  (gX / self.binw)
-
-        gY = copy.deepcopy(freeE.reshape(self.size, self.size))
-        gY = np.diff(gY, axis=1)
-        gY = np.append(gY, gY[:, -1][:, np.newaxis], axis=1)
-        gY =  (gY / self.binw)
-
-        gX = gX[np.newaxis, :, :]
-        gY = gY[np.newaxis, :, :]
-        bsForce = np.zeros((self.ndims, self.size, self.size)) 
-        bsForce[0] = gX
-        bsForce[1] = gY
-        self.estTarget = reshape_estTarget[:, 0].reshape(self.size, self.size)
-        
-        """
-        gX = np.gradient(gX, axis=0)
-        gY = np.gradient(gY, axis=1)
-        gX = gX[np.newaxis, :, :]
-        gY = gY[np.newaxis, :, :]
-        gradient = np.zeros((self.ndims, self.size, self.size)) 
-        gradient[0] = gX 
-        gradient[1] = gY 
-        """
-
-
+      tf.train.Saver().save(sess, "net" + str(self.ndims) + "D" + "/netSaver.ckpt")
 
     tf.reset_default_graph()
 
-    return self.estTarget, bsForce 
+    return self.estTarget
 
 if __name__ == "__main__":
   pass

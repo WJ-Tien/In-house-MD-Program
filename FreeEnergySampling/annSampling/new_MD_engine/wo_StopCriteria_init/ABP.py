@@ -29,37 +29,25 @@ class ABP(object):
     # init coord and vel
     self.current_coord   = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
     self.current_vel     = self.mdInitializer.genVelocity() 
-    
-    self.criteriaCounter = 0 
-    self.criteriaFEBool  = 0
+    # init coord and vel
     
     if self.p["ndims"] == 1:
-      self.colvars_force          = np.zeros(len(self.bins), dtype=np.float64) 
-      self.colvars_FreeE          = np.zeros(len(self.bins), dtype=np.float64) 
-      self.colvars_FreeE_NN       = np.zeros(len(self.bins), dtype=np.float64) 
-      self.colvars_FreeE_prev     = np.zeros(len(self.bins), dtype=np.float64) 
-      self.colvars_FreeE_curr     = np.zeros(len(self.bins), dtype=np.float64) 
-      self.colvars_count          = np.zeros(len(self.bins), dtype=np.float64) 
-      self.colvars_hist           = np.zeros(len(self.bins), dtype=np.float64) 
-      self.criteria_hist          = np.zeros(len(self.bins), dtype=np.float64) 
-      self.criteria_FreeE         = np.zeros(len(self.bins), dtype=np.float64) 
-      self.criteria_prev          = np.zeros(len(self.bins), dtype=np.float64) 
-      self.criteria_curr          = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_force    = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_FreeE    = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_FreeE_NN = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_count    = np.zeros(len(self.bins), dtype=np.float64) 
+      self.colvars_hist     = np.zeros(len(self.bins), dtype=np.float64) 
+      self.temp             = np.zeros(len(self.bins), dtype=np.float64) 
       self.biasingPotentialConv   = np.zeros(len(self.bins), dtype=np.float64)
       self.biasingPotentialFromNN = np.zeros(len(self.bins), dtype=np.float64)
 
     if self.p["ndims"] == 2:
-      self.colvars_force          = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.colvars_FreeE          = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.colvars_FreeE_NN       = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.colvars_FreeE_prev     = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.colvars_FreeE_curr     = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.colvars_count          = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.colvars_hist           = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.criteria_hist          = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.criteria_FreeE         = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.criteria_prev          = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
-      self.criteria_curr          = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_force    = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_FreeE    = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_FreeE_NN = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_count    = np.zeros((self.p["ndims"], len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.colvars_hist     = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
+      self.temp             = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64) 
       self.biasingPotentialConv   = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64)
       self.biasingPotentialFromNN = np.zeros((len(self.bins), len(self.bins)), dtype=np.float64)
 
@@ -84,13 +72,13 @@ class ABP(object):
     if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
 
       if self.p["ndims"] == 1:
-        if self.p["init_frame"] <= self.p["earlyStopCheck"]: # initial sweep
+        if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
           return 0 
         else:
           return self.biasingPotentialFromNN[getIndices(coord_x, self.bins)]
 
       if self.p["ndims"]== 2: 
-        if self.p["init_frame"] <= self.p["earlyStopCheck"]: # initial sweep
+        if self.p["init_frame"] <= self.p["trainingFreq"]: # initial sweep
           return 0 
         else:
           return self.biasingPotentialFromNN[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]  
@@ -98,13 +86,13 @@ class ABP(object):
     elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no":
 
       if self.p["ndims"] == 1:
-        if self.p["init_frame"] <= self.p["earlyStopCheck"]: 
+        if self.p["init_frame"] <= self.p["trainingFreq"]: 
           return 0 
         else:
           return self.biasingPotentialConv[getIndices(coord_x, self.bins)]
 
       if self.p["ndims"]== 2: 
-        if self.p["init_frame"] <= self.p["earlyStopCheck"]:
+        if self.p["init_frame"] <= self.p["trainingFreq"]:
           return 0 
         else:
           return self.biasingPotentialConv[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]  
@@ -114,34 +102,31 @@ class ABP(object):
 
   def _calBiasingForce(self, coord_x, coord_y, d):
 
-    if self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no" or (self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] <= self.p["earlyStopCheck"]):
+    if self.p["abfCheckFlag"] == "yes":
       bsForce = copy.deepcopy(self.colvars_FreeE)
 
-    elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes" and self.p["init_frame"] > self.p["earlyStopCheck"]:
-      bsForce = copy.deepcopy(self.colvars_FreeE_NN)
+      if self.p["ndims"] == 1:
+        bsForce = np.diff(bsForce)
+        bsForce = np.append(bsForce, bsForce[-1])                             # padding to the right legnth
+        bsForce = (bsForce / self.binw)
+        return bsForce[getIndices(coord_x, self.bins)]
 
-    elif self.p["abfCheckFlag"] == "no" and self.p["nnCheckFlag"] == "no":
+      if self.p["ndims"] == 2:
+
+        if d == 0:
+          bsForce = np.diff(bsForce, axis=0)                                  # axis=0 for x; axis=1 for y
+          bsForce = np.append(bsForce, [bsForce[-1, :]], axis=0)              # padding to the right length
+          bsForce = (bsForce / self.binw)
+
+        elif d == 1:
+          bsForce = np.diff(bsForce, axis=1) 
+          bsForce = np.append(bsForce, bsForce[:, -1][:, np.newaxis], axis=1) # padding to the right length
+          bsForce = (bsForce / self.binw)
+
+        return bsForce[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
+
+    else:
       return 0
-
-    if self.p["ndims"] == 1:
-      bsForce = np.diff(bsForce)
-      bsForce = np.append(bsForce, bsForce[-1]) # padding to the right legnth
-      bsForce = (bsForce / self.binw)
-      return bsForce[getIndices(coord_x, self.bins)]
-
-    if self.p["ndims"] == 2:
-
-      if d == 0:
-        bsForce = np.diff(bsForce, axis=0)                     # axis=0 for x; axis=1 for y
-        bsForce = np.append(bsForce, [bsForce[-1, :]], axis=0) # padding to the right length
-        bsForce = (bsForce / self.binw)
-
-      elif d == 1:
-        bsForce = np.diff(bsForce, axis=1) 
-        bsForce = np.append(bsForce, bsForce[:, -1][:, np.newaxis], axis=1) # padding to the right length
-        bsForce = (bsForce / self.binw)
-
-      return bsForce[getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
              
   def _abpDecorator(func):
     def _wrapper(self, coord_x, d, vel, coord_y):
@@ -154,7 +139,26 @@ class ABP(object):
 
   @_abpDecorator
   def getCurrentForce(self, coord_x, d, vel, coord_y): 
-    Fabf = self._calBiasingForce(coord_x, coord_y, d)
+
+    if self.p["abfCheckFlag"] == "no" and self.p["nnCheckFlag"] == "no":
+      Fabf = 0  
+
+    elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no":
+      Fabf = self._calBiasingForce(coord_x, coord_y, d)
+
+    elif self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes":
+
+      if self.p["init_frame"] <= self.p["trainingFreq"]:
+        Fabf = self._calBiasingForce(coord_x, coord_y, d)
+
+      else: # ANN takes over here
+
+        if self.p["ndims"] == 1:
+          Fabf = self.gradient[getIndices(coord_x, self.bins)]
+
+        elif self.p["ndims"] == 2:
+          Fabf = self.gradient[d][getIndices(coord_x, self.bins)][getIndices(coord_y, self.bins)]
+        
     return Fabf
 
   def _probability(self): 
@@ -191,52 +195,33 @@ class ABP(object):
 
   def getCurrentFreeEnergy(self):  
     self.colvars_FreeE = -self.p["kb"] * self.p["temperature"] * np.log(self._probability())
-    self.colvars_FreeE[np.isneginf(self.colvars_FreeE)] = 0.0 # deal with -inf
-    self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0    # deal with  inf
+    self.colvars_FreeE[np.isneginf(self.colvars_FreeE)] = 0.0  # deal with -inf
+    self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0     # deal with  inf
     self.colvars_FreeE = paddingRightMostBin(self.colvars_FreeE)
-
 
   def _updateBiasingPotential(self):
     self.biasingPotentialFromNN = -copy.deepcopy(self.colvars_FreeE_NN) # phi(x) = -Fhat(x); for ANN
     self.biasingPotentialConv = -copy.deepcopy(self.colvars_FreeE)      # phi(x) = -Fhat(x); for non-ANN
 
-  def _criteriaModCurr(self):
-    if self.criteriaCounter <= 1:
-      self.criteria_prev = self._probability()
-    else:
-      self.criteria_curr = self._probability()
-
-  def _criteriaModPrev(self):
-      self.criteria_prev = copy.deepcopy(self.criteria_curr)
-
-  def _criteriaCheck(self, holder, prev, curr, msERROR):
-    # MSE first TODO scaled MSE
-    if self.criteriaCounter >= 2:
-      holder = ((prev - curr)/curr) ** 2 
-      holder[np.isnan(holder)] = 0.0   
-      holder[np.isinf(holder)] = 0.0    
-      holder[np.isneginf(holder)] = 0.0  
-      with open("holder.dat", "a") as fout:
-        fout.write(str(self.p["init_frame"]) + "\n")
-        fout.write(str(holder) + "\n")
-      holder = holder[holder > msERROR]
-      return not holder.size 
-    return False
+  def criteriaCheck(self):
+    pass
 
   def _learningProxy(self):
     if self.p["nnCheckFlag"] == "yes":
-      output = trainingANN("loss.dat", "hyperparam.dat", self.p["ndims"], len(self.bins), self.binw) 
+      if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0: 
+        output = trainingANN("loss.dat", "hyperparam.dat", self.p["ndims"], len(self.bins), self.binw) 
 
-      if self.p["init_frame"] < self.p["earlyStopCheck"] * self.p["switchSteps"]:
-        self.colvars_FreeE_NN , _ = \
-        output.training(self.colvars_coord, self.colvars_FreeE, self.p["earlyLearningRate"], self.p["earlyRegularCoeff"], self.p["earlyEpoch"], self.p["nnOutputFreq"]) 
+        if self.p["init_frame"] < self.p["trainingFreq"] * self.p["switchSteps"]:
+          self.colvars_FreeE_NN, self.gradient = \
+          output.training(self.colvars_coord, self.colvars_FreeE, self.p["earlyLearningRate"], self.p["earlyRegularCoeff"], self.p["earlyEpoch"], self.p["nnOutputFreq"]) 
 
-      else:
-        self.colvars_FreeE_NN , _ = \
-        output.training(self.colvars_coord, self.colvars_FreeE, self.p["lateLearningRate"], self.p["lateRegularCoeff"], self.p["lateEpoch"], self.p["nnOutputFreq"]) 
+        else:
+          self.colvars_FreeE_NN, self.gradient = \
+          output.training(self.colvars_coord, self.colvars_FreeE, self.p["lateLearningRate"], self.p["lateRegularCoeff"], self.p["lateEpoch"], self.p["nnOutputFreq"]) 
+
 
   def _accumulateColvarsHist(self):
-    for n in range(self.p["nparticle"]):
+    for n in range(self.p["nparticle"]): #TODO
       if self.p["ndims"] == 1:
         self.colvars_hist[getIndices(self.current_coord[n][0], self.bins)] += 1
       elif self.p["ndims"] == 2:
@@ -250,15 +235,15 @@ class ABP(object):
     init_real_world_time = time.time()
 
     # PRE-PROCESSING
-    lammpstrj      = open("m%.1f_T%.5f_gamma%.2f_len_%d.lammpstrj" % (self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
-    forceOnCVs     = open("Force_m%.1fT%.5f_gamma%.2f_len_%d.dat"  % (self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
-    freeEOnCVs     = open("FreeE_m%.1fT%.5f_gamma%.2f_len_%d.dat"  % (self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
-    histogramOnCVs = open("Hist_m%.1fT%.5f_gamma%.2f_len_%d.dat"   % (self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
-    annABP         = open("instantFreeEWANN_" + str(self.p["ndims"])  + "D.dat", "a")
+    lammpstrj      = open("m%.1f_T%.5f_gamma%.1f_len_%d.lammpstrj" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
+    forceOnCVs     = open("Force_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
+    freeEOnCVs     = open("FreeE_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
+    histogramOnCVs = open("Hist_m%.1fT%.5f_gamma%.1f_len_%d.dat" %(self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"]), "w")
+    annABP         = open("instantFreeEWANN_" + str(self.p["ndims"]) + "D.dat", "a")
     convABP        = open("instantFreeEWOANN_" + str(self.p["ndims"]) + "D.dat", "a")
     tempHist       = open("tempHist.dat", "a")
-    tempBsp        = open("tempBsp.dat",  "a")
-    earlyFreeE     = open("earlyFreeE.dat", "a")
+    tempBsp        = open("tempBsp.dat", "a")
+
 
     # START of the simulation
     self.IO.writeParams(self.p)
@@ -270,50 +255,35 @@ class ABP(object):
       self.p["init_frame"] += 1
       self.IO.printCurrentStatus(self.p["init_frame"], init_real_world_time)  
       self.mdInitializer.checkTargetTemperature(self.current_vel, self.p["init_frame"], self.p["total_frame"])
-    
-      # early stop
-      if self.p["init_frame"] % self.p["earlyStopCheck"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes":
-        self.criteriaCounter += 1 
-        self._criteriaModCurr()
 
-        if self._criteriaCheck(self.criteria_hist, self.criteria_prev, self.criteria_curr, self.p["trainingCriteria"]):
-          self.getCurrentFreeEnergy()
-
-          if self.p["nnCheckFlag"] == "no": 
-            self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
-
-          else:
-            self._learningProxy()
-            self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], earlyFreeE)
-
-          self._updateBiasingPotential()
-          self._criteriaModPrev()
-
-          # retrieve FE
-          if self.criteriaFEBool % 2 == 0:
-            if self.p["nnCheckFlag"] == "yes":
-              self.colvars_FreeE_prev = copy.deepcopy(self.colvars_FreeE_NN)
-            else:
-              self.colvars_FreeE_prev = copy.deepcopy(self.colvars_FreeE)
-          else:
-            if self.p["nnCheckFlag"] == "yes":
-              self.colvars_FreeE_curr = copy.deepcopy(self.colvars_FreeE_NN)
-            else:
-              self.colvars_FreeE_curr = copy.deepcopy(self.colvars_FreeE)
-
-          self.criteriaFEBool += 1
-          
-          # To clean invalid data (inf, nan), we let some data == 0, this would cause issues when evaluating criteria, so we should at least do twice
-          if self._criteriaCheck(self.criteria_FreeE, self.colvars_FreeE_prev, self.colvars_FreeE_curr, self.p["simlEndCriteria"]) and self.criteriaFEBool >= 2:
-            break
-          # retrieve FE
+      if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["init_frame"] != 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "yes": # for ANN-ABP
+        self.getCurrentFreeEnergy()
+        self._learningProxy()
+        self._updateBiasingPotential()
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], annABP)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], convABP)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_hist/np.sum(self.colvars_hist), self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempHist)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.biasingPotentialFromNN, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempBsp)
+        if self.p["init_frame"] != self.p["total_frame"]: 
           self._resetColvarsHist()
+      
+
+      if self.p["init_frame"] % self.p["trainingFreq"] == 0 and self.p["abfCheckFlag"] == "yes" and self.p["nnCheckFlag"] == "no" and self.p["init_frame"] != 0: # for regular ABP
+        self.getCurrentFreeEnergy()
+        self._updateBiasingPotential()
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], convABP)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_hist/np.sum(self.colvars_hist), self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempHist)
+        self.IO.certainFrequencyOutput(self.colvars_coord, self.biasingPotentialConv, self.colvars_hist, self.p["init_frame"], self.p["certainOutFreq"], tempBsp)
+        if self.p["init_frame"] != self.p["total_frame"]:
+          self._resetColvarsHist() 
+
+      if self.p["init_frame"] == self.p["total_frame"]: 
+        self.getCurrentFreeEnergy()
 
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
+
       self._accumulateColvarsHist()
-
       self.IO.lammpsFormatColvarsOutput(self.p["ndims"], self.p["nparticle"], self.p["half_boxboundary"], self.p["init_frame"], self.current_coord, lammpstrj, self.p["writeFreq"]) 
-
     # END of the simulation
 
     # POST-PROCESSING
@@ -342,11 +312,12 @@ class ABP(object):
         s.render(self.colvars_FreeE_NN, name=str(self.p["abfCheckFlag"] + "_" + self.p["nnCheckFlag"] + "_" + "FEsurface_NN" + str(self.p["ndims"])+"D"))
 
     # Close files, mdkir and mv files
-    self.IO.closeAllFiles(lammpstrj, forceOnCVs, freeEOnCVs, histogramOnCVs, annABP, convABP, tempHist, tempBsp, earlyFreeE)
+    self.IO.closeAllFiles(lammpstrj, forceOnCVs, freeEOnCVs, histogramOnCVs, annABP, convABP, tempHist, tempBsp)
     self.IO.makeDirAndMoveFiles(self.p["ndims"], self.p["mass"], self.p["temperature"], self.p["frictCoeff"], self.p["total_frame"],\
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
 
+
+
 if __name__ == "__main__":
-  #ABP("in.ABP_2D").mdrun()
-  ABP("in.ABP_1D").mdrun()
+  ABP("in.ABP").mdrun()

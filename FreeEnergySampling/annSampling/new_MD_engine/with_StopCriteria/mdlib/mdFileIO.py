@@ -86,6 +86,9 @@ class mdFileIO(object):
             elif line[0] == "earlyStopCheck":
               self.params["earlyStopCheck"] = int(line[2])
 
+            elif line[0] == "shiftConst":
+              self.params["shiftConst"] = float(line[2])
+
             elif line[0] == "binNum":
               self.params["binNum"] = int(line[2])
 
@@ -129,19 +132,22 @@ class mdFileIO(object):
   def writeParams(self, params):
 
     with open("simulation_params.dat", "w") as fout:
-      fout.write("#" + " " + "thermoStatFlag" + " " + str(params["thermoStatFlag"]) + "\n")
-      fout.write("#" + " " + "ndim"           + " " + str(params["ndims"])          + "\n")
-      fout.write("#" + " " + "nparticle"      + " " + str(params["nparticle"])      + "\n")
-      fout.write("#" + " " + "binNumber"      + " " + str(params["binNum"])         + "\n")
-      fout.write("#" + " " + "temperature"    + " " + str(params["temperature"])    + "\n") 
-      fout.write("#" + " " + "mass"           + " " + str(params["mass"])           + "\n") 
-      fout.write("#" + " " + "frictCoeff"     + " " + str(params["frictCoeff"])     + "\n") 
-      fout.write("#" + " " + "total_frame"    + " " + str(params["total_frame"])    + "\n") 
-      fout.write("#" + " " + "time_step"      + " " + str(params["time_step"])      + "\n") 
-      fout.write("#" + " " + "abfCheckFlag"   + " " + str(params["abfCheckFlag"])   + "\n")
-      fout.write("#" + " " + "nnCheckFlag"    + " " + str(params["nnCheckFlag"])    + "\n")
-      fout.write("#" + " " + "certainOutFreq" + " " + str(params["certainOutFreq"]) + "\n")
-      fout.write("#" + " " + "trainingFreq"   + " " + str(params["trainingFreq"])   + "\n")
+      fout.write("#" + " " + "thermoStatFlag"   + " " + str(params["thermoStatFlag"])   + "\n")
+      fout.write("#" + " " + "ndim"             + " " + str(params["ndims"])            + "\n")
+      fout.write("#" + " " + "nparticle"        + " " + str(params["nparticle"])        + "\n")
+      fout.write("#" + " " + "binNumber"        + " " + str(params["binNum"])           + "\n")
+      fout.write("#" + " " + "temperature"      + " " + str(params["temperature"])      + "\n") 
+      fout.write("#" + " " + "mass"             + " " + str(params["mass"])             + "\n") 
+      fout.write("#" + " " + "frictCoeff"       + " " + str(params["frictCoeff"])       + "\n") 
+      fout.write("#" + " " + "total_frame"      + " " + str(params["total_frame"])      + "\n") 
+      fout.write("#" + " " + "time_step"        + " " + str(params["time_step"])        + "\n") 
+      fout.write("#" + " " + "abfCheckFlag"     + " " + str(params["abfCheckFlag"])     + "\n")
+      fout.write("#" + " " + "nnCheckFlag"      + " " + str(params["nnCheckFlag"])      + "\n")
+      fout.write("#" + " " + "certainOutFreq"   + " " + str(params["certainOutFreq"])   + "\n")
+      fout.write("#" + " " + "trainingFreq"     + " " + str(params["trainingFreq"])     + "\n")
+      fout.write("#" + " " + "trainingCriteria" + " " + str(params["trainingCriteria"]) + "\n")
+      fout.write("#" + " " + "simlEndCriteria"  + " " + str(params["simlEndCriteria"])  + "\n")
+      fout.write("#" + " " + "earlyStopCheck"   + " " + str(params["earlyStopCheck"])   + "\n")
 
   def _lammpsFileHeader(self, nparticle, half_boxboundary, frame, lammpstrj):
 

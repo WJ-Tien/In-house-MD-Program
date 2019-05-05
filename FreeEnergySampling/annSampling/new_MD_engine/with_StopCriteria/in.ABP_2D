@@ -1,31 +1,29 @@
 ; md
 
 thermoStatFlag    = langevin
-ndims             = 1
+ndims             = 2
 kb                = 1
 mass              = 0.1
 nparticle         = 1 
 temperature       = 4.0 
 frictCoeff        = 2.0 
-half_boxboundary  = 3.141592653589793 
-binNum            = 360 
-;half_boxboundary  = 2 
-;binNum            = 40 
+half_boxboundary  = 2 
+binNum            = 40 
 init_frame        = 0
 init_time         = 0.
-total_frame       = 7500000
+total_frame       = 18000000
 time_step         = 0.005
 writeFreq         = 500
-certainOutFreq    = 4000000 
+certainOutFreq    = 1000000 
 
 trainingCriteria  = 0.05 
-simlEndCriteria   = 0.05 
-earlyStopCheck    = 750000
+simlEndCriteria   = 0.05
+earlyStopCheck    = 3000000
 
 ; ann
 nnOutputFreq      = 100 
 abfCheckFlag      = yes
-nnCheckFlag       = no 
+nnCheckFlag       = yes 
 
 earlyLearningRate = 0.025 
 earlyEpoch        = 3500 
@@ -33,7 +31,7 @@ earlyRegularCoeff = 0.00025
 
 switchSteps       = 0 
 
-trainingFreq      = 750000
-lateLearningRate  = 0.020
+trainingFreq      = 2500000 
+lateLearningRate  = 0.0199
 lateEpoch         = 10000
 lateRegularCoeff  = 0.00000

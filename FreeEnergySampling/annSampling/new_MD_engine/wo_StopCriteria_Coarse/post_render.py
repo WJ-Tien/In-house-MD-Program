@@ -8,7 +8,7 @@ FE = np.zeros((41,41))
 Force = np.zeros((2, 41,41))
 Hist = np.zeros((41,41)) 
 
-with open("FreeE_m1.0T2.00000_gamma0.1_len_36000000.dat" , "r") as fin:
+with open("FreeE_m0.1T4.00000_gamma0.5_len_18000000.dat" , "r") as fin:
   i = 0
   j = 0
   for line in fin:
@@ -19,7 +19,7 @@ with open("FreeE_m1.0T2.00000_gamma0.1_len_36000000.dat" , "r") as fin:
       i += 1
       j = 0
     
-with open("Hist_m1.0T2.00000_gamma0.1_len_36000000.dat" , "r") as fin:
+with open("Hist_m0.1T4.00000_gamma0.5_len_18000000.dat" , "r") as fin:
   i = 0
   j = 0
   for line in fin:
@@ -30,7 +30,7 @@ with open("Hist_m1.0T2.00000_gamma0.1_len_36000000.dat" , "r") as fin:
       i += 1
       j = 0
 
-with open("Force_m1.0T2.00000_gamma0.1_len_36000000.dat" , "r") as fin:
+with open("Force_m0.1T4.00000_gamma0.5_len_18000000.dat" , "r") as fin:
   i = 0
   j = 0
   for line in fin:
