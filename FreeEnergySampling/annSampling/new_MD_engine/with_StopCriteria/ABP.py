@@ -307,8 +307,8 @@ class ABP(object):
             break
           # retrieve FE
           self._resetColvarsHist()
-
-        self._criteriaModPrev()
+        if self.criteriaCounter > 1:
+          self._criteriaModPrev()
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
       self._accumulateColvarsHist()
 

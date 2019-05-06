@@ -238,8 +238,8 @@ class ABF(object):
           if self._criteriaCheck(self.criteria_FreeE, self.colvars_FreeE_prev, self.colvars_FreeE_curr, self.p["simlEndCriteria"]) and self.criteriaFEBool >= 2:
             break
           # retrieve FE
-
-        self._criteriaModPrev()
+        if self.criteriaCounter > 1:
+          self._criteriaModPrev()
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
       self._accumulateColvarsHist()
 
