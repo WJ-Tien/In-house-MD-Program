@@ -225,7 +225,6 @@ class ABF(object):
             self.getCurrentFreeEnergy() 
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
 
-          self._criteriaModPrev()
 
           # retrieve FE
           if self.criteriaFEBool % 2 == 0:
@@ -240,6 +239,7 @@ class ABF(object):
             break
           # retrieve FE
 
+        self._criteriaModPrev()
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
       self._accumulateColvarsHist()
 
@@ -282,5 +282,5 @@ class ABF(object):
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
 if __name__ == "__main__":
-  #ABF("in.ABF_1D").mdrun()
-  ABF("in.ABF_2D").mdrun()
+  ABF("in.ABF_1D").mdrun()
+  #ABF("in.ABF_2D").mdrun()

@@ -287,7 +287,6 @@ class ABP(object):
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE_NN, self.colvars_hist, self.p["init_frame"], earlyFreeE)
 
           self._updateBiasingPotential()
-          self._criteriaModPrev()
 
           # retrieve FE
           if self.criteriaFEBool % 2 == 0:
@@ -309,6 +308,7 @@ class ABP(object):
           # retrieve FE
           self._resetColvarsHist()
 
+        self._criteriaModPrev()
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
       self._accumulateColvarsHist()
 
@@ -348,5 +348,5 @@ class ABP(object):
 
 
 if __name__ == "__main__":
-  #ABP("in.ABP_2D").mdrun()
-  ABP("in.ABP_1D").mdrun()
+  ABP("in.ABP_2D").mdrun()
+  #ABP("in.ABP_1D").mdrun()
