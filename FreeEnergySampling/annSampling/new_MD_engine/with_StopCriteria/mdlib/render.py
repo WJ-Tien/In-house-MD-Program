@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mdlib.customMathFunc import forcex2D, forcey2D, Usurface2D, boltz2D, Usurface1D, forcex1D, boltz1D, freeE1D, freeE2D
 
-# This code aims at rendering 1d x-y plots and 2d contour plots for Langevin toy model
-
 class rendering(object):
 
   def __init__(self, ndims, half_boxboundary, binNum, temperature=None):
@@ -77,6 +75,6 @@ if __name__ == "__main__":
   #s.render(boltz1D, name="boltz1D")
   #s = rendering(ndims=1, half_boxboundary=np.pi, binNum=361)
   #s.render(forcex1D  ,name="forcex1D")
-  s = rendering(ndims=2, half_boxboundary=2, binNum=40, temperature=4)
-  s.render(freeE2D, name="freeE2D")
+  #s = rendering(ndims=2, half_boxboundary=2, binNum=40, temperature=4)
+  #s.render(freeE2D, name="freeE2D")
 

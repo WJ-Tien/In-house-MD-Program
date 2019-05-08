@@ -174,13 +174,6 @@ class mdFileIO(object):
           if ndims == 2:
             lammpstrj.write(str(i) + " " + str(1) + " " + str(coord[i][0]) + " " + str(coord[i][1]) + " " + str(0) + "\n") 
 
-  def _pdbFileHeader(self): #TODO
-    pass
-
-  def pdbFormatColvarsOutput(self, coord): #TODO
-    #"%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f"
-    pass
-
   def propertyOnColvarsOutput(self, colvars_coord, colvars_property, colvars_count, fileOutProperty): 
 
     colvars_coord = np.array(colvars_coord)
@@ -206,7 +199,7 @@ class mdFileIO(object):
           fileOutProperty.write(str(colvars_coord[j]) + " ")
           fileOutProperty.write(str(colvars_property[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_property[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
   
-  def certainFrequencyOutput(self, colvars_coord, colvars_property, colvars_count, frame, fileOutProperty): #TODO
+  def certainFrequencyOutput(self, colvars_coord, colvars_property, colvars_count, frame, fileOutProperty): 
 
     colvars_coord = np.array(colvars_coord)
     colvars_property = np.array(colvars_property)
@@ -219,7 +212,6 @@ class mdFileIO(object):
         fileOutProperty.write(str(colvars_coord[i]) + " ")
         fileOutProperty.write(str(colvars_property[i]) + " " + str(colvars_count[i]) + "\n")  
       fileOutProperty.write("\n")
-
 
     elif len(colvars_property.shape) == 2: # 2D
       for i in range(len(colvars_coord)):
@@ -236,7 +228,6 @@ class mdFileIO(object):
           fileOutProperty.write(str(colvars_coord[j]) + " ")
           fileOutProperty.write(str(colvars_property[0][i][j]) + " " + str(colvars_count[0][i][j]) + " " +str(colvars_property[1][i][j]) + " " + str(colvars_count[1][i][j]) + "\n")  
       fileOutProperty.write("\n")
-
   
   def makeDirAndMoveFiles(self, ndims, mass, temperature, frictCoeff, total_frame, abfCheckFlag, nnCheckFlag, moduleName):
 
@@ -247,7 +238,6 @@ class mdFileIO(object):
     mvFileString = "mv" + " " + "*.dat *.lammpstrj *.png" + " " + dirName + " "  
     mvFile = Popen(mvFileString, shell=True) 
     mvFile.wait()
-        
 
   def printCurrentStatus(self, frame, init_real_world_time):
     print("Frame %d with Time %f" % (frame, time.time() - init_real_world_time))
@@ -257,14 +247,4 @@ class mdFileIO(object):
       f.close()
 
 if __name__ == "__main__":
-  a = mdFileIO()
-  #b = a.readParamFile("in.mdp")
-  b = np.zeros((1, 1))
-  print(b)
-  f = open("test.lammpstrj", "w")
-  a.lammpsFormatColvarsOutput(1, 1, 3, 0, b, f) 
-  f.close()
-  #a.writeParams(b)
-  #print(len(a))
-  #print(a)
-  
+  pass 

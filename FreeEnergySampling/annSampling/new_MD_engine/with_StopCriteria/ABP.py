@@ -195,7 +195,6 @@ class ABP(object):
     self.colvars_FreeE[np.isinf(self.colvars_FreeE)] = 0.0    # deal with  inf
     self.colvars_FreeE = paddingRightMostBin(self.colvars_FreeE)
 
-
   def _updateBiasingPotential(self):
     self.biasingPotentialFromNN = -copy.deepcopy(self.colvars_FreeE_NN) # phi(x) = -Fhat(x); for ANN
     self.biasingPotentialConv = -copy.deepcopy(self.colvars_FreeE)      # phi(x) = -Fhat(x); for non-ANN
@@ -210,15 +209,12 @@ class ABP(object):
       self.criteria_prev = copy.deepcopy(self.criteria_curr)
 
   def _criteriaCheck(self, holder, prev, curr, msERROR):
-    # MSE first TODO scaled MSE
+
     if self.criteriaCounter >= 2:
       holder = ((prev - curr)/curr) ** 2 
       holder[np.isnan(holder)] = 0.0   
       holder[np.isinf(holder)] = 0.0    
       holder[np.isneginf(holder)] = 0.0  
-      with open("holder.dat", "a") as fout:
-        fout.write(str(self.p["init_frame"]) + "\n")
-        fout.write(str(holder) + "\n")
       holder = holder[holder > msERROR]
       return not holder.size 
     return False
@@ -307,8 +303,10 @@ class ABP(object):
             break
           # retrieve FE
           self._resetColvarsHist()
+
         if self.criteriaCounter > 1:
           self._criteriaModPrev()
+
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
       self._accumulateColvarsHist()
 

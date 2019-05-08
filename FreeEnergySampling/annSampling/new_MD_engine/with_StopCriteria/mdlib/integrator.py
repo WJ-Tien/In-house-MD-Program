@@ -9,7 +9,7 @@ def integrator(ndims, cv, force, half_boxboundary, frame, shiftConst, outputfile
   force = np.array(force)
   intg_interval = abs(cv[0] - cv[1])
 
-  if ndims == 1: # OK
+  if ndims == 1: 
 
     accIntg       = 0
     FE            = np.zeros(force.shape[0]) 
@@ -31,7 +31,7 @@ def integrator(ndims, cv, force, half_boxboundary, frame, shiftConst, outputfile
 
 #---------------------------------------------------------------------#
 
-  if ndims == 2: # probably OK? 
+  if ndims == 2:
 
     factor   = intg_interval * 0.5 
     FE_X     = 0
@@ -54,7 +54,6 @@ def integrator(ndims, cv, force, half_boxboundary, frame, shiftConst, outputfile
       for j in range(force.shape[2]):
         FE[i][j] = (acc_at_x[i] + acc_at_y[i][j]) * factor
 
-    #FE += 29.5 
     FE += shiftConst 
     FE = paddingRightMostBin(FE)
 

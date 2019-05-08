@@ -2,10 +2,6 @@
 import numpy as np
 from sympy import *
 
-# TODO 2019/4
-def integrator():
-  pass
-
 def myRound(a):
   if (a - np.floor(a)) < 0.5:
     return np.floor(a)

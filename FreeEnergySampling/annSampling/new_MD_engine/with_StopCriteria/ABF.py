@@ -29,7 +29,6 @@ class ABF(object):
     # init coord and vel 
     self.current_coord   = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
     self.current_vel     = self.mdInitializer.genVelocity() 
-    # init coord and vel
 
     self.criteriaCounter = 0 
     self.criteriaFEBool  = 0
@@ -238,8 +237,10 @@ class ABF(object):
           if self._criteriaCheck(self.criteria_FreeE, self.colvars_FreeE_prev, self.colvars_FreeE_curr, self.p["simlEndCriteria"]) and self.criteriaFEBool >= 2:
             break
           # retrieve FE
+
         if self.criteriaCounter > 1:
           self._criteriaModPrev()
+
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
       self._accumulateColvarsHist()
 

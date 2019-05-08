@@ -67,10 +67,6 @@ class mdEngine(object):
         current_vel[n][0]    = current_vel[n][0] + (0.5 / self.mass) * (current_force_x + current_force_x) * self.time_step
         current_vel[n][1]    = current_vel[n][1] + (0.5 / self.mass) * (current_force_y + current_force_y) * self.time_step
 
-  def velocityVerletLJ(self, current_coord, current_vel):
-    # for Lennard Jones potential
-    pass
-
 if __name__ == "__main__":
   pass
       
