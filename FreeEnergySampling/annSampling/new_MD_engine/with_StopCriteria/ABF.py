@@ -29,6 +29,7 @@ class ABF(object):
     # init coord and vel 
     self.current_coord   = np.zeros((self.p["nparticle"], self.p["ndims"]), dtype=np.float64)
     self.current_vel     = self.mdInitializer.genVelocity() 
+    # init coord and vel
 
     self.criteriaCounter = 0 
     self.criteriaFEBool  = 0
@@ -218,11 +219,14 @@ class ABF(object):
           if self.p["nnCheckFlag"] == "no": 
             self.getCurrentFreeEnergy() 
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
+            self.temp = paddingRightMostBin(self.colvars_force / self.colvars_count)
+            self.IO.certainFrequencyOutput(self.colvars_coord, self.temp, self.colvars_count, self.p["init_frame"], woANN)
 
           else:
             self._learningProxy()
             self.getCurrentFreeEnergy() 
             self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_FreeE, self.colvars_hist, self.p["init_frame"], earlyFreeE)
+            self.IO.certainFrequencyOutput(self.colvars_coord, self.colvars_force_NN, self.colvars_count, self.p["init_frame"], withANN)
 
 
           # retrieve FE
@@ -237,10 +241,8 @@ class ABF(object):
           if self._criteriaCheck(self.criteria_FreeE, self.colvars_FreeE_prev, self.colvars_FreeE_curr, self.p["simlEndCriteria"]) and self.criteriaFEBool >= 2:
             break
           # retrieve FE
-
         if self.criteriaCounter > 1:
           self._criteriaModPrev()
-
       self.mdInitializer.velocityVerletSimple(self.current_coord, self.current_vel) 
       self._accumulateColvarsHist()
 
@@ -283,5 +285,5 @@ class ABF(object):
                                 self.p["abfCheckFlag"], self.p["nnCheckFlag"], __class__.__name__)
 
 if __name__ == "__main__":
-  ABF("in.ABF_1D").mdrun()
-  #ABF("in.ABF_2D").mdrun()
+  #ABF("in.ABF_1D").mdrun()
+  ABF("in.ABF_2D").mdrun()
