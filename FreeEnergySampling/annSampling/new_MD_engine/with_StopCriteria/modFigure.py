@@ -41,12 +41,14 @@ def mainplt(fig, arrangement):
   ax.spines['left'].set_color('none')
   ax.spines['right'].set_color('none')
   ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+  ax.set_title("Two-Dimensional ABF", fontsize=20, y=1.01)
+  fig.suptitle("Free Energy Landscape", fontsize=15,x=0.509, y=0.85, color="blue")
 
   if arrangement == "vertical": # TODO
     ax.set_xlabel("Cartesian coordinate X", fontsize=20, labelpad=20)
 
   if arrangement == "horizontal":
-    ax.set_ylabel("Cartesian coordinate Y", fontsize=20, labelpad=20)
+    ax.set_ylabel("Cartesian coordinate Y", fontsize=15, labelpad=20)
 
 def contourplt(fig, loc, CVX, CVY, input_arr, tname, arrangement):
   """ the subplots """
@@ -54,10 +56,10 @@ def contourplt(fig, loc, CVX, CVY, input_arr, tname, arrangement):
   ax = fig.add_subplot(loc, aspect='equal') 
 
   ax.tick_params(labelsize=12)
-  ax.set_title(tname, fontsize=20, y=1.04)
+  ax.set_title(tname, fontsize=15, y=1.04)
   cs = ax.contourf(CVX, CVY, input_arr, 8, cmap=plt.cm.plasma)
   R  = ax.contour(CVX, CVY, input_arr, 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
-  ax.clabel(R, inline=True, fontsize=8.5)
+  ax.clabel(R, inline=True, fontsize=7.5)
 
   # align the colorbar to the subplot
   cb = plt.colorbar(cs, fraction=0.046, pad=0.04) 
@@ -69,11 +71,15 @@ def contourplt(fig, loc, CVX, CVY, input_arr, tname, arrangement):
     ax.set_ylabel("Cartesian coordinate Y", fontsize=20, labelpad=8)
 
   if arrangement == "horizontal":
-    plt.subplots_adjust(wspace=0.30) 
-    ax.set_xlabel("Cartesian coordinate X", fontsize=20, labelpad=8)
+    plt.subplots_adjust(wspace=0.40) 
+    ax.set_xlabel("Cartesian coordinate X", fontsize=15, labelpad=8)
 
 if __name__ == "__main__":
   from sys import argv
+
+  if len(argv) < 2:
+    print("h or v")
+    exit(0)
 
   # generate CV
   CVX      = np.linspace(-2, 2, 41)
@@ -81,16 +87,20 @@ if __name__ == "__main__":
   CVX, CVY = np.meshgrid(CVX, CVY, indexing="ij")
 
   # read input 
-  noannFS  = read2D("Force_m0.1T4.000_gamma0.5000_len_5600000_yes_no.dat", "fs")
-  annFS    = read2D("Force_m0.1T4.000_gamma0.5000_len_5600000_yes_yes.dat", "fs")
+  #noannFS  = read2D("Force_m0.1T4.000_gamma0.5000_len_5600000_yes_no.dat", "fs")
+  #annFS    = read2D("Force_m0.1T4.000_gamma0.5000_len_5600000_yes_yes.dat", "fs")
+  annFES   = read2D("2D_ABF_yes_yes.dat")
+  idealFES = read2D("FreeE_2D_T4.dat")
+  noannFES = read2D("2D_ABF_yes_no.dat")
 
   # render contour plots
   if argv[1] == "h": 
     arrangement = "horizontal"
-    fig = plt.figure(figsize=(12, 6))
+    fig = plt.figure(figsize=(14, 6))
     mainplt(fig, arrangement)
-    contourplt(fig, 121, CVX, CVY, noannFS[0], "Force along X", arrangement)
-    contourplt(fig, 122, CVX, CVY, noannFS[1], "Force along Y", arrangement)
+    contourplt(fig, 131, CVX, CVY, annFES, "ANN-ABF", arrangement)
+    contourplt(fig, 132, CVX, CVY, idealFES, "Ideal Landscape", arrangement)
+    contourplt(fig, 133, CVX, CVY, noannFES, "Regular ABF", arrangement)
 
   if argv[1] == "v": 
     arrangement = "vertical"
