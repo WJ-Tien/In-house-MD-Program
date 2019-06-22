@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def readFile(f, ndims, fflag=False):
+def readFile(f, ndims, fflag=False, ideal=False):
   i = 0
   j = 0
   MAGIC = 41
@@ -46,7 +46,10 @@ def readFile(f, ndims, fflag=False):
           CV_2D[0][i][j]    = float(line[0])
           CV_2D[0][i][j]    = float(line[1])
           Force_2D[0][i][j] = float(line[2])
-          Force_2D[1][i][j] = float(line[3])
+          if ideal:
+            Force_2D[1][i][j] = float(line[3])
+          else:
+            Force_2D[1][i][j] = float(line[4])
           j += 1
           if j == MAGIC:
             i += 1
@@ -99,21 +102,23 @@ def abs_L1_loss(ref, tg):
   return abs(tg - ref)
 
 
-def contourplt(fig, loc, CVX, CVY, input_arr, tname):
+def contourplt(fig, loc, CVX, CVY, input_arr, tname, pname):
   """ the subplots """
   # aspect=equal to ensure to render the square plot
   ax = fig.add_subplot(loc, aspect='equal') 
 
-  ax.tick_params(labelsize=12)
-  ax.set_title(tname, fontsize=15, y=1.04)
+  ax.tick_params(labelsize=15)
+  ax.set_title(tname, fontsize=20, y=1.04)
   cs = ax.contourf(CVX, CVY, input_arr, 8, cmap=plt.cm.plasma)
   R  = ax.contour(CVX, CVY, input_arr, 8, colors='black', linewidth=.25, linestyles="solid", extend="both")
-  ax.clabel(R, inline=True, fontsize=7.5)
+  ax.set_xlabel("X", fontsize=20, labelpad=15)
+  ax.set_ylabel("Y", fontsize=20, labelpad=15)
+  #ax.clabel(R, inline=True, fontsize=7.5)
 
   # align the colorbar to the subplot
   cb = plt.colorbar(cs, fraction=0.046, pad=0.04) 
-  cb.ax.tick_params(labelsize=12)
-  plt.savefig("contour.png")
+  cb.ax.tick_params(labelsize=15)
+  plt.savefig(pname)
 
 if __name__ == "__main__":
 
@@ -128,16 +133,18 @@ if __name__ == "__main__":
   ndims      = int(argv[4])
 
   if argv[1] == "f":
-    CV, ref = readFile(idealFile, ndims , True)  # ideal f
+    CV, ref = readFile(idealFile, ndims , True, True)  # ideal f
     _, tg   = readFile(targetFile, ndims , True) # target f
     loss = abs_L1_loss(ref, tg)
     writeFile("abs_L1_loss_force.dat", CV, loss, ndims, True)
     if ndims == 2:
-      fig = plt.figure(figsize=(8, 6))
+      fig = plt.figure(figsize=(10, 8))
       tmpCVX = np.linspace(-2, 2, 41)
       tmpCVY = np.linspace(-2, 2, 41)
       CVX, CVY = np.meshgrid(tmpCVX, tmpCVY, indexing="ij")
-      contourplt(fig, 111, CVX, CVY, loss, "ANN-ABF")
+      contourplt(fig, 111, CVX, CVY, loss[0], "abs L1 Loss of $\mathregular{f_x}$", "fx.png")
+      plt.gcf().clear()
+      contourplt(fig, 111, CVX, CVY, loss[1], "abs L1 Loss of $\mathregular{f_y}$", "fy.png")
        
   if argv[1] == "fes":
     CV, ref = readFile(idealFile, ndims , False)  # ideal fes
@@ -145,10 +152,10 @@ if __name__ == "__main__":
     loss = abs_L1_loss(ref, tg)
     writeFile("abs_L1_loss_FES.dat", CV, loss, ndims, False)
     if ndims == 2:
-      fig = plt.figure(figsize=(8, 6))
+      fig = plt.figure(figsize=(10, 8))
       tmpCVX = np.linspace(-2, 2, 41)
       tmpCVY = np.linspace(-2, 2, 41)
       CVX, CVY = np.meshgrid(tmpCVX, tmpCVY, indexing="ij")
-      contourplt(fig, 111, CVX, CVY, loss, "ANN-ABF")
+      contourplt(fig, 111, CVX, CVY, loss, "abs L1 Loss of Free Energy", "FreeE.png")
 
 
