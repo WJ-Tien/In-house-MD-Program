@@ -4,7 +4,7 @@
 ### What's inside 
 ##### Regular MD Routine
 * Regular Newtonian / Langevin MD
-##### Advanced Free Energy Sampling Calculation
+##### Advanced Sampling for Free Energy Calculation
 * Adaptive biasing force method 
 * Adaptive biasing force method with artificial neural network 
 * Integrator for adaptive biasing force method
