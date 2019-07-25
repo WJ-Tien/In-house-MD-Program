@@ -7,5 +7,3 @@
 ### colvars_LMP
 * colvars modules coupled with LAMMPS 
 
-### The other two "old versions" will be discarded in the future
-
