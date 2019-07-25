@@ -10,5 +10,5 @@
 * Integrator for adaptive biasing force method
 * Adaptive biasing potential method 
 * Adaptive biasing potential method method with artificial neural network
-* Self-written advanced free energy sampling methods coupled with LAMMPS (currently available: STWL)
+* Self-written advanced free energy sampling methods coupled with LAMMPS 
 
